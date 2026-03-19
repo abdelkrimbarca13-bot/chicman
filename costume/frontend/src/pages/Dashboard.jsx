@@ -51,7 +51,7 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg shadow-sm p-6 overflow-hidden">
         <div className="flex items-center mb-4 text-red-600">
           <AlertTriangle className="mr-2" />
           <h2 className="text-xl font-bold">Alertes Retards</h2>
@@ -59,24 +59,26 @@ const Dashboard = () => {
         {(!stats?.delayedRentals || stats.delayedRentals.length === 0) ? (
           <p className="text-gray-500">Aucun retard à signaler.</p>
         ) : (
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b">
-                <th className="py-2">Client</th>
-                <th className="py-2">Date retour prévue</th>
-                <th className="py-2">Téléphone</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.delayedRentals.map(rental => (
-                <tr key={rental.id} className="border-b">
-                  <td className="py-3">{rental.customer?.firstName} {rental.customer?.lastName}</td>
-                  <td className="py-3">{rental.expectedReturn ? new Date(rental.expectedReturn).toLocaleDateString() : ''}</td>
-                  <td className="py-3">{rental.customer?.phone}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[500px]">
+              <thead>
+                <tr className="border-b text-gray-600">
+                  <th className="py-2">Client</th>
+                  <th className="py-2">Date retour prévue</th>
+                  <th className="py-2">Téléphone</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {stats.delayedRentals.map(rental => (
+                  <tr key={rental.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 font-medium">{rental.customer?.firstName} {rental.customer?.lastName}</td>
+                    <td className="py-3">{rental.expectedReturn ? new Date(rental.expectedReturn).toLocaleDateString() : ''}</td>
+                    <td className="py-3 font-mono">{rental.customer?.phone}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

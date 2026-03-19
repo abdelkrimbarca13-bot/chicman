@@ -239,26 +239,26 @@ const Rentals = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Gestion des Locations</h1>
-        <div className="flex gap-4 items-center">
-            <div className="flex bg-white rounded-xl shadow-sm border border-gray-200 p-1">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Gestion des Locations</h1>
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center w-full lg:w-auto">
+            <div className="flex bg-white rounded-xl shadow-sm border border-gray-200 p-1 w-full sm:w-auto">
                 <button 
                     onClick={() => handleTabChange('ongoing')}
-                    className={`px-4 py-2 rounded-lg font-black text-xs uppercase transition-all ${activeTab === 'ongoing' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
+                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'ongoing' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
                 >
                     En Cours
                 </button>
                 <button 
                     onClick={() => handleTabChange('history')}
-                    className={`px-4 py-2 rounded-lg font-black text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
+                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
                 >
-                    Historique (Retours)
+                    Historique
                 </button>
             </div>
             <button 
                 onClick={() => setIsModalOpen(true)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-indigo-700 shadow-lg"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-indigo-700 shadow-lg w-full sm:w-auto text-sm"
             >
                 <Plus size={20} className="mr-2" /> Nouvelle Location
             </button>
@@ -266,10 +266,10 @@ const Rentals = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
-        <div className="flex-1 min-w-[300px]">
-          <label className="block text-xs font-black uppercase text-gray-500 mb-1">Filtrer par Période (Location)</label>
-          <div className="flex items-center gap-2">
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 items-stretch md:items-end">
+        <div className="flex-1">
+          <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Filtrer par Période</label>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div className="relative flex-1">
                 <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
                 <input 
@@ -279,7 +279,7 @@ const Rentals = () => {
                 onChange={(e) => setFilterStartDate(e.target.value)}
                 />
             </div>
-            <span className="text-gray-400 font-bold">au</span>
+            <span className="text-gray-400 font-bold text-center">au</span>
             <div className="relative flex-1">
                 <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
                 <input 
@@ -291,14 +291,14 @@ const Rentals = () => {
             </div>
           </div>
         </div>
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-black uppercase text-gray-500 mb-1">Filtrer par Client</label>
+        <div className="flex-1">
+          <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Filtrer par Client</label>
           <div className="relative">
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
             <input 
               type="text" 
               placeholder="Nom ou Prénom..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
               value={filterCustomer}
               onChange={(e) => setFilterCustomer(e.target.value)}
             />
@@ -306,24 +306,25 @@ const Rentals = () => {
         </div>
         <button 
           onClick={() => { setFilterStatus('ONGOING'); setFilterStartDate(''); setFilterEndDate(''); setFilterCustomer(''); setActiveTab('ongoing'); }}
-          className="px-4 py-2 text-indigo-600 hover:bg-indigo-50 font-bold rounded-lg transition-colors"
+          className="px-4 py-2 text-indigo-600 hover:bg-indigo-50 font-bold rounded-lg transition-colors text-sm"
         >
           Réinitialiser
         </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 uppercase text-xs font-semibold text-gray-600">
-            <tr>
-              <th className="px-6 py-3 border-b">Client</th>
-              <th className="px-6 py-3 border-b">Articles</th>
-              <th className="px-6 py-3 border-b text-center">Dates</th>
-              <th className="px-6 py-3 border-b">Statut</th>
-              <th className="px-6 py-3 border-b">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[900px]">
+            <thead className="bg-gray-50 uppercase text-[10px] sm:text-xs font-semibold text-gray-600">
+              <tr>
+                <th className="px-6 py-3 border-b whitespace-nowrap">Client</th>
+                <th className="px-6 py-3 border-b whitespace-nowrap">Articles</th>
+                <th className="px-6 py-3 border-b text-center whitespace-nowrap">Dates</th>
+                <th className="px-6 py-3 border-b whitespace-nowrap">Statut</th>
+                <th className="px-6 py-3 border-b whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
             {filteredRentals.map(rental => (
               <tr key={rental.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4">
@@ -400,6 +401,7 @@ const Rentals = () => {
           </tbody>
         </table>
       </div>
+    </div>
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -412,7 +414,7 @@ const Rentals = () => {
             </div>
             
             <form onSubmit={handleCreate} className="p-6 space-y-6">
-              <div className="bg-indigo-50/50 p-4 rounded-xl grid grid-cols-2 gap-4 border border-indigo-100">
+              <div className="bg-indigo-50/50 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-2 gap-4 border border-indigo-100">
                 <div>
                   <label className="block text-xs font-black uppercase text-indigo-600 mb-1">Début de location</label>
                   <input type="date" className="w-full p-2.5 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={newRental.startDate} onChange={e => setNewRental({...newRental, startDate: e.target.value})} required />

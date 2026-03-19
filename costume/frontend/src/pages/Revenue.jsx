@@ -63,13 +63,13 @@ const Revenue = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Suivi des Revenus</h1>
-        <div className="bg-indigo-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold">Suivi des Revenus</h1>
+        <div className="w-full sm:w-auto bg-indigo-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center">
             <TrendingUp className="mr-3" />
             <div>
-                <p className="text-xs uppercase font-semibold opacity-80">Total Aujourd'hui</p>
-                <p className="text-2xl font-bold">
+                <p className="text-[10px] uppercase font-semibold opacity-80">Total Aujourd'hui</p>
+                <p className="text-xl md:text-2xl font-bold">
                     {groupedRevenue[format(new Date(), 'yyyy-MM-dd')]?.total || 0} DA
                 </p>
             </div>
@@ -103,34 +103,36 @@ const Revenue = () => {
 
             {expandedDays[date] && (
               <div className="border-t border-gray-50 bg-gray-50/50 p-5">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="text-xs font-bold uppercase text-gray-400 border-b pb-2">
-                      <th className="pb-3 px-2">Heure</th>
-                      <th className="pb-3 px-2">Client</th>
-                      <th className="pb-3 px-2">Type</th>
-                      <th className="pb-3 px-2">Description</th>
-                      <th className="pb-3 px-2 text-right">Montant</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {groupedRevenue[date].items.map((movement, idx) => (
-                      <tr key={idx} className="text-sm">
-                        <td className="py-3 px-2 text-gray-500">{format(new Date(movement.date), 'HH:mm')}</td>
-                        <td className="py-3 px-2 font-medium">{movement.rental.customer.firstName} {movement.rental.customer.lastName}</td>
-                        <td className="py-3 px-2">
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-bold border ${getMovementTypeColor(movement.type)}`}>
-                            {getMovementTypeLabel(movement.type)}
-                          </span>
-                        </td>
-                        <td className="py-3 px-2 text-gray-600 text-xs">
-                          {movement.description || `Location #RENT-${movement.rentalId}`}
-                        </td>
-                        <td className="py-3 px-2 text-right font-bold text-gray-900">{movement.amount} DA</td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left min-w-[600px]">
+                    <thead>
+                      <tr className="text-[10px] sm:text-xs font-bold uppercase text-gray-400 border-b pb-2">
+                        <th className="pb-3 px-2">Heure</th>
+                        <th className="pb-3 px-2">Client</th>
+                        <th className="pb-3 px-2">Type</th>
+                        <th className="pb-3 px-2">Description</th>
+                        <th className="pb-3 px-2 text-right">Montant</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {groupedRevenue[date].items.map((movement, idx) => (
+                        <tr key={idx} className="text-sm hover:bg-white/50 transition-colors">
+                          <td className="py-3 px-2 text-gray-500 font-mono text-xs">{format(new Date(movement.date), 'HH:mm')}</td>
+                          <td className="py-3 px-2 font-medium">{movement.rental.customer.firstName} {movement.rental.customer.lastName}</td>
+                          <td className="py-3 px-2">
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${getMovementTypeColor(movement.type)}`}>
+                              {getMovementTypeLabel(movement.type)}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2 text-gray-600 text-xs italic">
+                            {movement.description || `Location #RENT-${movement.rentalId}`}
+                          </td>
+                          <td className="py-3 px-2 text-right font-bold text-gray-900">{movement.amount} DA</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>

@@ -53,15 +53,15 @@ const Customers = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Fiches Clients</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Fiches Clients</h1>
         <button 
           onClick={() => {
             setCurrentCustomer({ firstName: '', lastName: '', phone: '', address: '', idNumber: '' });
             setEditingId(null);
             setIsModalOpen(true);
           }}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-indigo-700"
+          className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-indigo-700 shadow-lg text-sm"
         >
           <Plus size={20} className="mr-2" /> Nouveau Client
         </button>

@@ -93,18 +93,18 @@ const Cash = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-black text-gray-800">Gestion de la Caisse</h1>
-        <div className="flex bg-white rounded-xl shadow-sm border border-gray-200 p-1">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-2xl md:text-3xl font-black text-gray-800">Gestion de la Caisse</h1>
+        <div className="flex bg-white rounded-xl shadow-sm border border-gray-200 p-1 w-full sm:w-auto">
             <button 
                 onClick={() => setActiveTab('current')}
-                className={`px-4 py-2 rounded-lg font-black text-xs uppercase transition-all ${activeTab === 'current' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'current' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
             >
                 Aujourd'hui
             </button>
             <button 
                 onClick={() => setActiveTab('history')}
-                className={`px-4 py-2 rounded-lg font-black text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
             >
                 Historique
             </button>
@@ -114,7 +114,7 @@ const Cash = () => {
       {activeTab === 'current' ? (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 group-hover:scale-110 transition-transform">
                 <DollarSign size={100} />
