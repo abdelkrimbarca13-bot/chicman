@@ -53,7 +53,7 @@ const Layout = ({ children }) => {
       `}>
         <div className="p-8 hidden lg:flex flex-col items-center border-b border-indigo-600/50">
           <span className="text-5xl font-normal text-white font-nathalyn">Chic</span>
-          <span className="text-lg font-light tracking-[0.6em] text-amber-400 -mt-2 font-elegant italic">MEN</span>
+          <span className="text-lg font-light tracking-[0.6em] text-amber-400 -mt-2 font-elegant italic">MAN</span>
         </div>
         
         <div className="lg:hidden p-6 flex flex-col items-center border-b border-indigo-600/50">

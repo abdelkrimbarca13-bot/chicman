@@ -65,7 +65,7 @@ const Items = () => {
     printWin.document.write(`
       <html>
         <head>
-          <title>Ticket CHIC MEN - ${qrModal.reference}</title>
+          <title>Ticket CHIC MAN - ${qrModal.reference}</title>
           <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
           <style>
             body { 
@@ -124,7 +124,7 @@ const Items = () => {
         </head>
         <body>
           <div class="ticket">
-            <div class="brand">CHIC MEN</div>
+            <div class="brand">CHIC MAN</div>
             <div class="sub-brand">Luxury Rental</div>
             <div class="qr-container">${windowContent}</div>
             <div class="item-name">${qrModal.name}</div>
@@ -321,7 +321,7 @@ const Items = () => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl w-80 overflow-hidden border border-amber-200">
             <div className="bg-black text-amber-400 py-4 text-center border-b-2 border-amber-400">
-                <h3 className="font-['Cinzel'] text-xl tracking-widest font-bold">CHIC MEN</h3>
+                <h3 className="font-['Cinzel'] text-xl tracking-widest font-bold">CHIC MAN</h3>
                 <p className="text-[10px] tracking-[0.3em] uppercase opacity-80">Luxury Rental Service</p>
             </div>
             

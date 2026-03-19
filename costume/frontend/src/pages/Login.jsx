@@ -27,7 +27,7 @@ const Login = () => {
         <div className="mb-10 flex flex-col items-center">
             <span className="text-7xl font-normal text-indigo-900 font-nathalyn">Chic</span>
             <div className="h-px w-32 bg-amber-500 my-1"></div>
-            <span className="text-xl font-light tracking-[0.7em] text-amber-600 font-elegant italic">MEN</span>
+            <span className="text-xl font-light tracking-[0.7em] text-amber-600 font-elegant italic">MAN</span>
         </div>
         {error && <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded">{error}</div>}
         <form onSubmit={handleSubmit}>

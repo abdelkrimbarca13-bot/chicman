@@ -52,7 +52,7 @@ const RentalReceipt = ({ rental, onClose }) => {
           `}} />
           
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-black tracking-widest border-b-4 border-black inline-block px-8 pb-2">CHIC MEN</h1>
+            <h1 className="text-4xl font-black tracking-widest border-b-4 border-black inline-block px-8 pb-2">CHIC MAN</h1>
             <p className="text-sm uppercase tracking-[0.5em] mt-2 font-bold">Luxury Rental Service</p>
           </div>
 
@@ -163,7 +163,7 @@ const RentalReceipt = ({ rental, onClose }) => {
           </div>
 
           <div className="text-center border-t-2 border-dashed border-black pt-4">
-            <p className="text-[10px] uppercase font-bold tracking-widest">Merci de votre confiance - CHIC MEN Luxury Rental</p>
+            <p className="text-[10px] uppercase font-bold tracking-widest">Merci de votre confiance - CHIC MAN Luxury Rental</p>
             <p className="text-[9px] text-gray-500 mt-1">Les articles doivent être retournés dans leur état d'origine. Tout dommage sera facturé.</p>
           </div>
         </div>
