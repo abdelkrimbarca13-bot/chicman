@@ -1,0 +1,117 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      String   @default("EMPLOYEE")
+  createdAt DateTime @default(now())
+}
+
+model Item {
+  id          Int          @id @default(autoincrement())
+  reference   String       @unique
+  name        String
+  model       String?
+  type        String
+  size        String
+  color       String
+  status      String       @default("AVAILABLE")
+  rentalPrice Float        @default(0)
+  quantity    Int          @default(1)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  rentals     RentalItem[]
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  phone     String
+  address   String
+  email     String?
+  idNumber  String   @unique
+  createdAt DateTime @default(now())
+  rentals   Rental[]
+}
+
+model Rental {
+  id                Int            @id @default(autoincrement())
+  customerId        Int
+  startDate         DateTime       @default(now())
+  expectedReturn    DateTime
+  actualReturn      DateTime?
+  totalAmount       Float          @default(0)
+  depositAmount     Float          @default(0)
+  paidAmount        Float          @default(0)
+  discount          Float          @default(0)
+  remarks           String?
+  status            String         @default("ONGOING")
+  isActivated       Boolean        @default(false)
+  guaranteeDocument String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  cashMovements     CashMovement[]
+  payments          Payment[]
+  customer          Customer       @relation(fields: [customerId], references: [id])
+  items             RentalItem[]
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  amount    Float
+  rentalId  Int
+  createdAt DateTime @default(now())
+  rental    Rental   @relation(fields: [rentalId], references: [id])
+}
+
+model CashMovement {
+  id          Int      @id @default(autoincrement())
+  rentalId    Int
+  amount      Float
+  type        String
+  description String?
+  date        DateTime
+  createdAt   DateTime @default(now())
+  rental      Rental   @relation(fields: [rentalId], references: [id])
+}
+
+model RentalItem {
+  id                 Int     @id @default(autoincrement())
+  rentalId           Int
+  itemId             Int
+  remarks            String?
+  tailorModification String?
+  item               Item    @relation(fields: [itemId], references: [id])
+  rental             Rental  @relation(fields: [rentalId], references: [id])
+}
+
+model DailyCash {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @unique @default(now())
+  initialCash   Float    @default(0)
+  totalRentals  Float    @default(0)
+  totalExpenses Float    @default(0)
+  finalBalance  Float    @default(0)
+  status        String   @default("OPEN")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  description String
+  date        DateTime @default(now())
+  slipNumber  String?
+  createdAt   DateTime @default(now())
+}

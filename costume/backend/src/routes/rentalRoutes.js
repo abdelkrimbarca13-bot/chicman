@@ -1,0 +1,12 @@
+const express = require('express');  
+const router = express.Router();  
+const rentalController = require('../controllers/rentalController');  
+const auth = require('../middleware/auth');  
+router.get('/', auth, rentalController.getAllRentals);  
+router.get('/revenue', auth, rentalController.getRevenue);  
+router.get('/cash/movements', auth, rentalController.getCashMovements);  
+router.post('/', auth, rentalController.createRental);  
+router.post('/:id/payment', auth, rentalController.addPayment);  
+router.post('/:id/activate', auth, rentalController.activateRental);  
+router.post('/:id/return', auth, rentalController.returnRental);  
+module.exports = router;  

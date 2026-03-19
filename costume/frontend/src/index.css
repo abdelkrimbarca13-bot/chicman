@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-luxury: "Cinzel", serif;
+  --font-nathalyn: "Pinyon Script", cursive;
+  --font-poppins: "Poppins", sans-serif;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-poppins);
+}
+
+.font-luxury {
+  font-family: var(--font-luxury);
+}
+
+.font-elegant {
+  font-family: var(--font-serif);
+}
+
+.font-nathalyn {
+  font-family: var(--font-nathalyn);
+}
