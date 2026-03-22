@@ -46,7 +46,8 @@ const Customers = () => {
         await api.delete(`/customers/${id}`);
         fetchCustomers();
       } catch (err) {
-        alert('Erreur lors de la suppression');
+        const message = err.response?.data?.message || 'Erreur lors de la suppression';
+        alert(message);
       }
     }
   };

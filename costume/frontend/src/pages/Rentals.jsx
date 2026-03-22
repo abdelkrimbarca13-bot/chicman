@@ -170,7 +170,7 @@ const Rentals = () => {
   };
 
   const handleActivate = async (id) => {
-    if (confirm('Activer la location ? Le solde restant sera ajouté à la caisse.')) {
+    if (confirm('Activer la location ?')) {
       try {
         await api.post(`/rentals/${id}/activate`);
         fetchData();

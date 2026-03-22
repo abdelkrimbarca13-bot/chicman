@@ -36,6 +36,17 @@ exports.updateCustomer = async (req, res) => {
 exports.deleteCustomer = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Check if customer has rentals
+    const rentalsCount = await prisma.rental.count({
+      where: { customerId: parseInt(id) }
+    });
+
+    if (rentalsCount > 0) {
+      return res.status(400).json({ 
+        message: "Impossible de supprimer ce client car il possède des locations enregistrées." 
+      });
+    }
     
     await prisma.customer.delete({
       where: { id: parseInt(id) }

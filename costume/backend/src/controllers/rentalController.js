@@ -248,45 +248,16 @@ exports.activateRental = async (req, res) => {
       return res.status(400).json({ message: 'Rental already activated' });
     }
 
-    const currentPaid = rental.payments.reduce((sum, p) => sum + p.amount, 0);
-    const remainder = Math.max(0, rental.totalAmount - currentPaid);
-
     const updated = await prisma.$transaction(async (tx) => {
       const updatedRental = await tx.rental.update({
         where: { id: parseInt(id) },
         data: {
-          isActivated: true,
-          paidAmount: rental.totalAmount
+          isActivated: true
         }
       });
 
-      // Add remainder to cash only if there's a remainder
-      if (remainder > 0) {
-        await tx.payment.create({
-          data: {
-            amount: remainder,
-            rentalId: parseInt(id)
-          }
-        });
-
-        await tx.cashMovement.create({
-          data: {
-            rentalId: parseInt(id),
-            amount: remainder,
-            type: 'REMAINDER',
-            description: `Solde restant activation - Location #${id}`,
-            date: new Date()
-          }
-        });
-      }
-
       return updatedRental;
     });
-
-    // Update daily stats
-    if (remainder > 0) {
-      await updateDailyStats(new Date());
-    }
 
     res.json(updated);
   } catch (error) {
