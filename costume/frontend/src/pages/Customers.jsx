@@ -9,8 +9,13 @@ const Customers = () => {
   const [currentCustomer, setCurrentCustomer] = useState({ firstName: '', lastName: '', phone: '', address: '', idNumber: '' });
   const [editingId, setEditingId] = useState(null);
 
-  const fetchCustomers = () => {
-    api.get('/customers').then(res => setCustomers(res.data));
+  const fetchCustomers = async () => {
+    try {
+      const res = await api.get('/customers');
+      setCustomers(res.data);
+    } catch (err) {
+      console.error('Erreur chargement clients:', err);
+    }
   };
 
   useEffect(() => {
@@ -28,7 +33,7 @@ const Customers = () => {
       setIsModalOpen(false);
       setCurrentCustomer({ firstName: '', lastName: '', phone: '', address: '', idNumber: '' });
       setEditingId(null);
-      fetchCustomers();
+      await fetchCustomers();
     } catch (err) {
       alert('Erreur: Vérifiez si le numéro de pièce d\'identité est unique');
     }
@@ -44,9 +49,10 @@ const Customers = () => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
       try {
         await api.delete(`/customers/${id}`);
-        fetchCustomers();
+        await fetchCustomers();
       } catch (err) {
-        const message = err.response?.data?.message || 'Erreur lors de la suppression';
+        console.error('Erreur lors de la suppression:', err);
+        const message = err.response?.data?.message || 'Erreur lors de la suppression. Veuillez réessayer.';
         alert(message);
       }
     }
