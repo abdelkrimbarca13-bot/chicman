@@ -45,9 +45,29 @@ const RentalReceipt = ({ rental, onClose }) => {
         <div id="receipt-content" className="p-8 bg-white text-black font-serif">
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
+              @page {
+                size: A5;
+                margin: 5mm;
+              }
               .no-print { display: none !important; }
-              body { padding: 0; margin: 0; }
-              #receipt-content { padding: 20px !important; width: 100% !important; }
+              body { 
+                padding: 0; 
+                margin: 0; 
+                background: white;
+              }
+              #receipt-content { 
+                padding: 5mm !important; 
+                width: 100% !important;
+                font-size: 10pt !important;
+              }
+              h1 { font-size: 24pt !important; }
+              .text-4xl { font-size: 24pt !important; }
+              .text-2xl { font-size: 16pt !important; }
+              .text-lg { font-size: 12pt !important; }
+              .p-8 { padding: 5mm !important; }
+              .mb-8 { margin-bottom: 4mm !important; }
+              .mb-6 { margin-bottom: 3mm !important; }
+              table th, table td { padding: 4px !important; }
             }
           `}} />
           
@@ -151,16 +171,7 @@ const RentalReceipt = ({ rental, onClose }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 mt-12 mb-8">
-            <div className="text-center">
-              <p className="text-xs uppercase font-black mb-16 border-b-2 border-black pb-1">Signature Client</p>
-              <p className="text-[10px] text-gray-400 italic">"Lu et approuvé"</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs uppercase font-black mb-16 border-b-2 border-black pb-1">Le Gérant</p>
-              <p className="text-[10px] text-gray-400 italic">Signature et Griffe</p>
-            </div>
-          </div>
+
 
           <div className="text-center border-t-2 border-dashed border-black pt-4">
             <p className="text-[10px] uppercase font-bold tracking-widest">Merci de votre confiance - CHIC MAN Luxury Rental</p>
