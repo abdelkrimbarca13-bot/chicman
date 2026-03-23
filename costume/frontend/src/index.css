@@ -6,10 +6,15 @@
   --font-luxury: "Cinzel", serif;
   --font-nathalyn: "Pinyon Script", cursive;
   --font-poppins: "Poppins", sans-serif;
+  
+  --color-gold: #c5a021;
+  --color-dark-gold: #a68419;
+  --color-light-gold: #dfc15e;
+  --color-rich-black: #0a0a0a;
 }
 
 body {
-  @apply bg-gray-50 text-gray-900;
+  @apply bg-zinc-950 text-zinc-100;
   font-family: var(--font-sans);
 }
 

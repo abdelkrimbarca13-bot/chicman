@@ -26,14 +26,14 @@ const Layout = ({ children }) => {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-zinc-950 overflow-hidden text-zinc-100">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-indigo-700 text-white flex items-center justify-between px-4 z-40">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-rich-black text-white flex items-center justify-between px-4 z-40 border-b border-gold/30">
         <div className="flex flex-col items-center">
           <span className="text-2xl font-normal text-white font-nathalyn">Chic</span>
-          <span className="text-xs font-light tracking-[0.4em] text-amber-400 -mt-1 font-elegant italic">MEN</span>
+          <span className="text-xs font-light tracking-[0.4em] text-gold -mt-1 font-elegant italic">MEN</span>
         </div>
-        <button onClick={toggleSidebar} className="p-2 hover:bg-indigo-600 rounded-md">
+        <button onClick={toggleSidebar} className="p-2 hover:bg-zinc-900 rounded-md">
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -48,17 +48,17 @@ const Layout = ({ children }) => {
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 w-64 bg-indigo-700 text-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out
+        fixed lg:static inset-y-0 left-0 w-64 bg-rich-black text-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out border-r border-gold/20
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-8 hidden lg:flex flex-col items-center border-b border-indigo-600/50">
+        <div className="p-8 hidden lg:flex flex-col items-center border-b border-gold/20">
           <span className="text-5xl font-normal text-white font-nathalyn">Chic</span>
-          <span className="text-lg font-light tracking-[0.6em] text-amber-400 -mt-2 font-elegant italic">MAN</span>
+          <span className="text-lg font-light tracking-[0.6em] text-gold -mt-2 font-elegant italic">MAN</span>
         </div>
         
-        <div className="lg:hidden p-6 flex flex-col items-center border-b border-indigo-600/50">
+        <div className="lg:hidden p-6 flex flex-col items-center border-b border-gold/20">
           <span className="text-3xl font-normal text-white font-nathalyn">Chic</span>
-          <span className="text-sm font-light tracking-[0.5em] text-amber-400 -mt-2 font-elegant italic">MEN</span>
+          <span className="text-sm font-light tracking-[0.5em] text-gold -mt-2 font-elegant italic">MEN</span>
         </div>
 
         <nav className="flex-1 mt-6 overflow-y-auto">
@@ -68,7 +68,7 @@ const Layout = ({ children }) => {
               to={item.path}
               onClick={() => setIsSidebarOpen(false)}
               className={`flex items-center px-6 py-4 lg:py-3 transition-colors ${
-                location.pathname === item.path ? 'bg-indigo-800 border-l-4 border-amber-400' : 'hover:bg-indigo-600'
+                location.pathname === item.path ? 'bg-zinc-900 border-l-4 border-gold text-gold' : 'hover:bg-zinc-900 hover:text-gold'
               }`}
             >
               <span className="mr-3">{item.icon}</span>
@@ -77,13 +77,13 @@ const Layout = ({ children }) => {
           ))}
         </nav>
         
-        <div className="p-4 border-t border-indigo-600">
-          <div className="flex items-center mb-4 px-2 text-sm text-indigo-200">
+        <div className="p-4 border-t border-gold/20">
+          <div className="flex items-center mb-4 px-2 text-sm text-zinc-400">
             <span className="truncate">Connecté en tant que: <span className="font-semibold text-white">{user?.role}</span></span>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center w-full px-6 py-3 text-left hover:bg-indigo-600 transition-colors rounded-md"
+            className="flex items-center w-full px-6 py-3 text-left hover:bg-zinc-900 hover:text-gold transition-colors rounded-md"
           >
             <LogOut size={20} className="mr-3" /> Déconnexion
           </button>

@@ -18,11 +18,11 @@ const Revenue = () => {
 
   const getMovementTypeColor = (type) => {
     const colors = {
-      DEPOSIT: 'bg-blue-50 text-blue-700 border-blue-200',
-      REMAINDER: 'bg-green-50 text-green-700 border-green-200',
-      REFUND: 'bg-red-50 text-red-700 border-red-200'
+      DEPOSIT: 'bg-gold/10 text-gold border-gold/20',
+      REMAINDER: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+      REFUND: 'bg-red-500/10 text-red-500 border-red-500/20'
     };
-    return colors[type] || 'bg-gray-50 text-gray-700 border-gray-200';
+    return colors[type] || 'bg-zinc-800 text-zinc-400 border-zinc-700';
   };
 
   const groupMovementsByDay = (data) => {
@@ -64,12 +64,12 @@ const Revenue = () => {
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">Suivi des Revenus</h1>
-        <div className="w-full sm:w-auto bg-indigo-600 text-white px-6 py-3 rounded-xl shadow-lg flex items-center">
+        <h1 className="text-2xl md:text-3xl font-bold text-white">Suivi des Revenus</h1>
+        <div className="w-full sm:w-auto bg-gold text-black px-6 py-3 rounded-xl shadow-lg flex items-center">
             <TrendingUp className="mr-3" />
             <div>
-                <p className="text-[10px] uppercase font-semibold opacity-80">Total Aujourd'hui</p>
-                <p className="text-xl md:text-2xl font-bold">
+                <p className="text-[10px] uppercase font-bold opacity-80">Total Aujourd'hui</p>
+                <p className="text-xl md:text-2xl font-black italic">
                     {groupedRevenue[format(new Date(), 'yyyy-MM-dd')]?.total || 0} DA
                 </p>
             </div>
@@ -78,56 +78,56 @@ const Revenue = () => {
 
       <div className="space-y-4">
         {sortedDates.map(date => (
-          <div key={date} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div key={date} className="bg-zinc-900 rounded-xl shadow-xl border border-zinc-800 overflow-hidden">
             <button 
               onClick={() => toggleDay(date)}
-              className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center justify-between p-5 hover:bg-zinc-800/50 transition-colors"
             >
               <div className="flex items-center">
-                <Calendar className="text-indigo-500 mr-4" size={24} />
-                <div>
-                  <p className="font-bold text-lg text-gray-800">
+                <Calendar className="text-gold mr-4" size={24} />
+                <div className="text-left">
+                  <p className="font-bold text-lg text-white">
                     {format(new Date(date), 'dd MMMM yyyy')}
                     {date === format(new Date(), 'yyyy-MM-dd') && (
-                        <span className="ml-3 bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Aujourd'hui</span>
+                        <span className="ml-3 bg-gold/20 text-gold text-xs px-2 py-1 rounded-full border border-gold/30">Aujourd'hui</span>
                     )}
                   </p>
-                  <p className="text-sm text-gray-500">{groupedRevenue[date].items.length} transaction(s)</p>
+                  <p className="text-sm text-zinc-500">{groupedRevenue[date].items.length} transaction(s)</p>
                 </div>
               </div>
               <div className="flex items-center">
-                <p className="text-xl font-black text-indigo-700 mr-6">{groupedRevenue[date].total} DA</p>
-                {expandedDays[date] ? <ChevronDown size={20}/> : <ChevronRight size={20}/>}
+                <p className="text-xl font-black italic text-gold mr-6">{groupedRevenue[date].total} DA</p>
+                {expandedDays[date] ? <ChevronDown size={20} className="text-zinc-500"/> : <ChevronRight size={20} className="text-zinc-500"/>}
               </div>
             </button>
 
             {expandedDays[date] && (
-              <div className="border-t border-gray-50 bg-gray-50/50 p-5">
+              <div className="border-t border-zinc-800 bg-zinc-950 p-5">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left min-w-[600px]">
                     <thead>
-                      <tr className="text-[10px] sm:text-xs font-bold uppercase text-gray-400 border-b pb-2">
+                      <tr className="text-[10px] sm:text-xs font-bold uppercase text-zinc-500 border-b border-zinc-800 pb-2">
                         <th className="pb-3 px-2">Heure</th>
-                        <th className="pb-3 px-2">Client</th>
+                        <th className="pb-3 px-2 text-zinc-300">Client</th>
                         <th className="pb-3 px-2">Type</th>
                         <th className="pb-3 px-2">Description</th>
-                        <th className="pb-3 px-2 text-right">Montant</th>
+                        <th className="pb-3 px-2 text-right text-gold">Montant</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-zinc-800/50">
                       {groupedRevenue[date].items.map((movement, idx) => (
-                        <tr key={idx} className="text-sm hover:bg-white/50 transition-colors">
-                          <td className="py-3 px-2 text-gray-500 font-mono text-xs">{format(new Date(movement.date), 'HH:mm')}</td>
-                          <td className="py-3 px-2 font-medium">{movement.rental.customer.firstName} {movement.rental.customer.lastName}</td>
+                        <tr key={idx} className="text-sm hover:bg-zinc-900/50 transition-colors">
+                          <td className="py-3 px-2 text-zinc-500 font-mono text-xs">{format(new Date(movement.date), 'HH:mm')}</td>
+                          <td className="py-3 px-2 font-medium text-zinc-200">{movement.rental.customer.firstName} {movement.rental.customer.lastName}</td>
                           <td className="py-3 px-2">
                             <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${getMovementTypeColor(movement.type)}`}>
                               {getMovementTypeLabel(movement.type)}
                             </span>
                           </td>
-                          <td className="py-3 px-2 text-gray-600 text-xs italic">
+                          <td className="py-3 px-2 text-zinc-500 text-xs italic">
                             {movement.description || `Location #RENT-${movement.rentalId}`}
                           </td>
-                          <td className="py-3 px-2 text-right font-bold text-gray-900">{movement.amount} DA</td>
+                          <td className="py-3 px-2 text-right font-black italic text-zinc-100">{movement.amount} DA</td>
                         </tr>
                       ))}
                     </tbody>
@@ -138,8 +138,8 @@ const Revenue = () => {
           </div>
         ))}
         {sortedDates.length === 0 && (
-            <div className="text-center py-20 bg-white rounded-xl border-2 border-dashed border-gray-200">
-                <p className="text-gray-400 italic">Aucun mouvement de caisse enregistré pour le moment.</p>
+            <div className="text-center py-20 bg-zinc-900 rounded-xl border-2 border-dashed border-zinc-800">
+                <p className="text-zinc-500 italic">Aucun mouvement de caisse enregistré pour le moment.</p>
             </div>
         )}
       </div>

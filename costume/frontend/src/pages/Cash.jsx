@@ -94,17 +94,17 @@ const Cash = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl md:text-3xl font-black text-gray-800">Gestion de la Caisse</h1>
-        <div className="flex bg-white rounded-xl shadow-sm border border-gray-200 p-1 w-full sm:w-auto">
+        <h1 className="text-2xl md:text-3xl font-black text-gold font-luxury tracking-widest uppercase border-b-2 border-gold/30 pb-2">Gestion de la Caisse</h1>
+        <div className="flex bg-zinc-900 rounded-xl shadow-lg border border-zinc-800 p-1 w-full sm:w-auto">
             <button 
                 onClick={() => setActiveTab('current')}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'current' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
+                className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'current' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-800'}`}
             >
                 Aujourd'hui
             </button>
             <button 
                 onClick={() => setActiveTab('history')}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
+                className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-800'}`}
             >
                 Historique
             </button>
@@ -115,82 +115,82 @@ const Cash = () => {
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
-            <div className="absolute right-[-10px] top-[-10px] opacity-5 group-hover:scale-110 transition-transform">
+        <div className="bg-zinc-900 p-6 rounded-2xl shadow-xl border border-gold/10 relative overflow-hidden group">
+            <div className="absolute right-[-10px] top-[-10px] opacity-10 text-gold group-hover:scale-110 transition-transform">
                 <DollarSign size={100} />
             </div>
-            <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Monnaie Initiale</p>
-            <h3 className="text-2xl font-black text-gray-800">{dailyCash.initialCash} DA</h3>
+            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Monnaie Initiale</p>
+            <h3 className="text-2xl font-black text-white">{dailyCash.initialCash} DA</h3>
             <button 
                 onClick={() => setIsInitialCashModalOpen(true)}
-                className="mt-4 text-[10px] font-black uppercase text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                className="mt-4 text-[10px] font-black uppercase text-gold hover:text-light-gold flex items-center gap-1 transition-colors"
             >
                 <Plus size={12} /> Modifier
             </button>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
-            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-green-600 group-hover:scale-110 transition-transform">
+        <div className="bg-zinc-900 p-6 rounded-2xl shadow-xl border border-gold/10 relative overflow-hidden group">
+            <div className="absolute right-[-10px] top-[-10px] opacity-10 text-green-500 group-hover:scale-110 transition-transform">
                 <ArrowDownCircle size={100} />
             </div>
-            <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Recette Locations</p>
-            <h3 className="text-2xl font-black text-green-600">+{dailyCash.totalRentals} DA</h3>
-            <p className="mt-4 text-[10px] font-bold text-gray-400 uppercase">Entrées du jour</p>
+            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Recette Locations</p>
+            <h3 className="text-2xl font-black text-green-400">+{dailyCash.totalRentals} DA</h3>
+            <p className="mt-4 text-[10px] font-bold text-zinc-600 uppercase tracking-tighter">Entrées du jour</p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
-            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-red-600 group-hover:scale-110 transition-transform">
+        <div className="bg-zinc-900 p-6 rounded-2xl shadow-xl border border-gold/10 relative overflow-hidden group">
+            <div className="absolute right-[-10px] top-[-10px] opacity-10 text-red-500 group-hover:scale-110 transition-transform">
                 <ArrowUpCircle size={100} />
             </div>
-            <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Dépenses (Sorties)</p>
-            <h3 className="text-2xl font-black text-red-600">-{dailyCash.totalExpenses} DA</h3>
+            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Dépenses (Sorties)</p>
+            <h3 className="text-2xl font-black text-red-400">-{dailyCash.totalExpenses} DA</h3>
             <button 
                 onClick={() => setIsExpenseModalOpen(true)}
-                className="mt-4 text-[10px] font-black uppercase text-red-600 hover:text-red-800 flex items-center gap-1"
+                className="mt-4 text-[10px] font-black uppercase text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors"
             >
                 <Plus size={12} /> Ajouter Dépense
             </button>
         </div>
 
-        <div className="bg-indigo-600 p-6 rounded-2xl shadow-lg relative overflow-hidden group">
-            <div className="absolute right-[-10px] top-[-10px] opacity-10 text-white group-hover:scale-110 transition-transform">
+        <div className="bg-gold p-6 rounded-2xl shadow-2xl relative overflow-hidden group shadow-gold/20">
+            <div className="absolute right-[-10px] top-[-10px] opacity-20 text-rich-black group-hover:scale-110 transition-transform">
                 <Calculator size={100} />
             </div>
-            <p className="text-xs font-black text-indigo-200 uppercase tracking-widest mb-1">Solde Final Caisse</p>
-            <h3 className="text-3xl font-black text-white">{dailyCash.finalBalance} DA</h3>
-            <p className="mt-4 text-[10px] font-bold text-indigo-300 uppercase">Argent réel en caisse</p>
+            <p className="text-[10px] font-black text-rich-black/60 uppercase tracking-widest mb-1">Solde Final Caisse</p>
+            <h3 className="text-3xl font-black text-rich-black">{dailyCash.finalBalance} DA</h3>
+            <p className="mt-4 text-[10px] font-bold text-rich-black/40 uppercase tracking-tighter">Argent réel en caisse</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Expenses Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-50 flex justify-between items-center">
-                <h3 className="font-black text-gray-800 uppercase tracking-tight flex items-center gap-2">
-                    <ArrowUpCircle className="text-red-500" size={20} />
+        <div className="bg-zinc-900 rounded-2xl shadow-xl border border-gold/10 overflow-hidden">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-800/50">
+                <h3 className="font-black text-gold uppercase tracking-widest flex items-center gap-2 font-luxury text-sm">
+                    <ArrowUpCircle className="text-red-400" size={20} />
                     Dépenses de la journée
                 </h3>
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                    <thead className="bg-gray-50 uppercase text-[10px] font-black text-gray-400">
+                    <thead className="bg-zinc-800 uppercase text-[10px] font-black text-zinc-500">
                         <tr>
-                            <th className="px-6 py-4">Bon N°</th>
-                            <th className="px-6 py-4">Description</th>
-                            <th className="px-6 py-4 text-right">Montant</th>
+                            <th className="px-6 py-4 tracking-wider">Bon N°</th>
+                            <th className="px-6 py-4 tracking-wider">Description</th>
+                            <th className="px-6 py-4 text-right tracking-wider">Montant</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-zinc-800 text-zinc-300">
                         {expenses.length === 0 ? (
                             <tr>
-                                <td colSpan="3" className="px-6 py-12 text-center text-gray-400 font-bold italic">Aucune dépense enregistrée</td>
+                                <td colSpan="3" className="px-6 py-12 text-center text-zinc-600 font-bold italic text-sm tracking-tight">Aucune dépense enregistrée</td>
                             </tr>
                         ) : (
                             expenses.map((exp, idx) => (
-                                <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 font-mono text-xs font-bold text-indigo-600">{exp.slipNumber || 'N/S'}</td>
-                                    <td className="px-6 py-4 text-sm font-medium text-gray-700">{exp.description}</td>
-                                    <td className="px-6 py-4 text-right font-black text-red-600">-{exp.amount} DA</td>
+                                <tr key={idx} className="hover:bg-zinc-800/50 transition-colors">
+                                    <td className="px-6 py-4 font-mono text-xs font-bold text-gold">{exp.slipNumber || 'N/S'}</td>
+                                    <td className="px-6 py-4 text-sm font-medium text-white">{exp.description}</td>
+                                    <td className="px-6 py-4 text-right font-black text-red-400">-{exp.amount} DA</td>
                                 </tr>
                             ))
                         )}
@@ -200,58 +200,59 @@ const Cash = () => {
         </div>
 
         {/* Daily Summary Report Style */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6 flex flex-col justify-center">
+        <div className="bg-zinc-900 rounded-2xl shadow-xl border border-gold/10 p-8 space-y-6 flex flex-col justify-center relative">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gold"></div>
             <div className="text-center space-y-2 mb-4">
-                <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gold/10 text-gold rounded-full flex items-center justify-center mx-auto mb-4 border border-gold/20 shadow-lg shadow-gold/5">
                     <Receipt size={32} />
                 </div>
-                <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Rapport de Fin de Journée</h3>
-                <p className="text-gray-400 text-sm font-medium">Résumé financier automatique du {format(new Date(), 'dd/MM/yyyy')}</p>
+                <h3 className="text-2xl font-black text-gold uppercase tracking-widest font-luxury">Rapport de Fin de Journée</h3>
+                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">Résumé automatique du {format(new Date(), 'dd/MM/yyyy')}</p>
             </div>
 
-            <div className="space-y-4 border-y-2 border-dashed border-gray-100 py-6">
+            <div className="space-y-4 border-y-2 border-dashed border-zinc-800 py-8">
                 <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Caisse de départ (+)</span>
-                    <span className="font-black text-gray-800">{dailyCash.initialCash} DA</span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Caisse de départ (+)</span>
+                    <span className="font-black text-white text-lg">{dailyCash.initialCash} DA</span>
                 </div>
                 <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Recettes (+)</span>
-                    <span className="font-black text-green-600">{dailyCash.totalRentals} DA</span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Total Recettes (+)</span>
+                    <span className="font-black text-green-400 text-lg">{dailyCash.totalRentals} DA</span>
                 </div>
-                <div className="flex justify-between items-center pb-2">
-                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Dépenses (-)</span>
-                    <span className="font-black text-red-600">{dailyCash.totalExpenses} DA</span>
+                <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Total Dépenses (-)</span>
+                    <span className="font-black text-red-400 text-lg">{dailyCash.totalExpenses} DA</span>
                 </div>
             </div>
 
-            <div className="flex justify-between items-center pt-4">
-                <span className="text-lg font-black text-gray-800 uppercase">SOLDE FINAL</span>
-                <span className="text-3xl font-black text-indigo-600 underline decoration-indigo-200 decoration-4 underline-offset-8">{dailyCash.finalBalance} DA</span>
+            <div className="flex justify-between items-center pt-6">
+                <span className="text-lg font-black text-white uppercase tracking-widest font-luxury">SOLDE FINAL</span>
+                <span className="text-4xl font-black text-gold underline decoration-gold/30 decoration-4 underline-offset-[12px]">{dailyCash.finalBalance} DA</span>
             </div>
         </div>
       </div>
       </>
       ) : (
         <div className="space-y-6">
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-end">
+            <div className="bg-zinc-900 p-4 rounded-xl shadow-xl border border-zinc-800 flex flex-wrap gap-4 items-end">
                 <div className="flex-1 min-w-[300px]">
-                    <label className="block text-xs font-black uppercase text-gray-400 mb-1">Filtrer par Période (Caisse)</label>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-1 tracking-widest">Filtrer par Période (Caisse)</label>
                     <div className="flex items-center gap-2">
                         <div className="relative flex-1">
-                            <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                            <Calendar className="absolute left-3 top-2.5 text-zinc-500" size={18} />
                             <input 
                             type="date" 
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold"
+                            className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm font-bold text-white"
                             value={filterStartDate}
                             onChange={(e) => setFilterStartDate(e.target.value)}
                             />
                         </div>
-                        <span className="text-gray-400 font-bold">au</span>
+                        <span className="text-zinc-600 font-bold">au</span>
                         <div className="relative flex-1">
-                            <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                            <Calendar className="absolute left-3 top-2.5 text-zinc-500" size={18} />
                             <input 
                             type="date" 
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold"
+                            className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm font-bold text-white"
                             value={filterEndDate}
                             onChange={(e) => setFilterEndDate(e.target.value)}
                             />
@@ -260,31 +261,31 @@ const Cash = () => {
                 </div>
                 <button 
                 onClick={() => { setFilterStartDate(''); setFilterEndDate(''); }}
-                className="px-4 py-2 text-indigo-600 hover:bg-indigo-50 font-black text-xs uppercase rounded-lg transition-colors"
+                className="px-4 py-2 text-gold hover:bg-gold/10 font-black text-xs uppercase rounded-lg transition-colors border border-gold/20"
                 >
                 Réinitialiser
                 </button>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="font-black text-gray-800 uppercase tracking-tight flex items-center gap-2">
-                        <Receipt className="text-indigo-600" size={20} />
+            <div className="bg-zinc-900 rounded-2xl shadow-xl border border-gold/10 overflow-hidden">
+                <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-800/30">
+                    <h3 className="font-black text-gold uppercase tracking-widest flex items-center gap-2 font-luxury text-sm">
+                        <Receipt className="text-gold" size={20} />
                         Historique des Clôtures de Caisse
                     </h3>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50 uppercase text-[10px] font-black text-gray-400">
+                        <thead className="bg-zinc-800/50 uppercase text-[10px] font-black text-zinc-500">
                             <tr>
-                                <th className="px-6 py-4">Date</th>
-                                <th className="px-6 py-4">Fond de Caisse</th>
-                                <th className="px-6 py-4 text-green-600">Recettes (+)</th>
-                                <th className="px-6 py-4 text-red-600">Dépenses (-)</th>
-                                <th className="px-6 py-4 font-black text-indigo-600">Solde Final</th>
+                                <th className="px-6 py-4 tracking-wider">Date</th>
+                                <th className="px-6 py-4 tracking-wider">Fond de Caisse</th>
+                                <th className="px-6 py-4 text-green-500/80 tracking-wider">Recettes (+)</th>
+                                <th className="px-6 py-4 text-red-500/80 tracking-wider">Dépenses (-)</th>
+                                <th className="px-6 py-4 font-black text-gold tracking-wider">Solde Final</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-zinc-800 text-zinc-300">
                             {history.filter(day => {
                                 let matches = true;
                                 const dayDate = new Date(day.date);
@@ -302,7 +303,7 @@ const Cash = () => {
                                 return matches;
                             }).length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-400 font-bold italic">Aucun historique disponible pour cette période</td>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-zinc-600 font-bold italic text-sm tracking-tight">Aucun historique disponible pour cette période</td>
                                 </tr>
                             ) : (
                                 history.filter(day => {
@@ -321,12 +322,12 @@ const Cash = () => {
                                     }
                                     return matches;
                                 }).map((day, idx) => (
-                                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 font-bold text-gray-700">{format(new Date(day.date), 'dd/MM/yyyy')}</td>
-                                        <td className="px-6 py-4 font-medium text-gray-600">{day.initialCash} DA</td>
-                                        <td className="px-6 py-4 font-black text-green-600">+{day.totalRentals} DA</td>
-                                        <td className="px-6 py-4 font-black text-red-600">-{day.totalExpenses} DA</td>
-                                        <td className="px-6 py-4 font-black text-indigo-600 text-lg">{day.finalBalance} DA</td>
+                                    <tr key={idx} className="hover:bg-zinc-800/50 transition-colors">
+                                        <td className="px-6 py-4 font-bold text-zinc-200">{format(new Date(day.date), 'dd/MM/yyyy')}</td>
+                                        <td className="px-6 py-4 font-medium text-zinc-400">{day.initialCash} DA</td>
+                                        <td className="px-6 py-4 font-black text-green-400">+{day.totalRentals} DA</td>
+                                        <td className="px-6 py-4 font-black text-red-400">-{day.totalExpenses} DA</td>
+                                        <td className="px-6 py-4 font-black text-gold text-lg italic tracking-tighter">{day.finalBalance} DA</td>
                                     </tr>
                                 ))
                             )}
@@ -339,20 +340,20 @@ const Cash = () => {
 
       {/* Modals */}
       {isInitialCashModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="p-6 border-b flex justify-between items-center">
-                <h2 className="text-xl font-black text-gray-800">Monnaie Initiale</h2>
-                <button onClick={() => setIsInitialCashModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={20}/></button>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-gold/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                <h2 className="text-xl font-black text-gold uppercase tracking-widest font-luxury">Monnaie Initiale</h2>
+                <button onClick={() => setIsInitialCashModalOpen(false)} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
             </div>
             <form onSubmit={handleSetInitialCash} className="p-6 space-y-6">
                 <div>
-                    <label className="block text-xs font-black uppercase text-gray-500 mb-2">Montant de départ en caisse</label>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-2 tracking-widest">Montant de départ en caisse</label>
                     <div className="relative">
-                        <DollarSign className="absolute left-3 top-3.5 text-indigo-600" size={24} />
+                        <DollarSign className="absolute left-4 top-4 text-gold" size={24} />
                         <input 
                             type="number" 
-                            className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-indigo-500 font-black text-2xl text-gray-800"
+                            className="w-full pl-12 pr-4 py-4 bg-zinc-800 border-2 border-zinc-700 rounded-xl outline-none focus:border-gold font-black text-3xl text-white shadow-inner"
                             value={initialAmount}
                             onChange={(e) => setInitialAmount(e.target.value)}
                             placeholder="0.00"
@@ -361,7 +362,7 @@ const Cash = () => {
                         />
                     </div>
                 </div>
-                <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black hover:bg-indigo-700 shadow-xl transition-all transform active:scale-95">
+                <button type="submit" className="w-full py-4 bg-gold text-rich-black rounded-xl font-black uppercase tracking-widest hover:bg-light-gold shadow-xl shadow-gold/10 transition-all transform active:scale-95">
                     ENREGISTRER LE DÉPART
                 </button>
             </form>
@@ -370,18 +371,18 @@ const Cash = () => {
       )}
 
       {isExpenseModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="p-6 border-b flex justify-between items-center">
-                <h2 className="text-xl font-black text-gray-800">Sortie de Caisse</h2>
-                <button onClick={() => setIsExpenseModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={20}/></button>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-gold/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                <h2 className="text-xl font-black text-red-400 uppercase tracking-widest font-luxury">Sortie de Caisse</h2>
+                <button onClick={() => setIsExpenseModalOpen(false)} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
             </div>
             <form onSubmit={handleCreateExpense} className="p-6 space-y-4">
                 <div>
-                    <label className="block text-xs font-black uppercase text-gray-500 mb-1">Montant</label>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-1 tracking-widest">Montant</label>
                     <input 
                         type="number" 
-                        className="w-full p-3 border-2 border-gray-100 rounded-xl outline-none focus:border-red-500 font-black text-xl text-red-600"
+                        className="w-full p-4 bg-zinc-800 border-2 border-zinc-700 rounded-xl outline-none focus:border-red-500 font-black text-2xl text-red-400 shadow-inner"
                         value={newExpense.amount}
                         onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
                         placeholder="0.00"
@@ -389,26 +390,26 @@ const Cash = () => {
                     />
                 </div>
                 <div>
-                    <label className="block text-xs font-black uppercase text-gray-500 mb-1">Référence (N° Bon)</label>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-1 tracking-widest">Référence (N° Bon)</label>
                     <input 
                         type="text" 
-                        className="w-full p-3 border-2 border-gray-100 rounded-xl outline-none focus:border-indigo-500 font-bold"
+                        className="w-full p-3 bg-zinc-800 border-2 border-zinc-700 rounded-xl outline-none focus:border-gold text-white font-bold"
                         value={newExpense.slipNumber}
                         onChange={(e) => setNewExpense({...newExpense, slipNumber: e.target.value})}
                         placeholder="Ex: BON-001"
                     />
                 </div>
                 <div>
-                    <label className="block text-xs font-black uppercase text-gray-500 mb-1">Justification / Description</label>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-1 tracking-widest">Justification / Description</label>
                     <textarea 
-                        className="w-full p-3 border-2 border-gray-100 rounded-xl outline-none focus:border-indigo-500 font-medium min-h-[100px]"
+                        className="w-full p-3 bg-zinc-800 border-2 border-zinc-700 rounded-xl outline-none focus:border-gold text-white font-medium min-h-[100px]"
                         value={newExpense.description}
                         onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
                         placeholder="Ex: Achat fournitures bureau..."
                         required
                     />
                 </div>
-                <button type="submit" className="w-full py-4 bg-red-600 text-white rounded-xl font-black hover:bg-red-700 shadow-xl transition-all transform active:scale-95 mt-2">
+                <button type="submit" className="w-full py-4 bg-red-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-red-700 shadow-xl transition-all transform active:scale-95 mt-2">
                     CONFIRMER LA SORTIE
                 </button>
             </form>

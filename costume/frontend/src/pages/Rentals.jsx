@@ -240,25 +240,25 @@ const Rentals = () => {
   return (
     <div>
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">Gestion des Locations</h1>
+        <h1 className="text-2xl md:text-3xl font-bold font-luxury tracking-widest text-gold uppercase border-b-2 border-gold/30 pb-2">Gestion des Locations</h1>
         <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center w-full lg:w-auto">
-            <div className="flex bg-white rounded-xl shadow-sm border border-gray-200 p-1 w-full sm:w-auto">
+            <div className="flex bg-zinc-900 rounded-xl shadow-lg border border-zinc-800 p-1 w-full sm:w-auto">
                 <button 
                     onClick={() => handleTabChange('ongoing')}
-                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'ongoing' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
+                    className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'ongoing' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-800'}`}
                 >
                     En Cours
                 </button>
                 <button 
                     onClick={() => handleTabChange('history')}
-                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-50'}`}
+                    className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-800'}`}
                 >
                     Historique
                 </button>
             </div>
             <button 
                 onClick={() => setIsModalOpen(true)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-indigo-700 shadow-lg w-full sm:w-auto text-sm"
+                className="bg-gold text-rich-black px-6 py-2 rounded-lg flex items-center justify-center hover:bg-light-gold shadow-lg shadow-gold/10 w-full sm:w-auto text-sm font-bold transition-all active:scale-95"
             >
                 <Plus size={20} className="mr-2" /> Nouvelle Location
             </button>
@@ -266,25 +266,25 @@ const Rentals = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 items-stretch md:items-end">
+      <div className="bg-zinc-900 p-6 rounded-lg shadow-xl border border-gold/10 mb-6 flex flex-col md:flex-row gap-6 items-stretch md:items-end">
         <div className="flex-1">
-          <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Filtrer par Période</label>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <label className="block text-[10px] font-black uppercase text-gold/60 mb-2 tracking-widest">Filtrer par Période</label>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="relative flex-1">
-                <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                <Calendar className="absolute left-3 top-2.5 text-zinc-500" size={18} />
                 <input 
                 type="date" 
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm text-white"
                 value={filterStartDate}
                 onChange={(e) => setFilterStartDate(e.target.value)}
                 />
             </div>
-            <span className="text-gray-400 font-bold text-center">au</span>
+            <span className="text-zinc-600 font-bold text-center">au</span>
             <div className="relative flex-1">
-                <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                <Calendar className="absolute left-3 top-2.5 text-zinc-500" size={18} />
                 <input 
                 type="date" 
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm text-white"
                 value={filterEndDate}
                 onChange={(e) => setFilterEndDate(e.target.value)}
                 />
@@ -292,13 +292,13 @@ const Rentals = () => {
           </div>
         </div>
         <div className="flex-1">
-          <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Filtrer par Client</label>
+          <label className="block text-[10px] font-black uppercase text-gold/60 mb-2 tracking-widest">Filtrer par Client</label>
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-2.5 text-zinc-500" size={18} />
             <input 
               type="text" 
               placeholder="Nom ou Prénom..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+              className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm text-white"
               value={filterCustomer}
               onChange={(e) => setFilterCustomer(e.target.value)}
             />
@@ -306,39 +306,39 @@ const Rentals = () => {
         </div>
         <button 
           onClick={() => { setFilterStatus('ONGOING'); setFilterStartDate(''); setFilterEndDate(''); setFilterCustomer(''); setActiveTab('ongoing'); }}
-          className="px-4 py-2 text-indigo-600 hover:bg-indigo-50 font-bold rounded-lg transition-colors text-sm"
+          className="px-6 py-2 text-gold hover:bg-gold/10 font-bold rounded-lg transition-colors text-sm border border-gold/20"
         >
           Réinitialiser
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-zinc-900 rounded-lg shadow-xl border border-gold/10 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[900px]">
-            <thead className="bg-gray-50 uppercase text-[10px] sm:text-xs font-semibold text-gray-600">
+            <thead className="bg-zinc-800 uppercase text-[10px] sm:text-xs font-semibold text-zinc-400">
               <tr>
-                <th className="px-6 py-3 border-b whitespace-nowrap">Client</th>
-                <th className="px-6 py-3 border-b whitespace-nowrap">Articles</th>
-                <th className="px-6 py-3 border-b text-center whitespace-nowrap">Dates</th>
-                <th className="px-6 py-3 border-b whitespace-nowrap">Statut</th>
-                <th className="px-6 py-3 border-b whitespace-nowrap">Actions</th>
+                <th className="px-6 py-4 border-b border-zinc-700 whitespace-nowrap tracking-wider">Client</th>
+                <th className="px-6 py-4 border-b border-zinc-700 whitespace-nowrap tracking-wider">Articles</th>
+                <th className="px-6 py-4 border-b border-zinc-700 text-center whitespace-nowrap tracking-wider">Dates</th>
+                <th className="px-6 py-4 border-b border-zinc-700 whitespace-nowrap tracking-wider">Statut</th>
+                <th className="px-6 py-4 border-b border-zinc-700 whitespace-nowrap tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-zinc-800 text-zinc-300">
             {filteredRentals.map(rental => (
-              <tr key={rental.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={rental.id} className="hover:bg-zinc-800/50 transition-colors">
                 <td className="px-6 py-4">
-                  <div className="font-bold text-gray-800">{rental.customer.firstName} {rental.customer.lastName}</div>
-                  <div className="text-xs text-gray-500 font-mono">{rental.customer.phone}</div>
+                  <div className="font-bold text-white text-base">{rental.customer.firstName} {rental.customer.lastName}</div>
+                  <div className="text-xs text-gold font-mono tracking-tight">{rental.customer.phone}</div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1.5">
                     {rental.items.map((ri, idx) => (
-                      <span key={idx} className="bg-indigo-50 text-indigo-700 text-[10px] px-2 py-1 rounded-md border border-indigo-100 font-medium">
+                      <span key={idx} className="bg-zinc-800 text-zinc-200 text-[10px] px-2.5 py-1 rounded border border-gold/20 font-medium">
                         {ri.item.name} 
-                        {ri.remarks && <span className="text-gray-400 ml-1">({ri.remarks})</span>}
+                        {ri.remarks && <span className="text-zinc-500 ml-1 italic">({ri.remarks})</span>}
                         {ri.tailorModification && (
-                          <span className="text-indigo-900 ml-1 bg-indigo-200/50 px-1 rounded flex items-center gap-0.5 inline-flex">
+                          <span className="text-gold ml-1 bg-gold/10 px-1.5 py-0.5 rounded flex items-center gap-1 inline-flex border border-gold/20">
                             <Scissors size={8} /> {ri.tailorModification}
                           </span>
                         )}
@@ -347,23 +347,27 @@ const Rentals = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                   <div className="flex flex-col items-center text-xs space-y-1">
-                     <span className="flex items-center text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded"><Calendar size={10} className="mr-1" /> {format(new Date(rental.startDate), 'dd/MM/yy')}</span>
-                     <span className="flex items-center text-orange-600 font-semibold bg-orange-50 px-2 py-0.5 rounded"><Calendar size={10} className="mr-1" /> {format(new Date(rental.expectedReturn), 'dd/MM/yy')}</span>
+                   <div className="flex flex-col items-center text-[10px] space-y-1.5">
+                     <span className="flex items-center text-blue-400 font-bold bg-blue-900/20 px-2.5 py-1 rounded border border-blue-900/30 w-full justify-center">
+                       <Calendar size={10} className="mr-1.5" /> {format(new Date(rental.startDate), 'dd/MM/yy')}
+                     </span>
+                     <span className="flex items-center text-orange-400 font-bold bg-orange-900/20 px-2.5 py-1 rounded border border-orange-900/30 w-full justify-center">
+                       <Calendar size={10} className="mr-1.5" /> {format(new Date(rental.expectedReturn), 'dd/MM/yy')}
+                     </span>
                    </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                    rental.status === 'ONGOING' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                  <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                    rental.status === 'ONGOING' ? 'bg-blue-900/20 text-blue-400 border-blue-900/30' : 'bg-green-900/20 text-green-400 border-green-900/30'
                   }`}>
                     {rental.status === 'ONGOING' ? 'En cours' : 'Retourné'}
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-4 flex-wrap">
                     <button 
                       onClick={() => setReceiptModal(rental)}
-                      className="text-purple-600 hover:text-purple-900 flex items-center font-bold text-sm"
+                      className="text-zinc-300 hover:text-gold flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
                       title="Afficher le bon de location"
                     >
                       <FileText size={16} className="mr-1"/> Bon
@@ -373,7 +377,7 @@ const Rentals = () => {
                         {!rental.isActivated && (
                           <button 
                             onClick={() => handleActivate(rental.id)}
-                            className="text-orange-600 hover:text-orange-900 flex items-center font-bold text-sm"
+                            className="text-orange-400 hover:text-orange-300 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
                             title="Activer la location"
                           >
                             <Play size={16} className="mr-1"/> Activer
@@ -381,7 +385,7 @@ const Rentals = () => {
                         )}
                         <button 
                           onClick={() => setPaymentModal(rental)}
-                          className="text-blue-600 hover:text-blue-900 flex items-center font-bold text-sm"
+                          className="text-blue-400 hover:text-blue-300 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
                           title="Ajouter paiement"
                         >
                           <DollarSign size={16} className="mr-1"/> Paiement
@@ -404,45 +408,45 @@ const Rentals = () => {
     </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-                <h2 className="text-2xl font-black text-gray-800">Nouvelle Location</h2>
-                <div className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gold/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 z-10">
+                <h2 className="text-2xl font-black text-gold font-luxury tracking-widest uppercase">Nouvelle Location</h2>
+                <div className="text-xs font-bold text-gold bg-gold/10 px-3 py-1 rounded-full border border-gold/20">
                     RENT-{rentId}
                 </div>
             </div>
             
             <form onSubmit={handleCreate} className="p-6 space-y-6">
-              <div className="bg-indigo-50/50 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-2 gap-4 border border-indigo-100">
+              <div className="bg-zinc-800 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-2 gap-4 border border-zinc-700">
                 <div>
-                  <label className="block text-xs font-black uppercase text-indigo-600 mb-1">Début de location</label>
-                  <input type="date" className="w-full p-2.5 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={newRental.startDate} onChange={e => setNewRental({...newRental, startDate: e.target.value})} required />
+                  <label className="block text-xs font-black uppercase text-gold/60 mb-1 tracking-wider">Début de location</label>
+                  <input type="date" className="w-full p-2.5 bg-zinc-900 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-white" value={newRental.startDate} onChange={e => setNewRental({...newRental, startDate: e.target.value})} required />
                 </div>
                 <div>
-                  <label className="block text-xs font-black uppercase text-indigo-600 mb-1">Fin de location</label>
-                  <input type="date" className="w-full p-2.5 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={newRental.expectedReturn} onChange={e => setNewRental({...newRental, expectedReturn: e.target.value})} required />
+                  <label className="block text-xs font-black uppercase text-gold/60 mb-1 tracking-wider">Fin de location</label>
+                  <input type="date" className="w-full p-2.5 bg-zinc-900 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-white" value={newRental.expectedReturn} onChange={e => setNewRental({...newRental, expectedReturn: e.target.value})} required />
                 </div>
               </div>
 
               <div className="relative">
                 <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-black uppercase text-gray-500">Scanner ou Chercher Articles</label>
-                    <span className="text-[10px] text-indigo-500 font-bold">Total Sélectionné: {newRental.items.length}</span>
+                    <label className="block text-xs font-black uppercase text-zinc-500 tracking-wider">Scanner ou Chercher Articles</label>
+                    <span className="text-[10px] text-gold font-bold uppercase tracking-tighter">Total: {newRental.items.length}</span>
                 </div>
                 <div className="flex gap-2">
                     <div className="relative flex-1">
-                        <Smartphone className="absolute left-3 top-3 text-indigo-500" size={18} />
+                        <Smartphone className="absolute left-3 top-3 text-gold" size={18} />
                         <input 
                             type="text" 
                             placeholder="Scannez l'article ici..." 
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-gray-50 font-bold"
+                            className="w-full pl-10 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-white font-bold"
                             value={scanTerm}
                             onChange={(e) => handleScan(e.target.value)}
                             autoFocus
                         />
                         {scanTerm.length >= 2 && (
-                          <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
+                          <div className="absolute top-full left-0 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-50 overflow-hidden">
                             {allItems.filter(item => 
                                 item.name.toLowerCase().includes(scanTerm.toLowerCase()) || 
                                 item.reference.toLowerCase().includes(scanTerm.toLowerCase())
@@ -453,15 +457,15 @@ const Rentals = () => {
                                         key={item.id}
                                         type="button"
                                         onClick={() => addItem(item)}
-                                        className={`w-full p-3 text-left flex justify-between items-center border-b last:border-0 hover:bg-gray-50 transition-colors ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`w-full p-3 text-left flex justify-between items-center border-b border-zinc-700 last:border-0 hover:bg-zinc-700 transition-colors ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <div>
-                                            <div className="font-bold text-gray-800">{item.name}</div>
-                                            <div className="text-xs text-gray-500 uppercase font-mono">{item.reference} - {item.type}</div>
+                                            <div className="font-bold text-white">{item.name}</div>
+                                            <div className="text-xs text-zinc-500 uppercase font-mono">{item.reference} - {item.type}</div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-sm font-black text-indigo-600">{item.rentalPrice} DA</div>
-                                            {!isAvailable && <span className="text-[8px] font-black text-red-500 uppercase bg-red-50 px-1 rounded">Indisponible</span>}
+                                            <div className="text-sm font-black text-gold">{item.rentalPrice} DA</div>
+                                            {!isAvailable && <span className="text-[8px] font-black text-red-400 uppercase bg-red-900/30 px-1 rounded border border-red-900/50">Occupé</span>}
                                         </div>
                                     </button>
                                 );
@@ -474,36 +478,36 @@ const Rentals = () => {
 
               {newRental.items.length > 0 && (
                 <div className="space-y-3">
-                  <label className="block text-xs font-black uppercase text-gray-500">Articles Sélectionnés</label>
+                  <label className="block text-xs font-black uppercase text-zinc-500 tracking-wider">Articles Sélectionnés</label>
                   {newRental.items.map(item => (
-                    <div key={item.id} className="flex flex-col p-3 bg-gray-50 rounded-lg border border-gray-200 group">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-gray-800">{item.name}</span>
+                    <div key={item.id} className="flex flex-col p-4 bg-zinc-800/50 rounded-xl border border-zinc-700 group hover:border-gold/30 transition-colors">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="font-bold text-white text-base">{item.name}</span>
                         <div className="flex items-center gap-4">
-                          <span className="text-indigo-600 font-bold">{item.price} DA</span>
-                          <button type="button" onClick={() => removeItem(item.id)} className="text-red-400 hover:text-red-600 transition-colors">
+                          <span className="text-gold font-black">{item.price} DA</span>
+                          <button type="button" onClick={() => removeItem(item.id)} className="text-zinc-500 hover:text-red-400 transition-colors">
                             <Trash2 size={16} />
                           </button>
                         </div>
                       </div>
                       <div className="space-y-2">
                         <div className="relative">
-                          <Info size={14} className="absolute left-2 top-2.5 text-gray-400" />
+                          <Info size={14} className="absolute left-2.5 top-2.5 text-zinc-500" />
                           <input 
                             type="text"
                             placeholder="Remarques..."
-                            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-indigo-400 outline-none"
+                            className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-900 border border-zinc-700 rounded text-white focus:ring-1 focus:ring-gold outline-none"
                             value={item.remarks}
                             onChange={(e) => updateItemRemarks(item.id, e.target.value)}
                           />
                         </div>
                         {item.type === 'Pantalon' && (
                           <div className="relative">
-                            <Scissors size={14} className="absolute left-2 top-2.5 text-indigo-400" />
+                            <Scissors size={14} className="absolute left-2.5 top-2.5 text-gold" />
                             <input 
                               type="text"
                               placeholder="Modification tailleur (ex: Raccourcir 2cm)"
-                              className="w-full pl-8 pr-3 py-1.5 text-sm border border-indigo-100 bg-indigo-50/30 rounded focus:ring-1 focus:ring-indigo-400 outline-none font-medium text-indigo-700"
+                              className="w-full pl-9 pr-3 py-1.5 text-sm bg-gold/5 border border-gold/20 rounded text-gold focus:ring-1 focus:ring-gold outline-none font-medium"
                               value={item.tailorModification}
                               onChange={(e) => updateItemTailor(item.id, e.target.value)}
                             />
@@ -515,15 +519,15 @@ const Rentals = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                    <h3 className="text-sm font-black uppercase text-gray-800 border-b pb-1">Client</h3>
+                    <h3 className="text-sm font-black uppercase text-gold border-b border-zinc-800 pb-2 tracking-widest font-luxury">Client</h3>
                     <div className="grid grid-cols-2 gap-3">
-                        <input type="text" placeholder="Prénom" className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={newRental.firstName} onChange={e => setNewRental({...newRental, firstName: e.target.value})} required />
-                        <input type="text" placeholder="Nom" className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={newRental.lastName} onChange={e => setNewRental({...newRental, lastName: e.target.value})} required />
+                        <input type="text" placeholder="Prénom" className="w-full p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-white" value={newRental.firstName} onChange={e => setNewRental({...newRental, firstName: e.target.value})} required />
+                        <input type="text" placeholder="Nom" className="w-full p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-white" value={newRental.lastName} onChange={e => setNewRental({...newRental, lastName: e.target.value})} required />
                     </div>
-                    <input type="text" placeholder="Téléphone" className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={newRental.phone} onChange={e => setNewRental({...newRental, phone: e.target.value})} required />
-                    <select className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={newRental.guaranteeDocument} onChange={e => setNewRental({...newRental, guaranteeDocument: e.target.value})} required>
+                    <input type="text" placeholder="Téléphone" className="w-full p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-white" value={newRental.phone} onChange={e => setNewRental({...newRental, phone: e.target.value})} required />
+                    <select className="w-full p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-white" value={newRental.guaranteeDocument} onChange={e => setNewRental({...newRental, guaranteeDocument: e.target.value})} required>
                         <option value="">Document de garantie...</option>
                         <option value="PASSPORT">Passeport</option>
                         <option value="ID_CARD">Carte d'identité</option>
@@ -531,46 +535,49 @@ const Rentals = () => {
                     </select>
                     <textarea 
                       placeholder="Remarques générales sur le bon..."
-                      className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"
+                      className="w-full p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-white min-h-[100px]"
                       value={newRental.remarks}
                       onChange={e => setNewRental({...newRental, remarks: e.target.value})}
                     />
                 </div>
 
                 <div className="space-y-4">
-                    <h3 className="text-sm font-black uppercase text-gray-800 border-b pb-1">Paiement</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
+                    <h3 className="text-sm font-black uppercase text-gold border-b border-zinc-800 pb-2 tracking-widest font-luxury">Paiement</h3>
+                    <div className="bg-zinc-800 p-6 rounded-2xl border border-zinc-700 shadow-inner space-y-4">
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-500">Sous-total</span>
-                            <span className="font-bold">{newRental.items.reduce((sum, i) => sum + i.price, 0)} DA</span>
+                            <span className="text-zinc-500 uppercase font-bold tracking-tighter">Sous-total</span>
+                            <span className="font-bold text-white">{newRental.items.reduce((sum, i) => sum + i.price, 0)} DA</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-500">Remise</span>
-                            <input 
-                              type="number" 
-                              className="w-24 p-1 border rounded text-right font-bold text-red-600" 
-                              value={newRental.discount} 
-                              onChange={e => setNewRental({...newRental, discount: parseFloat(e.target.value) || 0})}
-                            />
+                            <span className="text-zinc-500 uppercase font-bold tracking-tighter">Remise</span>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                type="number" 
+                                className="w-24 p-1.5 bg-zinc-900 border border-zinc-700 rounded text-right font-black text-red-400 focus:ring-1 focus:ring-red-500 outline-none" 
+                                value={newRental.discount} 
+                                onChange={e => setNewRental({...newRental, discount: parseFloat(e.target.value) || 0})}
+                                />
+                                <span className="text-zinc-500 text-xs font-bold">DA</span>
+                            </div>
                         </div>
-                        <div className="flex justify-between items-center pt-2 border-t border-gray-200 text-lg">
-                            <span className="font-black text-gray-800">TOTAL</span>
-                            <span className="font-black text-indigo-600">{newRental.totalAmount} DA</span>
+                        <div className="flex justify-between items-center pt-4 border-t border-zinc-700 text-xl">
+                            <span className="font-black text-white font-luxury uppercase tracking-wider">TOTAL</span>
+                            <span className="font-black text-gold underline underline-offset-4 decoration-gold/30">{newRental.totalAmount} DA</span>
                         </div>
                     </div>
                     <div>
-                        <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Versement Initial (Acompte)</label>
+                        <label className="block text-[10px] font-black uppercase text-zinc-500 mb-2 tracking-widest">Versement Initial (Acompte)</label>
                         <div className="relative">
-                            <DollarSign className="absolute left-3 top-3 text-green-600" size={18} />
-                            <input type="number" className="w-full pl-10 pr-4 py-2.5 border-2 border-green-100 rounded-lg outline-none focus:border-green-500 bg-green-50/30 font-black text-green-700 text-xl" value={newRental.paidAmount} onChange={e => setNewRental({...newRental, paidAmount: parseFloat(e.target.value) || 0})} />
+                            <DollarSign className="absolute left-4 top-3.5 text-green-500" size={20} />
+                            <input type="number" className="w-full pl-12 pr-4 py-3.5 bg-green-900/10 border-2 border-green-900/30 rounded-xl outline-none focus:border-green-500 text-green-400 font-black text-2xl shadow-inner" value={newRental.paidAmount} onChange={e => setNewRental({...newRental, paidAmount: parseFloat(e.target.value) || 0})} />
                         </div>
                     </div>
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4 sticky bottom-0 bg-white border-t mt-6">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-6 py-3 border border-gray-300 text-gray-600 rounded-xl font-black hover:bg-gray-50 transition-colors">ANNULER</button>
-                <button type="submit" className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-black hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all transform active:scale-95">CRÉER LE BON</button>
+              <div className="flex gap-4 pt-6 sticky bottom-0 bg-zinc-900 border-t border-zinc-800 mt-8">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-6 py-4 border border-zinc-700 text-zinc-400 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors">ANNULER</button>
+                <button type="submit" className="flex-1 px-6 py-4 bg-gold text-rich-black rounded-xl font-black uppercase tracking-widest hover:bg-light-gold shadow-xl shadow-gold/10 transition-all transform active:scale-95">CRÉER LE BON</button>
               </div>
             </form>
           </div>
@@ -578,39 +585,39 @@ const Rentals = () => {
       )}
 
       {paymentModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="p-6 border-b flex justify-between items-center">
-                <h2 className="text-xl font-black text-gray-800">Nouveau Versement</h2>
-                <button onClick={() => setPaymentModal(null)} className="p-2 hover:bg-gray-100 rounded-full"><X size={20}/></button>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-gold/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                <h2 className="text-xl font-black text-gold uppercase tracking-widest font-luxury">Nouveau Versement</h2>
+                <button onClick={() => setPaymentModal(null)} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
             </div>
             <form onSubmit={handleAddPayment} className="p-6 space-y-6">
-                <div className="bg-indigo-50 p-4 rounded-xl space-y-2">
+                <div className="bg-zinc-800 p-5 rounded-xl border border-zinc-700 space-y-3">
                     <div className="flex justify-between text-sm">
-                        <span className="text-indigo-600 font-bold">Client:</span>
-                        <span className="font-bold">{paymentModal.customer.firstName} {paymentModal.customer.lastName}</span>
+                        <span className="text-zinc-500 font-bold uppercase tracking-tighter">Client:</span>
+                        <span className="font-bold text-white">{paymentModal.customer.firstName} {paymentModal.customer.lastName}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                        <span className="text-indigo-600 font-bold">Total du bon:</span>
-                        <span className="font-bold">{paymentModal.totalAmount} DA</span>
+                        <span className="text-zinc-500 font-bold uppercase tracking-tighter">Total du bon:</span>
+                        <span className="font-bold text-white">{paymentModal.totalAmount} DA</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                        <span className="text-indigo-600 font-bold">Déjà payé:</span>
-                        <span className="font-bold text-green-600">{paymentModal.paidAmount} DA</span>
+                        <span className="text-zinc-500 font-bold uppercase tracking-tighter">Déjà payé:</span>
+                        <span className="font-bold text-green-400">{paymentModal.paidAmount} DA</span>
                     </div>
-                    <div className="flex justify-between text-lg pt-2 border-t border-indigo-200">
-                        <span className="text-indigo-900 font-black">Reste à payer:</span>
-                        <span className="font-black text-red-600">{paymentModal.totalAmount - paymentModal.paidAmount} DA</span>
+                    <div className="flex justify-between text-lg pt-3 border-t border-zinc-700">
+                        <span className="text-zinc-400 font-black uppercase tracking-wider font-luxury text-sm">Reste à payer:</span>
+                        <span className="font-black text-red-400">{paymentModal.totalAmount - paymentModal.paidAmount} DA</span>
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-xs font-black uppercase text-gray-500 mb-2">Montant du versement</label>
+                    <label className="block text-[10px] font-black uppercase text-zinc-500 mb-2 tracking-widest">Montant du versement</label>
                     <div className="relative">
-                        <DollarSign className="absolute left-3 top-3.5 text-green-600" size={24} />
+                        <DollarSign className="absolute left-4 top-4 text-green-500" size={24} />
                         <input 
                             type="number" 
-                            className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-indigo-500 font-black text-2xl text-gray-800"
+                            className="w-full pl-12 pr-4 py-4 bg-zinc-800 border-2 border-zinc-700 rounded-xl outline-none focus:border-gold font-black text-3xl text-white shadow-inner"
                             value={paymentAmount}
                             onChange={(e) => setPaymentAmount(e.target.value)}
                             placeholder="0.00"
@@ -619,7 +626,7 @@ const Rentals = () => {
                     </div>
                 </div>
 
-                <button type="submit" className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black hover:bg-indigo-700 shadow-xl transition-all transform active:scale-95">
+                <button type="submit" className="w-full py-4 bg-gold text-rich-black rounded-xl font-black uppercase tracking-widest hover:bg-light-gold shadow-xl shadow-gold/10 transition-all transform active:scale-95">
                     CONFIRMER LE PAIEMENT
                 </button>
             </form>

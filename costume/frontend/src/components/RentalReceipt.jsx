@@ -35,7 +35,8 @@ const RentalReceipt = ({ rental, onClose }) => {
             </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300 shadow-sm"
+              title="Quitter"
             >
               <X size={24} />
             </button>
@@ -176,6 +177,15 @@ const RentalReceipt = ({ rental, onClose }) => {
           <div className="text-center border-t-2 border-dashed border-black pt-4">
             <p className="text-[10px] uppercase font-bold tracking-widest">Merci de votre confiance - CHIC MAN Luxury Rental</p>
             <p className="text-[9px] text-gray-500 mt-1">Les articles doivent être retournés dans leur état d'origine. Tout dommage sera facturé.</p>
+          </div>
+
+          <div className="mt-10 no-print flex justify-center">
+            <button 
+                onClick={onClose}
+                className="px-8 py-3 bg-zinc-100 text-zinc-600 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-200 transition-all border border-zinc-200"
+            >
+                QUITTER SANS IMPRIMER
+            </button>
           </div>
         </div>
       </div>
