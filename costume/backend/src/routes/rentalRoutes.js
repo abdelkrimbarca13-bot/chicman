@@ -9,4 +9,5 @@ router.post('/', auth, rentalController.createRental);
 router.post('/:id/payment', auth, rentalController.addPayment);  
 router.post('/:id/activate', auth, rentalController.activateRental);  
 router.post('/:id/return', auth, rentalController.returnRental);  
+router.delete('/:id', auth, rentalController.deleteRental);
 module.exports = router;  

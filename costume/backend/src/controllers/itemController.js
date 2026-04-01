@@ -1,4 +1,5 @@
 const prisma = require('../utils/prisma');
+const { logAction } = require('../utils/audit');
 
 exports.getAllItems = async (req, res) => {
   try {
@@ -9,29 +10,47 @@ exports.getAllItems = async (req, res) => {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      // Trouve les articles qui ont une location qui chevauche les dates demandées
-      const busyItems = await prisma.rentalItem.findMany({
+      // 1. Trouver tous les articles directement occupés par une location qui chevauche exactement ces heures
+      const overlappingRentalItems = await prisma.rentalItem.findMany({
         where: {
           rental: {
             status: { in: ['ONGOING', 'DELAYED'] },
-            OR: [
-              {
-                AND: [
-                  { startDate: { lte: end } },
-                  { expectedReturn: { gte: start } }
-                ]
-              }
+            AND: [
+              { startDate: { lt: end } },
+              { expectedReturn: { gt: start } }
             ]
           }
         },
-        select: { itemId: true }
+        include: { item: true }
       });
 
-      const busyItemIds = busyItems.map(bi => bi.itemId);
-      where = {
-        id: { notIn: busyItemIds },
-        status: 'AVAILABLE' // Doit aussi être physiquement disponible
-      };
+      const busyItemIds = new Set(overlappingRentalItems.map(ri => ri.itemId));
+      const busyEnsembleIds = new Set(overlappingRentalItems.map(ri => ri.item.ensembleId).filter(id => id));
+
+      // 2. Un article est indisponible si :
+      // - Il est déjà dans busyItemIds
+      // - OU il appartient à un ensemble dont un élément est dans busyEnsembleIds
+      // - OU il est physiquement en nettoyage/réparation (si la date de début est aujourd'hui)
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const isStartingToday = start <= today;
+
+      const allItems = await prisma.item.findMany();
+      const availableItems = allItems.filter(item => {
+        // Bloqué par location directe
+        if (busyItemIds.has(item.id)) return false;
+        
+        // Bloqué car son ensemble est occupé
+        if (item.ensembleId && busyEnsembleIds.has(item.ensembleId)) return false;
+        
+        // Bloqué physiquement si location immédiate
+        if (isStartingToday && ['CLEANING', 'REPAIRING', 'RENTED'].includes(item.status)) return false;
+
+        return true;
+      });
+
+      return res.json(availableItems);
     }
 
     const items = await prisma.item.findMany({ where });
@@ -44,6 +63,7 @@ exports.getAllItems = async (req, res) => {
 exports.createItem = async (req, res) => {
   try {
     const item = await prisma.item.create({ data: req.body });
+    await logAction(req.userData.userId, 'CREATE_ITEM', { itemId: item.id, reference: item.reference });
     res.status(201).json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -57,6 +77,7 @@ exports.updateItem = async (req, res) => {
       where: { id: parseInt(id) },
       data: req.body
     });
+    await logAction(req.userData.userId, 'UPDATE_ITEM', { itemId: id, reference: item.reference });
     res.json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -76,6 +97,7 @@ exports.updateItemStatus = async (req, res) => {
       where: { id: parseInt(id) },
       data: { status }
     });
+    await logAction(req.userData.userId, 'UPDATE_ITEM_STATUS', { itemId: id, reference: item.reference, status });
     res.json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -116,10 +138,36 @@ exports.getItemByReference = async (req, res) => {
   }
 };
 
+exports.bulkCreateItems = async (req, res) => {
+  try {
+    const items = req.body; // Liste d'articles
+    if (!Array.isArray(items)) return res.status(400).json({ error: 'Format invalide' });
+
+    const results = await prisma.$transaction(
+      items.map(item => 
+        prisma.item.upsert({
+          where: { reference: item.reference },
+          update: item,
+          create: item
+        })
+      )
+    );
+
+    await logAction(req.userData.userId, 'BULK_IMPORT_ITEMS', { count: results.length });
+    res.status(201).json({ message: `${results.length} articles importés ou mis à jour.` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
     const itemId = parseInt(id);
+
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Seul l\'administrateur peut supprimer un article.' });
+    }
 
     // Vérifier si l'article est actuellement loué
     const activeRental = await prisma.rentalItem.findFirst({
@@ -146,6 +194,8 @@ exports.deleteItem = async (req, res) => {
     await prisma.item.delete({
       where: { id: itemId }
     });
+
+    await logAction(req.userData.userId, 'DELETE_ITEM', { itemId });
 
     res.status(204).send();
   } catch (error) {

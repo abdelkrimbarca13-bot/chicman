@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
-import { Plus, Search, Edit2, Trash2, QrCode, History, X, Printer, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Plus, Search, Edit2, Trash2, QrCode, History, X, Printer, AlertCircle, CheckCircle2, Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import * as XLSX from 'xlsx';
 
 const Items = () => {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
@@ -11,7 +14,7 @@ const Items = () => {
   const [historyModal, setHistoryModal] = useState(null);
   const [qrModal, setQrModal] = useState(null);
   const [currentItem, setCurrentItem] = useState({
-    name: '', model: '', reference: '', type: 'pantalon', size: '', color: '', quantity: 1, rentalPrice: 0
+    name: '', model: '', reference: '', type: 'pantalon', size: '', color: '', quantity: 1, rentalPrice: 0, ensembleId: ''
   });
 
   const fetchItems = () => {
@@ -26,6 +29,25 @@ const Items = () => {
       alert('Erreur lors de la récupération des articles: ' + (err.response?.data?.error || err.message));
       setItems([]);
     });
+  };
+
+  const handleExcelExport = () => {
+    const exportData = items.map(item => ({
+      'Référence': item.reference,
+      'Nom': item.name,
+      'Modèle': item.model,
+      'Type': item.type,
+      'Taille': item.size,
+      'Couleur': item.color,
+      'Prix Location': item.rentalPrice,
+      'Statut': item.status,
+      'Ensemble ID': item.ensembleId
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Articles");
+    XLSX.writeFile(wb, `Inventaire_Articles_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   useEffect(() => {
@@ -45,7 +67,7 @@ const Items = () => {
         const res = await api.get(`/items/${id}`);
         setHistoryModal(res.data);
     } catch (err) {
-        alert('Erreur lors du chargement de l\'historique');
+        alert('Erreur lors du chargement de l\'historique : ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -54,7 +76,7 @@ const Items = () => {
       await api.put(`/items/${itemId}/status`, { status: newStatus });
       fetchItems();
     } catch (err) {
-      alert('Erreur lors de la mise à jour du statut');
+      alert('Erreur lors de la mise à jour du statut : ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -164,7 +186,7 @@ const Items = () => {
       setCurrentItem({ name: '', model: '', reference: '', type: 'pantalon', size: '', color: '', quantity: 1, rentalPrice: 0 });
       fetchItems();
     } catch (err) {
-      alert('Erreur lors de l\'enregistrement');
+      alert('Erreur lors de l\'enregistrement : ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -182,12 +204,20 @@ const Items = () => {
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold font-luxury tracking-wider text-gold border-b-2 border-gold/50 w-fit pb-2 uppercase">Gestion du Stock</h1>
-        <button 
-          onClick={() => { setCurrentItem({ name: '', model: '', reference: '', type: 'Veste', size: '', color: '', quantity: 1, rentalPrice: 0 }); setIsModalOpen(true); }}
-          className="w-full sm:w-auto bg-gold text-rich-black px-4 py-2 rounded-lg flex items-center justify-center hover:bg-light-gold shadow-lg shadow-gold/10 transition-all active:scale-95 text-sm md:text-base font-bold"
-        >
-          <Plus size={20} className="mr-2" /> Ajouter un article
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button 
+                onClick={handleExcelExport}
+                className="w-full sm:w-auto bg-zinc-100 dark:bg-zinc-800 text-gold px-4 py-2 rounded-lg flex items-center justify-center hover:bg-zinc-700 shadow-lg cursor-pointer transition-all border border-gold/20 font-bold text-sm"
+            >
+                <Download size={18} className="mr-2" /> Export Excel
+            </button>
+            <button 
+                onClick={() => { setCurrentItem({ name: '', model: '', reference: '', type: 'Veste', size: '', color: '', quantity: 1, rentalPrice: 0 }); setIsModalOpen(true); }}
+                className="w-full sm:w-auto bg-gold text-rich-black px-4 py-2 rounded-lg flex items-center justify-center hover:bg-light-gold shadow-lg shadow-gold/10 transition-all active:scale-95 text-sm font-bold"
+            >
+                <Plus size={20} className="mr-2" /> Ajouter un article
+            </button>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -196,14 +226,14 @@ const Items = () => {
           <input
             type="text"
             placeholder="Scannez ou recherchez..."
-            className="w-full pl-10 pr-4 py-2 border border-zinc-800 rounded-lg focus:ring-2 focus:ring-gold bg-zinc-900 text-white"
+            className="w-full pl-10 pr-4 py-2 border border-zinc-800 rounded-lg focus:ring-2 focus:ring-gold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white"
             value={searchTerm}
             autoFocus
             onChange={(e) => handleScanInput(e.target.value)}
           />
         </div>
         <select 
-          className="w-full md:w-auto px-4 py-2 border border-zinc-800 rounded-lg focus:ring-2 focus:ring-gold bg-zinc-900 font-bold text-zinc-300"
+          className="w-full md:w-auto px-4 py-2 border border-zinc-800 rounded-lg focus:ring-2 focus:ring-gold bg-white dark:bg-zinc-900 font-bold text-zinc-300"
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
         >
@@ -215,10 +245,10 @@ const Items = () => {
         </select>
       </div>
 
-      <div className="bg-zinc-900 rounded-lg shadow-xl overflow-hidden border border-gold/10">
+      <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl overflow-hidden border border-gold/10">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[800px]">
-            <thead className="bg-zinc-800 uppercase text-xs font-semibold text-zinc-400">
+            <thead className="bg-zinc-100 dark:bg-zinc-800 uppercase text-xs font-semibold text-zinc-400">
               <tr>
                 <th className="px-6 py-3 whitespace-nowrap">Code / Réf</th>
                 <th className="px-6 py-3 whitespace-nowrap">Article / Modèle</th>
@@ -231,10 +261,10 @@ const Items = () => {
             </thead>
             <tbody className="divide-y divide-zinc-800 text-zinc-300">
             {filteredItems.map(item => (
-              <tr key={item.id} className="hover:bg-zinc-800/50 transition-colors">
+              <tr key={item.id} className="hover:bg-zinc-100 dark:bg-zinc-800/50 transition-colors">
                 <td className="px-6 py-4 font-mono text-sm font-bold text-gold">{item.reference}</td>
                 <td className="px-6 py-4">
-                  <div className="font-medium text-white">{item.name}</div>
+                  <div className="font-medium text-zinc-900 dark:text-white">{item.name}</div>
                   <div className="text-xs text-zinc-500">{item.model}</div>
                 </td>
                 <td className="px-6 py-4 capitalize">{item.type}</td>
@@ -261,16 +291,18 @@ const Items = () => {
                   <button onClick={() => setQrModal(item)} className="text-zinc-400 hover:text-gold" title="Générer QR"><QrCode size={18}/></button>
                   <button onClick={() => showHistory(item.id)} className="text-blue-400 hover:text-blue-300" title="Historique"><History size={18}/></button>
                   <button onClick={() => { setCurrentItem(item); setIsModalOpen(true); }} className="text-gold hover:text-light-gold" title="Modifier"><Edit2 size={18}/></button>
-                  <button onClick={async () => { 
-                    if(confirm('Supprimer cet article ? Cela supprimera également son historique de location.')) { 
-                      try {
-                        await api.delete(`/items/${item.id}`); 
-                        fetchItems(); 
-                      } catch (err) {
-                        alert('Erreur lors de la suppression : ' + (err.response?.data?.error || err.message));
-                      }
-                    } 
-                  }} className="text-red-400 hover:text-red-300" title="Supprimer"><Trash2 size={18}/></button>
+                  {user?.role === 'ADMIN' && (
+                    <button onClick={async () => { 
+                      if(confirm('Supprimer cet article ? Cela supprimera également son historique de location.')) { 
+                        try {
+                          await api.delete(`/items/${item.id}`); 
+                          fetchItems(); 
+                        } catch (err) {
+                          alert('Erreur lors de la suppression : ' + (err.response?.data?.error || err.message));
+                        }
+                      } 
+                    }} className="text-red-400 hover:text-red-300" title="Supprimer"><Trash2 size={18}/></button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -281,16 +313,19 @@ const Items = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-zinc-900 rounded-xl p-8 w-full max-w-md border border-gold/20 shadow-2xl">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 w-full max-w-md border border-gold/20 shadow-2xl">
             <h2 className="text-2xl font-bold mb-6 text-gold font-luxury tracking-widest uppercase border-b border-gold/10 pb-2">{currentItem.id ? 'Modifier' : 'Ajouter'} l'article</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <input type="text" placeholder="Nom (ex: Blazer Zara)" className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:ring-gold focus:border-gold" value={currentItem.name} onChange={e => setCurrentItem({...currentItem, name: e.target.value})} required />
-                <input type="text" placeholder="Modèle (ex: Collection 2023)" className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:ring-gold focus:border-gold" value={currentItem.model} onChange={e => setCurrentItem({...currentItem, model: e.target.value})} />
+                <input type="text" placeholder="Nom (ex: Blazer Zara)" className="w-full p-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded text-zinc-900 dark:text-white focus:ring-gold focus:border-gold" value={currentItem.name} onChange={e => setCurrentItem({...currentItem, name: e.target.value})} required />
+                <input type="text" placeholder="Modèle (ex: Collection 2023)" className="w-full p-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded text-zinc-900 dark:text-white focus:ring-gold focus:border-gold" value={currentItem.model} onChange={e => setCurrentItem({...currentItem, model: e.target.value})} />
               </div>
-              <input type="text" placeholder="Référence (laisser vide pour auto-générer)" className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:ring-gold focus:border-gold" value={currentItem.reference} onChange={e => setCurrentItem({...currentItem, reference: e.target.value})} />
               <div className="grid grid-cols-2 gap-4">
-                <select className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:ring-gold focus:border-gold" value={currentItem.type} onChange={e => setCurrentItem({...currentItem, type: e.target.value})}>
+                <input type="text" placeholder="Référence (laisser vide pour auto-générer)" className="w-full p-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded text-zinc-900 dark:text-white focus:ring-gold focus:border-gold" value={currentItem.reference} onChange={e => setCurrentItem({...currentItem, reference: e.target.value})} />
+                <input type="text" placeholder="ID Ensemble (ex: COSTUME-01)" className="w-full p-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded text-zinc-900 dark:text-white focus:ring-gold focus:border-gold" value={currentItem.ensembleId || ''} onChange={e => setCurrentItem({...currentItem, ensembleId: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <select className="w-full p-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded text-zinc-900 dark:text-white focus:ring-gold focus:border-gold" value={currentItem.type} onChange={e => setCurrentItem({...currentItem, type: e.target.value})}>
                   <option value="Veste">Veste</option>
                   <option value="Chemise">Chemise</option>
                   <option value="Gilet">Gilet</option>
@@ -302,14 +337,14 @@ const Items = () => {
                   <option value="Gilet accessoire">Gilet accessoire</option>
                   <option value="Cravate">Cravate</option>
                 </select>
-                <input type="number" placeholder="Prix Location (DA)" className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:ring-gold focus:border-gold font-bold" value={currentItem.rentalPrice} onChange={e => setCurrentItem({...currentItem, rentalPrice: parseFloat(e.target.value)})} required />
+                <input type="number" placeholder="Prix Location (DA)" className="w-full p-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded text-zinc-900 dark:text-white focus:ring-gold focus:border-gold font-bold" value={currentItem.rentalPrice} onChange={e => setCurrentItem({...currentItem, rentalPrice: parseFloat(e.target.value)})} required />
               </div>
               <div className="flex gap-4">
-                <input type="text" placeholder="Taille" className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:ring-gold focus:border-gold" value={currentItem.size} onChange={e => setCurrentItem({...currentItem, size: e.target.value})} required />
-                <input type="text" placeholder="Couleur" className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:ring-gold focus:border-gold" value={currentItem.color} onChange={e => setCurrentItem({...currentItem, color: e.target.value})} required />
+                <input type="text" placeholder="Taille" className="w-full p-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded text-zinc-900 dark:text-white focus:ring-gold focus:border-gold" value={currentItem.size} onChange={e => setCurrentItem({...currentItem, size: e.target.value})} required />
+                <input type="text" placeholder="Couleur" className="w-full p-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded text-zinc-900 dark:text-white focus:ring-gold focus:border-gold" value={currentItem.color} onChange={e => setCurrentItem({...currentItem, color: e.target.value})} required />
               </div>
               <div className="flex justify-end space-x-4 mt-8 pt-4 border-t border-zinc-800">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-zinc-400 font-semibold hover:text-white transition-colors">Annuler</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-zinc-400 font-semibold hover:text-zinc-900 dark:text-white transition-colors">Annuler</button>
                 <button type="submit" className="px-6 py-2 bg-gold text-rich-black rounded font-bold hover:bg-light-gold transition-all active:scale-95 shadow-lg shadow-gold/10">Enregistrer</button>
               </div>
             </form>
@@ -351,7 +386,7 @@ const Items = () => {
                     </button>
                     <button 
                         onClick={printQR}
-                        className="flex-1 py-2 bg-rich-black text-gold font-bold text-xs uppercase rounded hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 shadow-lg"
+                        className="flex-1 py-2 bg-rich-black text-gold font-bold text-xs uppercase rounded hover:bg-zinc-100 dark:bg-zinc-800 transition-colors flex items-center justify-center gap-2 shadow-lg"
                     >
                         <Printer size={14} /> Imprimer
                     </button>
@@ -367,18 +402,18 @@ const Items = () => {
 
       {historyModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-zinc-900 rounded-xl p-8 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-gold/20 shadow-2xl">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-gold/20 shadow-2xl">
             <div className="flex justify-between items-center mb-6 border-b border-gold/10 pb-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gold font-luxury tracking-widest uppercase">{historyModal.name}</h2>
                     <p className="text-zinc-500 font-mono text-xs">{historyModal.reference} - {historyModal.model}</p>
                 </div>
-                <button onClick={() => setHistoryModal(null)} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24}/></button>
+                <button onClick={() => setHistoryModal(null)} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 hover:text-zinc-900 dark:text-white transition-colors"><X size={24}/></button>
             </div>
             
             <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
                 <div className="grid grid-cols-2 gap-4 mb-8">
-                    <div className="bg-zinc-800 p-4 rounded-lg text-center border border-zinc-700">
+                    <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-lg text-center border border-zinc-700">
                         <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Total Locations</p>
                         <p className="text-3xl font-bold text-gold">{historyModal.rentals.length}</p>
                     </div>
@@ -402,16 +437,16 @@ const Items = () => {
                     <h3 className="font-bold text-lg mb-4 text-gold flex items-center font-luxury uppercase tracking-widest">
                         <History size={20} className="mr-2"/> Dates d'occupation
                     </h3>
-                    <div className="bg-zinc-800 p-4 rounded-xl border border-zinc-700">
+                    <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl border border-zinc-700">
                         {historyModal.rentals.filter(r => new Date(r.rental.expectedReturn) >= new Date()).length > 0 ? (
                             <div className="space-y-3">
                                 {historyModal.rentals
                                     .filter(r => new Date(r.rental.expectedReturn) >= new Date())
                                     .sort((a, b) => new Date(a.rental.startDate) - new Date(b.rental.startDate))
                                     .map((r, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-zinc-900 p-3 rounded-lg border-l-4 border-gold shadow-md">
+                                        <div key={idx} className="flex items-center justify-between bg-white dark:bg-zinc-900 p-3 rounded-lg border-l-4 border-gold shadow-md">
                                             <div>
-                                                <p className="font-bold text-white text-sm">Du {new Date(r.rental.startDate).toLocaleDateString()} au {new Date(r.rental.expectedReturn).toLocaleDateString()}</p>
+                                                <p className="font-bold text-zinc-900 dark:text-white text-sm">Du {new Date(r.rental.startDate).toLocaleDateString()} au {new Date(r.rental.expectedReturn).toLocaleDateString()}</p>
                                                 <p className="text-[10px] text-zinc-500 uppercase font-semibold">Client: {r.rental.customer.firstName} {r.rental.customer.lastName}</p>
                                             </div>
                                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
@@ -430,7 +465,7 @@ const Items = () => {
 
                 <h3 className="font-bold text-lg mb-4 text-gold font-luxury uppercase tracking-widest">Historique Complet</h3>
                 <table className="w-full text-left">
-                    <thead className="bg-zinc-800 text-[10px] font-bold uppercase text-zinc-500">
+                    <thead className="bg-zinc-100 dark:bg-zinc-800 text-[10px] font-bold uppercase text-zinc-500">
                         <tr>
                             <th className="px-4 py-3">Client</th>
                             <th className="px-4 py-3 text-center">Dates</th>
@@ -439,8 +474,8 @@ const Items = () => {
                     </thead>
                     <tbody className="divide-y divide-zinc-800">
                         {historyModal.rentals.map((r, i) => (
-                            <tr key={i} className="text-xs hover:bg-zinc-800/50 transition-colors">
-                                <td className="px-4 py-4 font-medium text-white">
+                            <tr key={i} className="text-xs hover:bg-zinc-100 dark:bg-zinc-800/50 transition-colors">
+                                <td className="px-4 py-4 font-medium text-zinc-900 dark:text-white">
                                     {r.rental.customer.firstName} {r.rental.customer.lastName}
                                     <div className="text-[10px] text-zinc-500 font-mono">{r.rental.customer.phone}</div>
                                 </td>

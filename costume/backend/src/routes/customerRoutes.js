@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 router.get('/', auth, customerController.getAllCustomers);  
 router.post('/', auth, customerController.createCustomer);  
 router.put('/:id', auth, customerController.updateCustomer);  
+router.put('/:id/blacklist', auth, customerController.toggleBlacklist);
 router.delete('/:id', auth, customerController.deleteCustomer);  
 router.get('/:id/rentals', auth, customerController.getCustomerRentals);  
 module.exports = router;  

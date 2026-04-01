@@ -1,5 +1,6 @@
 const prisma = require('../utils/prisma');
 const { updateDailyStats } = require('./cashController');
+const { logAction } = require('../utils/audit');
 
 exports.createRental = async (req, res) => {
   try {
@@ -7,7 +8,7 @@ exports.createRental = async (req, res) => {
       firstName, lastName, phone, 
       items: selectedItems, // items: [{ id, remarks }]
       startDate, expectedReturn, 
-      totalAmount, paidAmount, discount, remarks,
+      totalAmount, paidAmount, discount, addedAmount, remarks,
       guaranteeDocument 
     } = req.body;
 
@@ -17,6 +18,12 @@ exports.createRental = async (req, res) => {
     let customer = await prisma.customer.findFirst({
       where: { phone: phone }
     });
+
+    if (customer && customer.isBlacklisted) {
+      return res.status(403).json({ 
+        message: 'Ce client est sur liste noire et ne peut pas effectuer de location.' 
+      });
+    }
 
     if (!customer) {
       customer = await prisma.customer.create({
@@ -31,41 +38,52 @@ exports.createRental = async (req, res) => {
     }
 
     const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
     const end = new Date(expectedReturn);
+    end.setHours(23, 59, 59, 999);
 
-    // Check items availability
+    // 1. Récupérer les détails des articles sélectionnés (pour connaître leurs ensembleId)
+    const selectedItemsDetails = await prisma.item.findMany({
+      where: { id: { in: itemIds } }
+    });
+    const selectedEnsembleIds = selectedItemsDetails.map(i => i.ensembleId).filter(id => id);
+
+    // 2. Vérifier les chevauchements
     const overlappingRentals = await prisma.rentalItem.findMany({
       where: {
-        itemId: { in: itemIds },
         rental: {
           status: { in: ['ONGOING', 'DELAYED'] },
           AND: [
             { startDate: { lte: end } },
             { expectedReturn: { gte: start } }
           ]
-        }
+        },
+        OR: [
+          { itemId: { in: itemIds } },
+          { item: { ensembleId: { in: selectedEnsembleIds } } }
+        ]
       },
       include: { item: true }
     });
 
     if (overlappingRentals.length > 0) {
       return res.status(400).json({ 
-        message: 'Certains articles sont déjà loués pour ces dates', 
-        items: overlappingRentals.map(r => r.item.name) 
+        message: 'Certains articles (ou éléments de leur ensemble) sont déjà loués pour ces dates', 
+        items: [...new Set(overlappingRentals.map(r => r.item.name))]
       });
     }
 
-    // Physical status check
-    const items = await prisma.item.findMany({
-      where: { id: { in: itemIds } }
-    });
-
-    const unavailableItems = items.filter(item => item.status !== 'AVAILABLE');
-    if (unavailableItems.length > 0) {
-      return res.status(400).json({ 
-        message: 'Certains articles ne sont pas physiquement disponibles (en nettoyage ou réparation)', 
-        items: unavailableItems.map(i => i.name) 
-      });
+    // 3. Vérification physique (seulement si la location commence aujourd'hui)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (start <= today) {
+        const unavailableItems = selectedItemsDetails.filter(item => item.status !== 'AVAILABLE');
+        if (unavailableItems.length > 0) {
+          return res.status(400).json({ 
+            message: 'Certains articles ne sont pas physiquement disponibles aujourd\'hui (en nettoyage ou réparation)', 
+            items: unavailableItems.map(i => i.name) 
+          });
+        }
     }
 
     // Create rental in transaction
@@ -83,6 +101,7 @@ exports.createRental = async (req, res) => {
           depositAmount: deposit,
           paidAmount: deposit,
           discount: disc,
+          addedAmount: parseFloat(addedAmount) || 0,
           remarks: remarks || null,
           guaranteeDocument: guaranteeDocument || null,
           status: 'ONGOING',
@@ -131,6 +150,8 @@ exports.createRental = async (req, res) => {
     if (parseFloat(paidAmount) > 0) {
       await updateDailyStats(new Date());
     }
+
+    await logAction(req.userData.userId, 'CREATE_RENTAL', { rentalId: rental.id, customer: `${firstName} ${lastName}` });
 
     res.status(201).json(rental);
   } catch (error) {
@@ -248,18 +269,67 @@ exports.activateRental = async (req, res) => {
       return res.status(400).json({ message: 'Rental already activated' });
     }
 
+    const startDate = new Date();
+    const expectedReturn = new Date(startDate.getTime() + (24 * 60 * 60 * 1000)); // +24 heures
+
     const updated = await prisma.$transaction(async (tx) => {
       const updatedRental = await tx.rental.update({
         where: { id: parseInt(id) },
         data: {
-          isActivated: true
+          isActivated: true,
+          startDate: startDate,
+          expectedReturn: expectedReturn
         }
       });
 
       return updatedRental;
     });
 
+    await logAction(req.userData.userId, 'ACTIVATE_RENTAL', { rentalId: id, newReturnDate: expectedReturn });
+
     res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteRental = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const rentalId = parseInt(id);
+
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Seul l\'administrateur peut supprimer une location.' });
+    }
+
+    const rental = await prisma.rental.findUnique({
+      where: { id: rentalId },
+      include: { items: true }
+    });
+
+    if (!rental) return res.status(404).json({ message: 'Location non trouvée' });
+
+    const itemIds = rental.items.map(ri => ri.itemId);
+
+    await prisma.$transaction(async (tx) => {
+      // Release items if the rental was not already returned
+      if (rental.status !== 'RETURNED') {
+          await tx.item.updateMany({
+            where: { id: { in: itemIds } },
+            data: { status: 'AVAILABLE' }
+          });
+      }
+
+      // Delete payments and movements
+      await tx.payment.deleteMany({ where: { rentalId } });
+      await tx.cashMovement.deleteMany({ where: { rentalId } });
+      await tx.rentalItem.deleteMany({ where: { rentalId } });
+      await tx.rental.delete({ where: { id: rentalId } });
+    });
+
+    await logAction(req.userData.userId, 'DELETE_RENTAL', { rentalId });
+
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -291,6 +361,8 @@ exports.returnRental = async (req, res) => {
         data: { status: 'CLEANING' }
       });
     });
+
+    await logAction(req.userData.userId, 'RETURN_RENTAL', { rentalId: id });
 
     res.json({ message: 'Items returned and moved to cleaning' });
   } catch (error) {

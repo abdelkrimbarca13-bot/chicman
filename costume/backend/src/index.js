@@ -7,6 +7,7 @@ const customerRoutes = require('./routes/customerRoutes');
 const rentalRoutes = require('./routes/rentalRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const cashRoutes = require('./routes/cashRoutes');
+const auditRoutes = require('./routes/auditRoutes');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/rentals', rentalRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/cash', cashRoutes);
+app.use('/api/audit', auditRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

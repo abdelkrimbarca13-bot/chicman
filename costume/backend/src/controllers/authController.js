@@ -5,11 +5,50 @@ const prisma = require('../utils/prisma');
 exports.register = async (req, res) => {
   try {
     const { username, password, role } = req.body;
+
+    // Seul l'admin peut créer d'autres comptes
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Seul l\'administrateur peut créer des comptes.' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: { username, password: hashedPassword, role: role || 'EMPLOYEE' }
     });
-    res.status(201).json({ message: 'User created!', userId: user.id });
+    res.status(201).json({ message: 'Compte créé !', userId: user.id });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    const users = await prisma.user.findMany({
+      select: { id: true, username: true, role: true, createdAt: true }
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    
+    // Empêcher de se supprimer soi-même
+    if (parseInt(id) === req.userData.userId) {
+        return res.status(400).json({ message: 'Vous ne pouvez pas supprimer votre propre compte.' });
+    }
+
+    await prisma.user.delete({ where: { id: parseInt(id) } });
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

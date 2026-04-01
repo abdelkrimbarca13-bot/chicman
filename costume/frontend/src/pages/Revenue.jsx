@@ -64,7 +64,7 @@ const Revenue = () => {
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white">Suivi des Revenus</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white">Suivi des Revenus</h1>
         <div className="w-full sm:w-auto bg-gold text-black px-6 py-3 rounded-xl shadow-lg flex items-center">
             <TrendingUp className="mr-3" />
             <div>
@@ -78,7 +78,7 @@ const Revenue = () => {
 
       <div className="space-y-4">
         {sortedDates.map(date => (
-          <div key={date} className="bg-zinc-900 rounded-xl shadow-xl border border-zinc-800 overflow-hidden">
+          <div key={date} className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-800 overflow-hidden">
             <button 
               onClick={() => toggleDay(date)}
               className="w-full flex items-center justify-between p-5 hover:bg-zinc-800/50 transition-colors"
@@ -86,7 +86,7 @@ const Revenue = () => {
               <div className="flex items-center">
                 <Calendar className="text-gold mr-4" size={24} />
                 <div className="text-left">
-                  <p className="font-bold text-lg text-white">
+                  <p className="font-bold text-lg text-zinc-900 dark:text-white">
                     {format(new Date(date), 'dd MMMM yyyy')}
                     {date === format(new Date(), 'yyyy-MM-dd') && (
                         <span className="ml-3 bg-gold/20 text-gold text-xs px-2 py-1 rounded-full border border-gold/30">Aujourd'hui</span>
@@ -102,7 +102,7 @@ const Revenue = () => {
             </button>
 
             {expandedDays[date] && (
-              <div className="border-t border-zinc-800 bg-zinc-950 p-5">
+              <div className="border-t border-zinc-800 bg-zinc-100 dark:bg-zinc-950 p-5">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left min-w-[600px]">
                     <thead>
@@ -116,7 +116,7 @@ const Revenue = () => {
                     </thead>
                     <tbody className="divide-y divide-zinc-800/50">
                       {groupedRevenue[date].items.map((movement, idx) => (
-                        <tr key={idx} className="text-sm hover:bg-zinc-900/50 transition-colors">
+                        <tr key={idx} className="text-sm hover:bg-white dark:bg-zinc-900/50 transition-colors">
                           <td className="py-3 px-2 text-zinc-500 font-mono text-xs">{format(new Date(movement.date), 'HH:mm')}</td>
                           <td className="py-3 px-2 font-medium text-zinc-200">{movement.rental.customer.firstName} {movement.rental.customer.lastName}</td>
                           <td className="py-3 px-2">
@@ -138,7 +138,7 @@ const Revenue = () => {
           </div>
         ))}
         {sortedDates.length === 0 && (
-            <div className="text-center py-20 bg-zinc-900 rounded-xl border-2 border-dashed border-zinc-800">
+            <div className="text-center py-20 bg-white dark:bg-zinc-900 rounded-xl border-2 border-dashed border-zinc-800">
                 <p className="text-zinc-500 italic">Aucun mouvement de caisse enregistré pour le moment.</p>
             </div>
         )}

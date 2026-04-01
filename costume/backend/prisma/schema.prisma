@@ -14,6 +14,7 @@ model User {
   password  String
   role      String   @default("EMPLOYEE")
   createdAt DateTime @default(now())
+  auditLogs AuditLog[]
 }
 
 model Item {
@@ -27,21 +28,23 @@ model Item {
   status      String       @default("AVAILABLE")
   rentalPrice Float        @default(0)
   quantity    Int          @default(1)
+  ensembleId  String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   rentals     RentalItem[]
 }
 
 model Customer {
-  id        Int      @id @default(autoincrement())
-  firstName String
-  lastName  String
-  phone     String
-  address   String
-  email     String?
-  idNumber  String   @unique
-  createdAt DateTime @default(now())
-  rentals   Rental[]
+  id            Int      @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  phone         String
+  address       String
+  email         String?
+  idNumber      String   @unique
+  isBlacklisted Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  rentals       Rental[]
 }
 
 model Rental {
@@ -54,6 +57,7 @@ model Rental {
   depositAmount     Float          @default(0)
   paidAmount        Float          @default(0)
   discount          Float          @default(0)
+  addedAmount       Float          @default(0)
   remarks           String?
   status            String         @default("ONGOING")
   isActivated       Boolean        @default(false)
@@ -64,6 +68,15 @@ model Rental {
   payments          Payment[]
   customer          Customer       @relation(fields: [customerId], references: [id])
   items             RentalItem[]
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
 }
 
 model Payment {

@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 router.get('/', auth, itemController.getAllItems);  
 router.get('/:id', auth, itemController.getItemDetails);  
 router.get('/ref/:ref', auth, itemController.getItemByReference);  
+router.post('/bulk', auth, itemController.bulkCreateItems);
 router.post('/', auth, itemController.createItem);  
 router.put('/:id/status', auth, itemController.updateItemStatus);  
 router.put('/:id', auth, itemController.updateItem);  

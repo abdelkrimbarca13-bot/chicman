@@ -21,6 +21,15 @@ exports.getDailyCash = async (req, res) => {
       });
     }
 
+    // Filtrer les données si l'utilisateur n'est pas ADMIN
+    if (req.userData.role !== 'ADMIN') {
+        const filtered = { ...dailyCash };
+        delete filtered.initialCash;
+        delete filtered.totalRentals;
+        delete filtered.finalBalance;
+        return res.json(filtered);
+    }
+
     res.json(dailyCash);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -29,6 +38,9 @@ exports.getDailyCash = async (req, res) => {
 
 exports.setInitialCash = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+        return res.status(403).json({ message: 'Seul l\'administrateur peut modifier le fond de caisse.' });
+    }
     const { amount } = req.body;
     const today = new Date().toISOString().split('T')[0] + 'T00:00:00.000Z';
     const todayDate = new Date(today);
@@ -145,6 +157,9 @@ exports.getExpenses = async (req, res) => {
 
 exports.getDailyReport = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+        return res.status(403).json({ message: 'Accès refusé.' });
+    }
     const today = new Date().toISOString().split('T')[0] + 'T00:00:00.000Z';
     const todayDate = new Date(today);
     const report = await updateDailyStats(todayDate);
@@ -156,6 +171,9 @@ exports.getDailyReport = async (req, res) => {
 
 exports.getHistory = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+        return res.status(403).json({ message: 'Accès refusé.' });
+    }
     const history = await prisma.dailyCash.findMany({
       orderBy: { date: 'desc' }
     });

@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../api';
-import { Plus, Calendar, CheckCircle, Search, Trash2, Smartphone, DollarSign, X, FileText, Play, Info, Scissors } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Plus, Calendar, CheckCircle, Search, Trash2, Smartphone, DollarSign, X, FileText, Play, Info, Scissors, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import RentalReceipt from '../components/RentalReceipt';
 
 const Rentals = () => {
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [rentals, setRentals] = useState([]);
   const [items, setItems] = useState([]);
   const [allItems, setAllItems] = useState([]);
@@ -23,9 +27,18 @@ const Rentals = () => {
     totalAmount: 0,
     paidAmount: 0,
     discount: 0,
+    addedAmount: 0,
     remarks: '',
     guaranteeDocument: ''
   });
+
+  useEffect(() => {
+    const rentalId = searchParams.get('rentalId');
+    if (rentalId && rentals.length > 0) {
+      const rental = rentals.find(r => r.id.toString() === rentalId);
+      if (rental) setReceiptModal(rental);
+    }
+  }, [searchParams, rentals]);
   const [filterStatus, setFilterStatus] = useState('ONGOING');
   const [activeTab, setActiveTab] = useState('ongoing');
   const [filterStartDate, setFilterStartDate] = useState('');
@@ -76,11 +89,11 @@ const Rentals = () => {
 
   useEffect(() => {
     const subtotal = newRental.items.reduce((sum, item) => sum + (item.price || 0), 0);
-    const total = Math.max(0, subtotal - (parseFloat(newRental.discount) || 0));
+    const total = Math.max(0, subtotal + (parseFloat(newRental.addedAmount) || 0) - (parseFloat(newRental.discount) || 0));
     if (newRental.totalAmount !== total) {
       setNewRental(prev => ({ ...prev, totalAmount: total }));
     }
-  }, [newRental.items, newRental.discount]);
+  }, [newRental.items, newRental.discount, newRental.addedAmount]);
 
   const addItem = (item) => {
     const isAvailable = items.some(i => i.id === item.id);
@@ -188,6 +201,17 @@ const Rentals = () => {
     }
   };
 
+  const handleDeleteRental = async (id) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette location ? Cette action est irréversible.')) {
+        try {
+            await api.delete(`/rentals/${id}`);
+            fetchData();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Erreur lors de la suppression');
+        }
+    }
+  };
+
   const handleAddPayment = async (e) => {
     e.preventDefault();
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
@@ -201,6 +225,39 @@ const Rentals = () => {
       fetchData();
     } catch {
       alert('Erreur lors de l\'enregistrement du paiement');
+    }
+  };
+
+  const handleQuickFilter = (days) => {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    
+    if (days === 0) {
+      // Today
+      setFilterStartDate(start.toISOString().split('T')[0]);
+      setFilterEndDate(end.toISOString().split('T')[0]);
+    } else if (days === 1) {
+      // Yesterday
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+      const yesterdayEnd = new Date();
+      yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+      yesterdayEnd.setHours(23, 59, 59, 999);
+      setFilterStartDate(yesterday.toISOString().split('T')[0]);
+      setFilterEndDate(yesterdayEnd.toISOString().split('T')[0]);
+    } else if (days === 7) {
+      // Last 7 days
+      const lastWeek = new Date();
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      lastWeek.setHours(0, 0, 0, 0);
+      setFilterStartDate(lastWeek.toISOString().split('T')[0]);
+      setFilterEndDate(end.toISOString().split('T')[0]);
+    } else {
+      setFilterStartDate('');
+      setFilterEndDate('');
     }
   };
 
@@ -230,8 +287,8 @@ const Rentals = () => {
       const searchTerm = filterCustomer.toLowerCase();
       const customerName = `${rental.customer.firstName} ${rental.customer.lastName}`.toLowerCase();
       matchesCustomer = customerName.includes(searchTerm) || 
-                        rental.customer.firstName.toLowerCase().includes(searchTerm) ||
-                        rental.customer.lastName.toLowerCase().includes(searchTerm);
+                        rental.customer.phone.includes(searchTerm) ||
+                        rental.id.toString().includes(searchTerm);
     }
     
     return matchesStatus && matchesDate && matchesCustomer;
@@ -242,16 +299,16 @@ const Rentals = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold font-luxury tracking-widest text-gold uppercase border-b-2 border-gold/30 pb-2">Gestion des Locations</h1>
         <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center w-full lg:w-auto">
-            <div className="flex bg-zinc-900 rounded-xl shadow-lg border border-zinc-800 p-1 w-full sm:w-auto">
+            <div className="flex bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-800 p-1 w-full sm:w-auto">
                 <button 
                     onClick={() => handleTabChange('ongoing')}
-                    className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'ongoing' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-800'}`}
+                    className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'ongoing' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-800'}`}
                 >
                     En Cours
                 </button>
                 <button 
                     onClick={() => handleTabChange('history')}
-                    className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-800'}`}
+                    className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-800'}`}
                 >
                     Historique
                 </button>
@@ -266,56 +323,68 @@ const Rentals = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-zinc-900 p-6 rounded-lg shadow-xl border border-gold/10 mb-6 flex flex-col md:flex-row gap-6 items-stretch md:items-end">
-        <div className="flex-1">
-          <label className="block text-[10px] font-black uppercase text-gold/60 mb-2 tracking-widest">Filtrer par Période</label>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div className="relative flex-1">
-                <Calendar className="absolute left-3 top-2.5 text-zinc-500" size={18} />
+      <div className="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow-xl border border-gold/10 mb-6 flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row gap-6 items-stretch md:items-end">
+            <div className="flex-1">
+            <label className="block text-[10px] font-black uppercase text-gold/60 mb-2 tracking-widest">Filtrer par Période</label>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1">
+                    <Calendar className="absolute left-3 top-2.5 text-zinc-500" size={18} />
+                    <input 
+                    type="date" 
+                    className="w-full pl-10 pr-4 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm text-zinc-900 dark:text-white"
+                    value={filterStartDate}
+                    onChange={(e) => setFilterStartDate(e.target.value)}
+                    />
+                </div>
+                <span className="text-zinc-600 font-bold text-center">au</span>
+                <div className="relative flex-1">
+                    <Calendar className="absolute left-3 top-2.5 text-zinc-500" size={18} />
+                    <input 
+                    type="date" 
+                    className="w-full pl-10 pr-4 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm text-zinc-900 dark:text-white"
+                    value={filterEndDate}
+                    onChange={(e) => setFilterEndDate(e.target.value)}
+                    />
+                </div>
+            </div>
+            </div>
+            <div className="flex-1">
+            <label className="block text-[10px] font-black uppercase text-gold/60 mb-2 tracking-widest">Recherche</label>
+            <div className="relative">
+                <Search className="absolute left-3 top-2.5 text-zinc-500" size={18} />
                 <input 
-                type="date" 
-                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm text-white"
-                value={filterStartDate}
-                onChange={(e) => setFilterStartDate(e.target.value)}
+                type="text" 
+                placeholder="Nom, Téléphone ou N° Bon..."
+                className="w-full pl-10 pr-4 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm text-zinc-900 dark:text-white"
+                value={filterCustomer}
+                onChange={(e) => setFilterCustomer(e.target.value)}
                 />
             </div>
-            <span className="text-zinc-600 font-bold text-center">au</span>
-            <div className="relative flex-1">
-                <Calendar className="absolute left-3 top-2.5 text-zinc-500" size={18} />
-                <input 
-                type="date" 
-                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm text-white"
-                value={filterEndDate}
-                onChange={(e) => setFilterEndDate(e.target.value)}
-                />
             </div>
-          </div>
+            {user?.role === 'ADMIN' && (
+                <button 
+                    onClick={() => { setFilterStatus('ONGOING'); setFilterStartDate(''); setFilterEndDate(''); setFilterCustomer(''); setActiveTab('ongoing'); }}
+                    className="px-6 py-2 text-gold hover:bg-gold/10 font-bold rounded-lg transition-colors text-sm border border-gold/20"
+                >
+                    Réinitialiser
+                </button>
+            )}
         </div>
-        <div className="flex-1">
-          <label className="block text-[10px] font-black uppercase text-gold/60 mb-2 tracking-widest">Filtrer par Client</label>
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 text-zinc-500" size={18} />
-            <input 
-              type="text" 
-              placeholder="Nom ou Prénom..."
-              className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm text-white"
-              value={filterCustomer}
-              onChange={(e) => setFilterCustomer(e.target.value)}
-            />
-          </div>
+        
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-zinc-800">
+            <span className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mr-2">Filtres Rapides:</span>
+            <button onClick={() => handleQuickFilter(0)} className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold rounded-full border border-zinc-700 transition-colors uppercase">Aujourd'hui</button>
+            <button onClick={() => handleQuickFilter(1)} className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold rounded-full border border-zinc-700 transition-colors uppercase">Hier</button>
+            <button onClick={() => handleQuickFilter(7)} className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold rounded-full border border-zinc-700 transition-colors uppercase">7 derniers jours</button>
+            <button onClick={() => handleQuickFilter(-1)} className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold rounded-full border border-zinc-700 transition-colors uppercase">Tout</button>
         </div>
-        <button 
-          onClick={() => { setFilterStatus('ONGOING'); setFilterStartDate(''); setFilterEndDate(''); setFilterCustomer(''); setActiveTab('ongoing'); }}
-          className="px-6 py-2 text-gold hover:bg-gold/10 font-bold rounded-lg transition-colors text-sm border border-gold/20"
-        >
-          Réinitialiser
-        </button>
       </div>
 
-      <div className="bg-zinc-900 rounded-lg shadow-xl border border-gold/10 overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl border border-gold/10 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[900px]">
-            <thead className="bg-zinc-800 uppercase text-[10px] sm:text-xs font-semibold text-zinc-400">
+            <thead className="bg-zinc-100 dark:bg-zinc-800 uppercase text-[10px] sm:text-xs font-semibold text-zinc-400">
               <tr>
                 <th className="px-6 py-4 border-b border-zinc-700 whitespace-nowrap tracking-wider">Client</th>
                 <th className="px-6 py-4 border-b border-zinc-700 whitespace-nowrap tracking-wider">Articles</th>
@@ -326,15 +395,15 @@ const Rentals = () => {
             </thead>
             <tbody className="divide-y divide-zinc-800 text-zinc-300">
             {filteredRentals.map(rental => (
-              <tr key={rental.id} className="hover:bg-zinc-800/50 transition-colors">
+              <tr key={rental.id} className="hover:bg-zinc-100 dark:bg-zinc-800/50 transition-colors">
                 <td className="px-6 py-4">
-                  <div className="font-bold text-white text-base">{rental.customer.firstName} {rental.customer.lastName}</div>
+                  <div className="font-bold text-zinc-900 dark:text-white text-base">{rental.customer.firstName} {rental.customer.lastName}</div>
                   <div className="text-xs text-gold font-mono tracking-tight">{rental.customer.phone}</div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1.5">
                     {rental.items.map((ri, idx) => (
-                      <span key={idx} className="bg-zinc-800 text-zinc-200 text-[10px] px-2.5 py-1 rounded border border-gold/20 font-medium">
+                      <span key={idx} className="bg-zinc-100 dark:bg-zinc-800 text-zinc-200 text-[10px] px-2.5 py-1 rounded border border-gold/20 font-medium">
                         {ri.item.name} 
                         {ri.remarks && <span className="text-zinc-500 ml-1 italic">({ri.remarks})</span>}
                         {ri.tailorModification && (
@@ -372,6 +441,15 @@ const Rentals = () => {
                     >
                       <FileText size={16} className="mr-1"/> Bon
                     </button>
+                    {user?.role === 'ADMIN' && (
+                      <button 
+                        onClick={() => handleDeleteRental(rental.id)}
+                        className="text-red-500 hover:text-red-400 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                        title="Supprimer la location"
+                      >
+                        <Trash2 size={16} className="mr-1"/> Supprimer
+                      </button>
+                    )}
                     {rental.status === 'ONGOING' && (
                       <>
                         {!rental.isActivated && (
@@ -409,8 +487,8 @@ const Rentals = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gold/20">
-            <div className="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-zinc-900 z-10">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gold/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-white dark:bg-zinc-900 z-10">
                 <h2 className="text-2xl font-black text-gold font-luxury tracking-widest uppercase">Nouvelle Location</h2>
                 <div className="text-xs font-bold text-gold bg-gold/10 px-3 py-1 rounded-full border border-gold/20">
                     RENT-{rentId}
@@ -418,14 +496,14 @@ const Rentals = () => {
             </div>
             
             <form onSubmit={handleCreate} className="p-6 space-y-6">
-              <div className="bg-zinc-800 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-2 gap-4 border border-zinc-700">
+              <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-2 gap-4 border border-zinc-700">
                 <div>
                   <label className="block text-xs font-black uppercase text-gold/60 mb-1 tracking-wider">Début de location</label>
-                  <input type="date" className="w-full p-2.5 bg-zinc-900 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-white" value={newRental.startDate} onChange={e => setNewRental({...newRental, startDate: e.target.value})} required />
+                  <input type="date" className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-zinc-900 dark:text-white" value={newRental.startDate} onChange={e => setNewRental({...newRental, startDate: e.target.value})} required />
                 </div>
                 <div>
                   <label className="block text-xs font-black uppercase text-gold/60 mb-1 tracking-wider">Fin de location</label>
-                  <input type="date" className="w-full p-2.5 bg-zinc-900 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-white" value={newRental.expectedReturn} onChange={e => setNewRental({...newRental, expectedReturn: e.target.value})} required />
+                  <input type="date" className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-zinc-900 dark:text-white" value={newRental.expectedReturn} onChange={e => setNewRental({...newRental, expectedReturn: e.target.value})} required />
                 </div>
               </div>
 
@@ -440,13 +518,13 @@ const Rentals = () => {
                         <input 
                             type="text" 
                             placeholder="Scannez l'article ici..." 
-                            className="w-full pl-10 pr-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-white font-bold"
+                            className="w-full pl-10 pr-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-zinc-900 dark:text-white font-bold"
                             value={scanTerm}
                             onChange={(e) => handleScan(e.target.value)}
                             autoFocus
                         />
                         {scanTerm.length >= 2 && (
-                          <div className="absolute top-full left-0 w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-50 overflow-hidden">
+                          <div className="absolute top-full left-0 w-full mt-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-50 overflow-hidden">
                             {allItems.filter(item => 
                                 item.name.toLowerCase().includes(scanTerm.toLowerCase()) || 
                                 item.reference.toLowerCase().includes(scanTerm.toLowerCase())
@@ -460,7 +538,7 @@ const Rentals = () => {
                                         className={`w-full p-3 text-left flex justify-between items-center border-b border-zinc-700 last:border-0 hover:bg-zinc-700 transition-colors ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <div>
-                                            <div className="font-bold text-white">{item.name}</div>
+                                            <div className="font-bold text-zinc-900 dark:text-white">{item.name}</div>
                                             <div className="text-xs text-zinc-500 uppercase font-mono">{item.reference} - {item.type}</div>
                                         </div>
                                         <div className="text-right">
@@ -480,9 +558,9 @@ const Rentals = () => {
                 <div className="space-y-3">
                   <label className="block text-xs font-black uppercase text-zinc-500 tracking-wider">Articles Sélectionnés</label>
                   {newRental.items.map(item => (
-                    <div key={item.id} className="flex flex-col p-4 bg-zinc-800/50 rounded-xl border border-zinc-700 group hover:border-gold/30 transition-colors">
+                    <div key={item.id} className="flex flex-col p-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl border border-zinc-700 group hover:border-gold/30 transition-colors">
                       <div className="flex justify-between items-center mb-3">
-                        <span className="font-bold text-white text-base">{item.name}</span>
+                        <span className="font-bold text-zinc-900 dark:text-white text-base">{item.name}</span>
                         <div className="flex items-center gap-4">
                           <span className="text-gold font-black">{item.price} DA</span>
                           <button type="button" onClick={() => removeItem(item.id)} className="text-zinc-500 hover:text-red-400 transition-colors">
@@ -496,7 +574,7 @@ const Rentals = () => {
                           <input 
                             type="text"
                             placeholder="Remarques..."
-                            className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-900 border border-zinc-700 rounded text-white focus:ring-1 focus:ring-gold outline-none"
+                            className="w-full pl-9 pr-3 py-1.5 text-sm bg-white dark:bg-zinc-900 border border-zinc-700 rounded text-zinc-900 dark:text-white focus:ring-1 focus:ring-gold outline-none"
                             value={item.remarks}
                             onChange={(e) => updateItemRemarks(item.id, e.target.value)}
                           />
@@ -523,11 +601,11 @@ const Rentals = () => {
                 <div className="space-y-4">
                     <h3 className="text-sm font-black uppercase text-gold border-b border-zinc-800 pb-2 tracking-widest font-luxury">Client</h3>
                     <div className="grid grid-cols-2 gap-3">
-                        <input type="text" placeholder="Prénom" className="w-full p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-white" value={newRental.firstName} onChange={e => setNewRental({...newRental, firstName: e.target.value})} required />
-                        <input type="text" placeholder="Nom" className="w-full p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-white" value={newRental.lastName} onChange={e => setNewRental({...newRental, lastName: e.target.value})} required />
+                        <input type="text" placeholder="Prénom" className="w-full p-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-zinc-900 dark:text-white" value={newRental.firstName} onChange={e => setNewRental({...newRental, firstName: e.target.value})} required />
+                        <input type="text" placeholder="Nom" className="w-full p-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-zinc-900 dark:text-white" value={newRental.lastName} onChange={e => setNewRental({...newRental, lastName: e.target.value})} required />
                     </div>
-                    <input type="text" placeholder="Téléphone" className="w-full p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-white" value={newRental.phone} onChange={e => setNewRental({...newRental, phone: e.target.value})} required />
-                    <select className="w-full p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-white" value={newRental.guaranteeDocument} onChange={e => setNewRental({...newRental, guaranteeDocument: e.target.value})} required>
+                    <input type="text" placeholder="Téléphone" className="w-full p-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-zinc-900 dark:text-white" value={newRental.phone} onChange={e => setNewRental({...newRental, phone: e.target.value})} required />
+                    <select className="w-full p-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-zinc-900 dark:text-white" value={newRental.guaranteeDocument} onChange={e => setNewRental({...newRental, guaranteeDocument: e.target.value})} required>
                         <option value="">Document de garantie...</option>
                         <option value="PASSPORT">Passeport</option>
                         <option value="ID_CARD">Carte d'identité</option>
@@ -535,7 +613,7 @@ const Rentals = () => {
                     </select>
                     <textarea 
                       placeholder="Remarques générales sur le bon..."
-                      className="w-full p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-white min-h-[100px]"
+                      className="w-full p-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-2 focus:ring-gold text-zinc-900 dark:text-white min-h-[100px]"
                       value={newRental.remarks}
                       onChange={e => setNewRental({...newRental, remarks: e.target.value})}
                     />
@@ -543,25 +621,37 @@ const Rentals = () => {
 
                 <div className="space-y-4">
                     <h3 className="text-sm font-black uppercase text-gold border-b border-zinc-800 pb-2 tracking-widest font-luxury">Paiement</h3>
-                    <div className="bg-zinc-800 p-6 rounded-2xl border border-zinc-700 shadow-inner space-y-4">
+                    <div className="bg-zinc-100 dark:bg-zinc-800 p-6 rounded-2xl border border-zinc-700 shadow-inner space-y-4">
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-zinc-500 uppercase font-bold tracking-tighter">Sous-total</span>
-                            <span className="font-bold text-white">{newRental.items.reduce((sum, i) => sum + i.price, 0)} DA</span>
+                            <span className="font-bold text-zinc-900 dark:text-white">{newRental.items.reduce((sum, i) => sum + i.price, 0)} DA</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-zinc-500 uppercase font-bold tracking-tighter">Remise</span>
                             <div className="flex items-center gap-2">
                                 <input 
                                 type="number" 
-                                className="w-24 p-1.5 bg-zinc-900 border border-zinc-700 rounded text-right font-black text-red-400 focus:ring-1 focus:ring-red-500 outline-none" 
+                                className="w-24 p-1.5 bg-white dark:bg-zinc-900 border border-zinc-700 rounded text-right font-black text-red-400 focus:ring-1 focus:ring-red-500 outline-none" 
                                 value={newRental.discount} 
                                 onChange={e => setNewRental({...newRental, discount: parseFloat(e.target.value) || 0})}
                                 />
                                 <span className="text-zinc-500 text-xs font-bold">DA</span>
                             </div>
                         </div>
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-zinc-500 uppercase font-bold tracking-tighter">Ajouté (Retouche/Accessoires)</span>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                type="number" 
+                                className="w-24 p-1.5 bg-white dark:bg-zinc-900 border border-zinc-700 rounded text-right font-black text-blue-400 focus:ring-1 focus:ring-blue-500 outline-none" 
+                                value={newRental.addedAmount} 
+                                onChange={e => setNewRental({...newRental, addedAmount: parseFloat(e.target.value) || 0})}
+                                />
+                                <span className="text-zinc-500 text-xs font-bold">DA</span>
+                            </div>
+                        </div>
                         <div className="flex justify-between items-center pt-4 border-t border-zinc-700 text-xl">
-                            <span className="font-black text-white font-luxury uppercase tracking-wider">TOTAL</span>
+                            <span className="font-black text-zinc-900 dark:text-white font-luxury uppercase tracking-wider">TOTAL</span>
                             <span className="font-black text-gold underline underline-offset-4 decoration-gold/30">{newRental.totalAmount} DA</span>
                         </div>
                     </div>
@@ -575,8 +665,8 @@ const Rentals = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-6 sticky bottom-0 bg-zinc-900 border-t border-zinc-800 mt-8">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-6 py-4 border border-zinc-700 text-zinc-400 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors">ANNULER</button>
+              <div className="flex gap-4 pt-6 sticky bottom-0 bg-white dark:bg-zinc-900 border-t border-zinc-800 mt-8">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-6 py-4 border border-zinc-700 text-zinc-400 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-100 dark:bg-zinc-800 transition-colors">ANNULER</button>
                 <button type="submit" className="flex-1 px-6 py-4 bg-gold text-rich-black rounded-xl font-black uppercase tracking-widest hover:bg-light-gold shadow-xl shadow-gold/10 transition-all transform active:scale-95">CRÉER LE BON</button>
               </div>
             </form>
@@ -586,20 +676,20 @@ const Rentals = () => {
 
       {paymentModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-gold/20">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-gold/20">
             <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
                 <h2 className="text-xl font-black text-gold uppercase tracking-widest font-luxury">Nouveau Versement</h2>
-                <button onClick={() => setPaymentModal(null)} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
+                <button onClick={() => setPaymentModal(null)} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
             </div>
             <form onSubmit={handleAddPayment} className="p-6 space-y-6">
-                <div className="bg-zinc-800 p-5 rounded-xl border border-zinc-700 space-y-3">
+                <div className="bg-zinc-100 dark:bg-zinc-800 p-5 rounded-xl border border-zinc-700 space-y-3">
                     <div className="flex justify-between text-sm">
                         <span className="text-zinc-500 font-bold uppercase tracking-tighter">Client:</span>
-                        <span className="font-bold text-white">{paymentModal.customer.firstName} {paymentModal.customer.lastName}</span>
+                        <span className="font-bold text-zinc-900 dark:text-white">{paymentModal.customer.firstName} {paymentModal.customer.lastName}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-zinc-500 font-bold uppercase tracking-tighter">Total du bon:</span>
-                        <span className="font-bold text-white">{paymentModal.totalAmount} DA</span>
+                        <span className="font-bold text-zinc-900 dark:text-white">{paymentModal.totalAmount} DA</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-zinc-500 font-bold uppercase tracking-tighter">Déjà payé:</span>
@@ -617,7 +707,7 @@ const Rentals = () => {
                         <DollarSign className="absolute left-4 top-4 text-green-500" size={24} />
                         <input 
                             type="number" 
-                            className="w-full pl-12 pr-4 py-4 bg-zinc-800 border-2 border-zinc-700 rounded-xl outline-none focus:border-gold font-black text-3xl text-white shadow-inner"
+                            className="w-full pl-12 pr-4 py-4 bg-zinc-100 dark:bg-zinc-800 border-2 border-zinc-700 rounded-xl outline-none focus:border-gold font-black text-3xl text-zinc-900 dark:text-white shadow-inner"
                             value={paymentAmount}
                             onChange={(e) => setPaymentAmount(e.target.value)}
                             placeholder="0.00"
