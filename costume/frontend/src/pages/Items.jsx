@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Search, Edit2, Trash2, QrCode, History, X, Printer, AlertCircle, CheckCircle2, Download } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, QrCode, History, X, Printer, AlertCircle, CheckCircle2, Download, Scissors } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import * as XLSX from 'xlsx';
 
@@ -261,10 +261,18 @@ const Items = () => {
             </thead>
             <tbody className="divide-y divide-zinc-800 text-zinc-300">
             {filteredItems.map(item => (
-              <tr key={item.id} className="hover:bg-zinc-100 dark:bg-zinc-800/50 transition-colors">
-                <td className="px-6 py-4 font-mono text-sm font-bold text-gold">{item.reference}</td>
+              <tr 
+                key={item.id} 
+                className="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer group"
+                onClick={(e) => {
+                  // Empêcher l'ouverture si on clique sur un bouton ou un select
+                  if (e.target.closest('button') || e.target.closest('select')) return;
+                  showHistory(item.id);
+                }}
+              >
+                <td className="px-6 py-4 font-mono text-sm font-bold text-gold group-hover:text-light-gold transition-colors">{item.reference}</td>
                 <td className="px-6 py-4">
-                  <div className="font-medium text-zinc-900 dark:text-white">{item.name}</div>
+                  <div className="font-medium text-zinc-900 dark:text-white group-hover:text-gold transition-colors">{item.name}</div>
                   <div className="text-xs text-zinc-500">{item.model}</div>
                 </td>
                 <td className="px-6 py-4 capitalize">{item.type}</td>
@@ -445,9 +453,15 @@ const Items = () => {
                                     .sort((a, b) => new Date(a.rental.startDate) - new Date(b.rental.startDate))
                                     .map((r, idx) => (
                                         <div key={idx} className="flex items-center justify-between bg-white dark:bg-zinc-900 p-3 rounded-lg border-l-4 border-gold shadow-md">
-                                            <div>
+                                            <div className="flex-1">
                                                 <p className="font-bold text-zinc-900 dark:text-white text-sm">Du {new Date(r.rental.startDate).toLocaleDateString()} au {new Date(r.rental.expectedReturn).toLocaleDateString()}</p>
-                                                <p className="text-[10px] text-zinc-500 uppercase font-semibold">Client: {r.rental.customer.firstName} {r.rental.customer.lastName}</p>
+                                                <p className="text-[10px] text-zinc-500 uppercase font-semibold mb-1">Client: {r.rental.customer.firstName} {r.rental.customer.lastName}</p>
+                                                {r.tailorModification && (
+                                                    <div className="flex items-center gap-1.5 text-[10px] text-gold font-bold bg-gold/10 px-2 py-1 rounded border border-gold/20 w-fit">
+                                                        <Scissors size={12} className="text-gold" />
+                                                        <span>Tailleur: {r.tailorModification}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
                                                 new Date(r.rental.startDate) <= new Date() ? 'bg-orange-900/30 text-orange-400' : 'bg-blue-900/30 text-blue-400'
@@ -477,7 +491,12 @@ const Items = () => {
                             <tr key={i} className="text-xs hover:bg-zinc-100 dark:bg-zinc-800/50 transition-colors">
                                 <td className="px-4 py-4 font-medium text-zinc-900 dark:text-white">
                                     {r.rental.customer.firstName} {r.rental.customer.lastName}
-                                    <div className="text-[10px] text-zinc-500 font-mono">{r.rental.customer.phone}</div>
+                                    <div className="text-[10px] text-zinc-500 font-mono mb-1">{r.rental.customer.phone}</div>
+                                    {r.tailorModification && (
+                                        <div className="flex items-center gap-1 text-[9px] text-gold font-bold bg-gold/5 px-1.5 py-0.5 rounded border border-gold/10 w-fit">
+                                            <Scissors size={10} /> {r.tailorModification}
+                                        </div>
+                                    )}
                                 </td>
                                 <td className="px-4 py-4 text-center text-zinc-400">
                                     {new Date(r.rental.startDate).toLocaleDateString()} <br/>
