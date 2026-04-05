@@ -384,30 +384,31 @@ const Rentals = () => {
       <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl border border-gold/10 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[900px]">
-            <thead className="bg-zinc-100 dark:bg-zinc-800 uppercase text-[10px] sm:text-xs font-semibold text-zinc-400">
+            <thead className="bg-zinc-100 dark:bg-zinc-800 uppercase text-[10px] sm:text-xs font-bold text-zinc-500 dark:text-zinc-400">
               <tr>
-                <th className="px-6 py-4 border-b border-zinc-700 whitespace-nowrap tracking-wider">Client</th>
-                <th className="px-6 py-4 border-b border-zinc-700 whitespace-nowrap tracking-wider">Articles</th>
-                <th className="px-6 py-4 border-b border-zinc-700 text-center whitespace-nowrap tracking-wider">Dates</th>
-                <th className="px-6 py-4 border-b border-zinc-700 whitespace-nowrap tracking-wider">Statut</th>
-                <th className="px-6 py-4 border-b border-zinc-700 whitespace-nowrap tracking-wider">Actions</th>
+                <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap tracking-wider">Client</th>
+                <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap tracking-wider">Articles</th>
+                <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700 text-center whitespace-nowrap tracking-wider">Dates</th>
+                <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap tracking-wider">Statut</th>
+                <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-700 whitespace-nowrap tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800 text-zinc-300">
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-300">
             {filteredRentals.map(rental => (
-              <tr key={rental.id} className="hover:bg-zinc-100 dark:bg-zinc-800/50 transition-colors">
+              <tr key={rental.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                 <td className="px-6 py-4">
-                  <div className="font-bold text-zinc-900 dark:text-white text-base">{rental.customer.firstName} {rental.customer.lastName}</div>
-                  <div className="text-xs text-gold font-mono tracking-tight">{rental.customer.phone}</div>
+                  <div className="font-bold text-zinc-900 dark:text-white text-base uppercase tracking-tighter">#{rental.id.toString().padStart(5, '0')}</div>
+                  <div className="text-sm font-black text-gold uppercase truncate max-w-[150px]">{rental.customer.firstName} {rental.customer.lastName}</div>
+                  <div className="text-xs text-zinc-500 dark:text-gold font-mono tracking-tight font-bold">{rental.customer.phone}</div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1.5">
                     {rental.items.map((ri, idx) => (
-                      <span key={idx} className="bg-zinc-100 dark:bg-zinc-800 text-zinc-200 text-[10px] px-2.5 py-1 rounded border border-gold/20 font-medium">
+                      <span key={idx} className="bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-[10px] px-2.5 py-1 rounded border border-zinc-200 dark:border-gold/20 font-bold shadow-sm">
                         {ri.item.name} 
-                        {ri.remarks && <span className="text-zinc-500 ml-1 italic">({ri.remarks})</span>}
+                        {ri.remarks && <span className="text-zinc-400 dark:text-zinc-500 ml-1 italic font-medium">({ri.remarks})</span>}
                         {ri.tailorModification && (
-                          <span className="text-gold ml-1 bg-gold/10 px-1.5 py-0.5 rounded flex items-center gap-1 inline-flex border border-gold/20">
+                          <span className="text-gold ml-1 bg-gold/5 dark:bg-gold/10 px-1.5 py-0.5 rounded flex items-center gap-1 inline-flex border border-gold/20">
                             <Scissors size={8} /> {ri.tailorModification}
                           </span>
                         )}
@@ -417,17 +418,17 @@ const Rentals = () => {
                 </td>
                 <td className="px-6 py-4">
                    <div className="flex flex-col items-center text-[10px] space-y-1.5">
-                     <span className="flex items-center text-blue-400 font-bold bg-blue-900/20 px-2.5 py-1 rounded border border-blue-900/30 w-full justify-center">
+                     <span className="flex items-center text-blue-700 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded border border-blue-100 dark:border-blue-900/30 w-full justify-center">
                        <Calendar size={10} className="mr-1.5" /> {format(new Date(rental.startDate), 'dd/MM/yy')}
                      </span>
-                     <span className="flex items-center text-orange-400 font-bold bg-orange-900/20 px-2.5 py-1 rounded border border-orange-900/30 w-full justify-center">
+                     <span className="flex items-center text-orange-700 dark:text-orange-400 font-bold bg-orange-50 dark:bg-orange-900/20 px-2.5 py-1 rounded border border-orange-100 dark:border-orange-900/30 w-full justify-center">
                        <Calendar size={10} className="mr-1.5" /> {format(new Date(rental.expectedReturn), 'dd/MM/yy')}
                      </span>
                    </div>
                 </td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                    rental.status === 'ONGOING' ? 'bg-blue-900/20 text-blue-400 border-blue-900/30' : 'bg-green-900/20 text-green-400 border-green-900/30'
+                    rental.status === 'ONGOING' ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30' : 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30'
                   }`}>
                     {rental.status === 'ONGOING' ? 'En cours' : 'Retourné'}
                   </span>
@@ -436,7 +437,7 @@ const Rentals = () => {
                   <div className="flex gap-4 flex-wrap">
                     <button 
                       onClick={() => setReceiptModal(rental)}
-                      className="text-zinc-300 hover:text-gold flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                      className="text-zinc-500 dark:text-zinc-300 hover:text-gold flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
                       title="Afficher le bon de location"
                     >
                       <FileText size={16} className="mr-1"/> Bon

@@ -33,6 +33,44 @@ exports.getStats = async (req, res) => {
       }
     });
 
+    // Repairs for tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const dayAfterTomorrow = new Date(tomorrow);
+    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+
+    const tomorrowRepairs = await prisma.rentalItem.findMany({
+      where: {
+        rental: {
+          startDate: {
+            gte: tomorrow,
+            lt: dayAfterTomorrow
+          }
+        },
+        OR: [
+          { remarks: { not: null, not: "" } },
+          { tailorModification: { not: null, not: "" } }
+        ]
+      },
+      include: {
+        item: true,
+        rental: {
+          include: { customer: true }
+        }
+      }
+    });
+
+    // Cleaning items
+    const cleaningItemsList = await prisma.item.findMany({
+      where: { status: 'CLEANING' }
+    });
+
+    // Rented items
+    const rentedItemsList = await prisma.item.findMany({
+      where: { status: 'RENTED' }
+    });
+
     res.json({
       activeRentals,
       availableItems,
@@ -40,7 +78,10 @@ exports.getStats = async (req, res) => {
       repairingItems,
       cleaningItems,
       dailyRevenue: req.userData.role === 'ADMIN' ? dailyRevenue : null,
-      delayedRentals
+      delayedRentals,
+      tomorrowRepairs,
+      cleaningItemsList,
+      rentedItemsList
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -23,8 +23,8 @@ const RentalReceipt = ({ rental, onClose }) => {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print-bg">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto print:shadow-none print:max-h-none print:overflow-visible print:w-full print:max-w-none">
         <div className="p-6 border-b border-gray-300 flex justify-between items-center sticky top-0 bg-white z-10 no-print">
           <h2 className="text-2xl font-black text-black">BON DE LOCATION</h2>
           <div className="flex gap-2">
@@ -44,38 +44,36 @@ const RentalReceipt = ({ rental, onClose }) => {
           </div>
         </div>
 
-        <div id="receipt-content" className="p-8 bg-white text-black font-mono">
+        <div id="receipt-content" className="p-8 bg-white text-black font-mono print:p-0">
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
               @page {
-                size: 80mm auto;
-                margin: 0;
+                size: A5;
+                margin: 10mm;
               }
-              .no-print { display: none !important; }
-              body { 
-                padding: 0; 
-                margin: 0; 
-                background: white;
-                color: black;
-                font-family: 'Courier New', Courier, monospace;
-                -webkit-print-color-adjust: exact;
+              .no-print, .no-print-bg { display: none !important; }
+              html, body { 
+                height: 100%;
+                margin: 0 !important; 
+                padding: 0 !important;
+                background: white !important;
+                visibility: hidden;
               }
-              #receipt-content { 
-                padding: 4mm !important; 
-                width: 72mm !important;
-                font-size: 10pt !important;
-                line-height: 1.2;
+              #receipt-content, #receipt-content * {
+                visibility: visible;
               }
-              h1 { font-size: 18pt !important; font-weight: 900 !important; }
-              .ticket-title { font-size: 14pt !important; }
-              .text-xl { font-size: 14pt !important; }
-              .text-sm { font-size: 10pt !important; }
-              .p-8 { padding: 4mm !important; }
-              .mb-8 { margin-bottom: 6mm !important; }
-              .mb-6 { margin-bottom: 4mm !important; }
-              table th, table td { padding: 3px !important; }
-              .border-black { border-color: #000 !important; border-width: 1.5pt !important; }
-              .font-black { font-weight: 900 !important; }
+              #receipt-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+              }
+              .print-border {
+                border: 2px solid black !important;
+                padding: 15px !important;
+              }
             }
           `}} />
           
