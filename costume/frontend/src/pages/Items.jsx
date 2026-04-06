@@ -9,7 +9,7 @@ const Items = () => {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState('AVAILABLE');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [historyModal, setHistoryModal] = useState(null);
   const [qrModal, setQrModal] = useState(null);

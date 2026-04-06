@@ -40,7 +40,8 @@ exports.createRental = async (req, res) => {
     const start = new Date(startDate);
     start.setHours(0, 0, 0, 0);
     const end = new Date(expectedReturn);
-    end.setHours(23, 59, 59, 999);
+    // Set to 12:00 PM for the return deadline
+    end.setHours(12, 0, 0, 0);
 
     // 1. Récupérer les détails des articles sélectionnés (pour connaître leurs ensembleId)
     const selectedItemsDetails = await prisma.item.findMany({
@@ -365,6 +366,89 @@ exports.returnRental = async (req, res) => {
     await logAction(req.userData.userId, 'RETURN_RENTAL', { rentalId: id });
 
     res.json({ message: 'Items returned and moved to cleaning' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateRental = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      firstName, lastName, phone, 
+      items: selectedItems,
+      startDate, expectedReturn, 
+      totalAmount, paidAmount, discount, addedAmount, remarks,
+      guaranteeDocument 
+    } = req.body;
+
+    const rentalId = parseInt(id);
+
+    // Find existing rental
+    const existingRental = await prisma.rental.findUnique({
+      where: { id: rentalId },
+      include: { items: true }
+    });
+
+    if (!existingRental) return res.status(404).json({ message: 'Location non trouvée' });
+
+    // Update customer if info changed
+    await prisma.customer.update({
+      where: { id: existingRental.customerId },
+      data: { firstName, lastName, phone }
+    });
+
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(expectedReturn);
+    // Set to 12:00 PM to avoid late alert if returned same day at noon
+    end.setHours(12, 0, 0, 0);
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Release old items
+      const oldItemIds = existingRental.items.map(ri => ri.itemId);
+      await tx.item.updateMany({
+        where: { id: { in: oldItemIds } },
+        data: { status: 'AVAILABLE' }
+      });
+
+      // 2. Delete old rental items
+      await tx.rentalItem.deleteMany({ where: { rentalId } });
+
+      // 3. Update rental details
+      const updatedRental = await tx.rental.update({
+        where: { id: rentalId },
+        data: {
+          startDate: start,
+          expectedReturn: end,
+          totalAmount: parseFloat(totalAmount),
+          paidAmount: parseFloat(paidAmount),
+          discount: parseFloat(discount),
+          addedAmount: parseFloat(addedAmount) || 0,
+          remarks: remarks || null,
+          guaranteeDocument: guaranteeDocument || null,
+          items: {
+            create: selectedItems.map(item => ({ 
+              itemId: parseInt(item.id),
+              remarks: item.remarks || null,
+              tailorModification: item.tailorModification || null
+            }))
+          }
+        }
+      });
+
+      // 4. Update new items status
+      const newItemIds = selectedItems.map(item => parseInt(item.id));
+      await tx.item.updateMany({
+        where: { id: { in: newItemIds } },
+        data: { status: 'RENTED' }
+      });
+
+      return updatedRental;
+    });
+
+    await logAction(req.userData.userId, 'UPDATE_RENTAL', { rentalId: id });
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

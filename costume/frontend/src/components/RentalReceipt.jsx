@@ -49,14 +49,9 @@ const RentalReceipt = ({ rental, onClose }) => {
             @media print {
               @page {
                 size: A5;
-                margin: 10mm;
+                margin: 5mm;
               }
-              .no-print, .no-print-bg { display: none !important; }
-              html, body { 
-                height: 100%;
-                margin: 0 !important; 
-                padding: 0 !important;
-                background: white !important;
+              body * {
                 visibility: hidden;
               }
               #receipt-content, #receipt-content * {
@@ -70,9 +65,8 @@ const RentalReceipt = ({ rental, onClose }) => {
                 padding: 0 !important;
                 margin: 0 !important;
               }
-              .print-border {
-                border: 2px solid black !important;
-                padding: 15px !important;
+              .no-print {
+                display: none !important;
               }
             }
           `}} />
@@ -153,12 +147,6 @@ const RentalReceipt = ({ rental, onClose }) => {
                   <span>-{rental.discount} DA</span>
                 </div>
               )}
-              {rental.addedAmount > 0 && (
-                <div className="w-full flex justify-between text-[11px] font-black">
-                    <span className="uppercase">AJOUTE (RETOUCHE):</span>
-                    <span>+{rental.addedAmount} DA</span>
-                </div>
-              )}
               <div className="w-full flex justify-between text-sm font-black pt-2 border-t-2 border-black">
                 <span className="uppercase">TOTAL LOCATION:</span>
                 <span className="text-lg">{rental.totalAmount} DA</span>
@@ -168,18 +156,12 @@ const RentalReceipt = ({ rental, onClose }) => {
                 <span className="border-b-2 border-black">{rental.paidAmount} DA</span>
               </div>
               <div className="w-full flex justify-between text-xl font-black pt-3 border-t-4 border-double border-black bg-black text-white px-2 py-1 mt-2">
-                <span className="uppercase tracking-tighter">RESTE A PAYER:</span>
+                <span className="uppercase tracking-tighter">RESTE à PAYER:</span>
                 <span>{balance} DA</span>
               </div>
           </div>
 
-          <div className="flex justify-between items-center mb-10 px-4">
-              <div className="text-center flex flex-col items-center">
-                  <div className="w-32 h-16 border-2 border-black border-dashed flex items-center justify-center mb-2">
-                    <p className="text-[8px] font-black uppercase text-gray-300">Emplacement Signature</p>
-                  </div>
-                  <p className="text-[9px] font-black uppercase underline">SIGNATURE CLIENT</p>
-              </div>
+          <div className="flex justify-center items-center mb-10 px-4">
               <div className="flex flex-col items-center">
                   <QRCodeSVG value={qrValue} size={65} level="H" />
                   <p className="text-[8px] font-black mt-2 uppercase tracking-widest">AUTHENTIFIER LE BON</p>
@@ -187,11 +169,21 @@ const RentalReceipt = ({ rental, onClose }) => {
           </div>
 
           <div className="text-center border-t-2 border-dashed border-black pt-4">
-            <p className="text-[11px] uppercase font-black mb-1">MERCI DE VOTRE CONFIANCE</p>
-            <p className="text-[8px] font-black uppercase leading-tight max-w-[200px] mx-auto">
-              LES ARTICLES DOIVENT ETRE RETOURNES DANS LEUR ETAT D'ORIGINE. 
-              TOUT DOMMAGE OU RETARD SERA FACTURE SELON LE REGLEMENT INTERNE.
-            </p>
+            <p className="text-[11px] uppercase font-black mb-2">MERCI DE VOTRE CONFIANCE</p>
+            <div className="space-y-2">
+              <div className="text-[9px] font-black uppercase leading-tight">
+                <p>L’avance n’est pas remboursable.</p>
+                <p>Merci de retourner le costume avant 12h00 le jour du retour.</p>
+                <p>Tout retard peut entraîner des frais supplémentaires.</p>
+                <p>Le magasin n’est pas responsable en cas de perte du bon.</p>
+              </div>
+              <div className="text-[10px] font-bold leading-tight" dir="rtl">
+                <p>المبلغ المدفوع مسبقاً (العربون) لا يُسترجع.</p>
+                <p>يرجى إرجاع البدلة قبل الساعة 12:00 يوم الإرجاع.</p>
+                <p>في حالة التأخير قد يتم فرض رسوم إضافية.</p>
+                <p>المحل غير مسؤول عن ضياع الوصل.</p>
+              </div>
+            </div>
           </div>
         </div>
 

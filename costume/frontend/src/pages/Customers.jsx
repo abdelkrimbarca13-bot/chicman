@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Search, User, Edit2, Trash2, X, ShieldAlert, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Plus, Search, User, Edit2, Trash2, X, ShieldAlert, ShieldCheck, AlertCircle, History, ShoppingCart } from 'lucide-react';
 
 const Customers = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [historyModal, setHistoryModal] = useState(null);
   const [currentCustomer, setCurrentCustomer] = useState({ firstName: '', lastName: '', phone: '', address: '', idNumber: '', isBlacklisted: false });
   const [editingId, setEditingId] = useState(null);
 
@@ -18,6 +21,15 @@ const Customers = () => {
     } catch (err) {
       console.error('Erreur chargement clients:', err);
     }
+  };
+
+  const handleNewRental = (customer) => {
+    const params = new URLSearchParams({
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      phone: customer.phone
+    });
+    navigate(`/rentals?new=true&${params.toString()}`);
   };
 
   useEffect(() => {
@@ -144,9 +156,21 @@ const Customers = () => {
                 <span className="text-[10px] font-black uppercase text-zinc-500 tracking-wider mb-1">Adresse</span>
                 <span className="text-xs">{customer.address}</span>
               </div>
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">Locations</span>
-                <span className="bg-gold/10 text-gold px-2 py-0.5 rounded-full text-[10px] font-bold border border-gold/20">{customer.rentals?.length || 0}</span>
+              <div className="flex justify-between items-center pt-2 gap-2">
+                <button 
+                  onClick={() => setHistoryModal(customer)}
+                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all border border-zinc-200 dark:border-zinc-700"
+                >
+                  <History size={14} /> Historique
+                </button>
+                {!customer.isBlacklisted && (
+                  <button 
+                    onClick={() => handleNewRental(customer)}
+                    className="flex-1 flex items-center justify-center gap-2 py-2 bg-gold/10 text-gold rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gold hover:text-rich-black transition-all border border-gold/20"
+                  >
+                    <ShoppingCart size={14} /> Louer
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -175,6 +199,57 @@ const Customers = () => {
                 <button type="submit" className="px-6 py-2 bg-gold text-rich-black rounded font-bold hover:bg-light-gold shadow-lg shadow-gold/10 transition-all active:scale-95">Enregistrer</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {historyModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl p-8 w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-gold/20 shadow-2xl">
+            <div className="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gold font-luxury tracking-widest uppercase">Historique Locations</h2>
+                <p className="text-xs text-zinc-500 uppercase font-black">{historyModal.firstName} {historyModal.lastName}</p>
+              </div>
+              <button onClick={() => setHistoryModal(null)} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 hover:text-zinc-900 dark:text-white transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {historyModal.rentals && historyModal.rentals.length > 0 ? (
+                historyModal.rentals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(rental => (
+                  <div key={rental.id} className="p-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl border border-zinc-700 flex justify-between items-center group hover:border-gold/30 transition-all">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="font-bold text-zinc-900 dark:text-white">Bon #{rental.id.toString().padStart(5, '0')}</span>
+                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${rental.status === 'ONGOING' ? 'bg-blue-900/20 text-blue-400 border-blue-900/50' : 'bg-green-900/20 text-green-400 border-green-900/50'}`}>
+                          {rental.status === 'ONGOING' ? 'En cours' : 'Retourné'}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter">
+                        Du {new Date(rental.startDate).toLocaleDateString()} au {new Date(rental.expectedReturn).toLocaleDateString()}
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {rental.items.map((ri, i) => (
+                          <span key={i} className="text-[9px] bg-zinc-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-300 font-medium border border-zinc-300 dark:border-zinc-600">
+                            {ri.item.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-black text-gold text-sm">{rental.totalAmount} DA</div>
+                      <div className="text-[10px] text-zinc-500 font-bold uppercase">Payé: {rental.paidAmount} DA</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 text-zinc-500 font-bold uppercase tracking-widest border-2 border-dashed border-zinc-800 rounded-xl">
+                  Aucune location enregistrée
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

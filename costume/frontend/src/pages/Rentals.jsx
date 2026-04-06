@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Calendar, CheckCircle, Search, Trash2, Smartphone, DollarSign, X, FileText, Play, Info, Scissors, PlusCircle } from 'lucide-react';
+import { Plus, Calendar, CheckCircle, Search, Trash2, Smartphone, DollarSign, X, FileText, Play, Info, Scissors, PlusCircle, Edit2 } from 'lucide-react';
 import { format } from 'date-fns';
 import RentalReceipt from '../components/RentalReceipt';
 
@@ -13,6 +13,8 @@ const Rentals = () => {
   const [items, setItems] = useState([]);
   const [allItems, setAllItems] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingRentalId, setEditingRentalId] = useState(null);
   const [paymentModal, setPaymentModal] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [receiptModal, setReceiptModal] = useState(null);
@@ -37,6 +39,19 @@ const Rentals = () => {
     if (rentalId && rentals.length > 0) {
       const rental = rentals.find(r => r.id.toString() === rentalId);
       if (rental) setReceiptModal(rental);
+    }
+
+    const isNew = searchParams.get('new');
+    if (isNew === 'true') {
+      setNewRental(prev => ({
+        ...prev,
+        firstName: searchParams.get('firstName') || '',
+        lastName: searchParams.get('lastName') || '',
+        phone: searchParams.get('phone') || ''
+      }));
+      setIsModalOpen(true);
+      // Nettoyer l'URL
+      window.history.replaceState({}, '', '/rentals');
     }
   }, [searchParams, rentals]);
   const [filterStatus, setFilterStatus] = useState('ONGOING');
@@ -147,6 +162,33 @@ const Rentals = () => {
     }));
   };
 
+  const handleEditRental = (rental) => {
+    setNewRental({
+      firstName: rental.customer?.firstName || '',
+      lastName: rental.customer?.lastName || '',
+      phone: rental.customer?.phone || '',
+      items: rental.items.map(ri => ({
+        id: ri.item.id,
+        remarks: ri.remarks || '',
+        tailorModification: ri.tailorModification || '',
+        price: ri.price,
+        name: ri.item.name,
+        type: ri.item.type
+      })),
+      startDate: new Date(rental.startDate).toISOString().split('T')[0],
+      expectedReturn: new Date(rental.expectedReturn).toISOString().split('T')[0],
+      totalAmount: rental.totalAmount,
+      paidAmount: rental.paidAmount,
+      discount: rental.discount,
+      addedAmount: rental.addedAmount || 0,
+      remarks: rental.remarks || '',
+      guaranteeDocument: rental.guaranteeDocument
+    });
+    setEditingRentalId(rental.id);
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     if (newRental.items.length === 0) {
@@ -154,15 +196,28 @@ const Rentals = () => {
         return;
     }
     try {
-      await api.post('/rentals', {
+      const payload = {
         ...newRental,
         items: newRental.items.map(item => ({ 
           id: parseInt(item.id), 
           remarks: item.remarks,
-          tailorModification: item.tailorModification
-        }))
-      });
+          tailorModification: item.tailorModification,
+          price: parseFloat(item.price)
+        })),
+        totalAmount: parseFloat(newRental.totalAmount),
+        paidAmount: parseFloat(newRental.paidAmount),
+        discount: parseFloat(newRental.discount),
+        addedAmount: parseFloat(newRental.addedAmount || 0)
+      };
+
+      if (isEditMode) {
+        await api.put(`/rentals/${editingRentalId}`, payload);
+      } else {
+        await api.post('/rentals', payload);
+      }
       setIsModalOpen(false);
+      setIsEditMode(false);
+      setEditingRentalId(null);
       setNewRental({ 
         firstName: '', 
         lastName: '', 
@@ -178,7 +233,7 @@ const Rentals = () => {
       });
       fetchData();
     } catch {
-      alert('Erreur lors de la création');
+      alert(`Erreur lors de la ${isEditMode ? 'modification' : 'création'}`);
     }
   };
 
@@ -285,9 +340,9 @@ const Rentals = () => {
     let matchesCustomer = !filterCustomer;
     if (filterCustomer) {
       const searchTerm = filterCustomer.toLowerCase();
-      const customerName = `${rental.customer.firstName} ${rental.customer.lastName}`.toLowerCase();
+      const customerName = `${rental.customer?.firstName || ''} ${rental.customer?.lastName || ''}`.toLowerCase();
       matchesCustomer = customerName.includes(searchTerm) || 
-                        rental.customer.phone.includes(searchTerm) ||
+                        rental.customer?.phone?.includes(searchTerm) ||
                         rental.id.toString().includes(searchTerm);
     }
     
@@ -398,8 +453,8 @@ const Rentals = () => {
               <tr key={rental.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-bold text-zinc-900 dark:text-white text-base uppercase tracking-tighter">#{rental.id.toString().padStart(5, '0')}</div>
-                  <div className="text-sm font-black text-gold uppercase truncate max-w-[150px]">{rental.customer.firstName} {rental.customer.lastName}</div>
-                  <div className="text-xs text-zinc-500 dark:text-gold font-mono tracking-tight font-bold">{rental.customer.phone}</div>
+                  <div className="text-sm font-black text-gold uppercase truncate max-w-[150px]">{rental.customer?.firstName} {rental.customer?.lastName}</div>
+                  <div className="text-xs text-zinc-500 dark:text-gold font-mono tracking-tight font-bold">{rental.customer?.phone}</div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1.5">
@@ -427,11 +482,18 @@ const Rentals = () => {
                    </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                    rental.status === 'ONGOING' ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30' : 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30'
-                  }`}>
-                    {rental.status === 'ONGOING' ? 'En cours' : 'Retourné'}
-                  </span>
+                  <div className="flex flex-col gap-1.5">
+                    <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border text-center ${
+                      rental.status === 'ONGOING' ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30' : 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30'
+                    }`}>
+                      {rental.status === 'ONGOING' ? 'En cours' : 'Retourné'}
+                    </span>
+                    {rental.status === 'ONGOING' && new Date(rental.expectedReturn) < new Date() && (
+                      <span className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-500/50 bg-red-500/10 text-red-500 text-center animate-pulse">
+                        Retard
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex gap-4 flex-wrap">
@@ -453,13 +515,29 @@ const Rentals = () => {
                     )}
                     {rental.status === 'ONGOING' && (
                       <>
-                        {!rental.isActivated && (
+                        {!rental.isActivated ? (
+                          <>
+                            <button 
+                              onClick={() => handleActivate(rental.id)}
+                              className="text-orange-400 hover:text-orange-300 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                              title="Activer la location"
+                            >
+                              <Play size={16} className="mr-1"/> Activer
+                            </button>
+                            <button 
+                              onClick={() => handleEditRental(rental)}
+                              className="text-gold hover:text-light-gold flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                              title="Modifier la location"
+                            >
+                              <Edit2 size={16} className="mr-1"/> Modifier
+                            </button>
+                          </>
+                        ) : (
                           <button 
-                            onClick={() => handleActivate(rental.id)}
-                            className="text-orange-400 hover:text-orange-300 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
-                            title="Activer la location"
+                            onClick={() => handleReturn(rental.id)}
+                            className="text-green-600 hover:text-green-900 flex items-center font-bold text-sm"
                           >
-                            <Play size={16} className="mr-1"/> Activer
+                            <CheckCircle size={16} className="mr-1"/> Retourner
                           </button>
                         )}
                         <button 
@@ -468,12 +546,6 @@ const Rentals = () => {
                           title="Ajouter paiement"
                         >
                           <DollarSign size={16} className="mr-1"/> Paiement
-                        </button>
-                        <button 
-                          onClick={() => handleReturn(rental.id)}
-                          className="text-green-600 hover:text-green-900 flex items-center font-bold text-sm"
-                        >
-                          <CheckCircle size={16} className="mr-1"/> Retourner
                         </button>
                       </>
                     )}
@@ -490,9 +562,9 @@ const Rentals = () => {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gold/20">
             <div className="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-white dark:bg-zinc-900 z-10">
-                <h2 className="text-2xl font-black text-gold font-luxury tracking-widest uppercase">Nouvelle Location</h2>
+                <h2 className="text-2xl font-black text-gold font-luxury tracking-widest uppercase">{isEditMode ? 'Modifier' : 'Nouvelle'} Location</h2>
                 <div className="text-xs font-bold text-gold bg-gold/10 px-3 py-1 rounded-full border border-gold/20">
-                    RENT-{rentId}
+                    {isEditMode ? `ID: #${editingRentalId}` : `RENT-${rentId}`}
                 </div>
             </div>
             
@@ -640,7 +712,7 @@ const Rentals = () => {
                             </div>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-zinc-500 uppercase font-bold tracking-tighter">Ajouté (Retouche/Accessoires)</span>
+                            <span className="text-zinc-500 uppercase font-bold tracking-tighter">Ajouter</span>
                             <div className="flex items-center gap-2">
                                 <input 
                                 type="number" 
@@ -667,8 +739,8 @@ const Rentals = () => {
               </div>
 
               <div className="flex gap-4 pt-6 sticky bottom-0 bg-white dark:bg-zinc-900 border-t border-zinc-800 mt-8">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-6 py-4 border border-zinc-700 text-zinc-400 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-100 dark:bg-zinc-800 transition-colors">ANNULER</button>
-                <button type="submit" className="flex-1 px-6 py-4 bg-gold text-rich-black rounded-xl font-black uppercase tracking-widest hover:bg-light-gold shadow-xl shadow-gold/10 transition-all transform active:scale-95">CRÉER LE BON</button>
+                <button type="button" onClick={() => { setIsModalOpen(false); setIsEditMode(false); setEditingRentalId(null); }} className="flex-1 px-6 py-4 border border-zinc-700 text-zinc-400 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-100 dark:bg-zinc-800 transition-colors">ANNULER</button>
+                <button type="submit" className="flex-1 px-6 py-4 bg-gold text-rich-black rounded-xl font-black uppercase tracking-widest hover:bg-light-gold shadow-xl shadow-gold/10 transition-all transform active:scale-95">{isEditMode ? 'ENREGISTRER' : 'CRÉER LE BON'}</button>
               </div>
             </form>
           </div>

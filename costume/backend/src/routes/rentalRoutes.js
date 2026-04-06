@@ -7,6 +7,7 @@ router.get('/revenue', auth, rentalController.getRevenue);
 router.get('/cash/movements', auth, rentalController.getCashMovements);  
 router.post('/', auth, rentalController.createRental);  
 router.post('/:id/payment', auth, rentalController.addPayment);  
+router.put('/:id', auth, rentalController.updateRental);
 router.post('/:id/activate', auth, rentalController.activateRental);  
 router.post('/:id/return', auth, rentalController.returnRental);  
 router.delete('/:id', auth, rentalController.deleteRental);
