@@ -126,7 +126,9 @@ const Rentals = () => {
               tailorModification: '',
               price: item.rentalPrice || 0, 
               name: item.name,
-              type: item.type
+              type: item.type,
+              color: item.color,
+              size: item.size
             }]
         }));
     }
@@ -173,7 +175,9 @@ const Rentals = () => {
         tailorModification: ri.tailorModification || '',
         price: ri.price,
         name: ri.item.name,
-        type: ri.item.type
+        type: ri.item.type,
+        color: ri.item.color,
+        size: ri.item.size
       })),
       startDate: new Date(rental.startDate).toISOString().split('T')[0],
       expectedReturn: new Date(rental.expectedReturn).toISOString().split('T')[0],
@@ -613,6 +617,10 @@ const Rentals = () => {
                                         <div>
                                             <div className="font-bold text-zinc-900 dark:text-white">{item.name}</div>
                                             <div className="text-xs text-zinc-500 uppercase font-mono">{item.reference} - {item.type}</div>
+                                            <div className="text-[10px] text-zinc-500 font-bold uppercase mt-1">
+                                                <span className="bg-zinc-800 px-1.5 py-0.5 rounded mr-2">C: {item.color}</span>
+                                                <span className="bg-zinc-800 px-1.5 py-0.5 rounded">T: {item.size}</span>
+                                            </div>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-sm font-black text-gold">{item.rentalPrice} DA</div>
@@ -632,8 +640,14 @@ const Rentals = () => {
                   <label className="block text-xs font-black uppercase text-zinc-500 tracking-wider">Articles Sélectionnés</label>
                   {newRental.items.map(item => (
                     <div key={item.id} className="flex flex-col p-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl border border-zinc-700 group hover:border-gold/30 transition-colors">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="font-bold text-zinc-900 dark:text-white text-base">{item.name}</span>
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <span className="font-bold text-zinc-900 dark:text-white text-base">{item.name}</span>
+                          <div className="text-[10px] text-zinc-500 font-black uppercase flex gap-2 mt-1">
+                            <span className="bg-zinc-800/50 px-2 py-0.5 rounded border border-zinc-700">Couleur: {item.color}</span>
+                            <span className="bg-zinc-800/50 px-2 py-0.5 rounded border border-zinc-700">Taille: {item.size}</span>
+                          </div>
+                        </div>
                         <div className="flex items-center gap-4">
                           <span className="text-gold font-black">{item.price} DA</span>
                           <button type="button" onClick={() => removeItem(item.id)} className="text-zinc-500 hover:text-red-400 transition-colors">
