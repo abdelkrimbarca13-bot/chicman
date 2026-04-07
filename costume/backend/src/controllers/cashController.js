@@ -3,15 +3,18 @@ const prisma = require('../utils/prisma');
 exports.getDailyCash = async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0] + 'T00:00:00.000Z';
+    const dayStart = new Date(today);
+    const dayEnd = new Date(today);
+    dayEnd.setUTCHours(23, 59, 59, 999);
 
     let dailyCash = await prisma.dailyCash.findUnique({
-      where: { date: new Date(today) }
+      where: { date: dayStart }
     });
 
     if (!dailyCash) {
       dailyCash = await prisma.dailyCash.create({
         data: {
-          date: new Date(today),
+          date: dayStart,
           initialCash: 0,
           totalRentals: 0,
           totalExpenses: 0,
@@ -21,16 +24,75 @@ exports.getDailyCash = async (req, res) => {
       });
     }
 
+    // Récupérer les détails des revenus (paiements) et dépenses pour aujourd'hui
+    const payments = await prisma.payment.findMany({
+      where: { createdAt: { gte: dayStart, lte: dayEnd } },
+      include: { rental: { include: { customer: true } } }
+    });
+
+    const expenses = await prisma.expense.findMany({
+      where: { date: { gte: dayStart, lte: dayEnd } },
+      orderBy: { date: 'desc' }
+    });
+
+    const response = {
+      ...dailyCash,
+      details: {
+        payments,
+        expenses
+      }
+    };
+
     // Filtrer les données si l'utilisateur n'est pas ADMIN
     if (req.userData.role !== 'ADMIN') {
-        const filtered = { ...dailyCash };
-        delete filtered.initialCash;
-        delete filtered.totalRentals;
-        delete filtered.finalBalance;
-        return res.json(filtered);
+        delete response.initialCash;
+        delete response.totalRentals;
+        delete response.finalBalance;
+        // On ne montre pas les revenus aux employés, seulement leurs dépenses
+        delete response.details.payments;
     }
 
-    res.json(dailyCash);
+    res.json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getDayDetails = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
+    const { date } = req.params;
+    const dayStart = new Date(new Date(date).toISOString().split('T')[0] + 'T00:00:00.000Z');
+    const dayEnd = new Date(new Date(date).toISOString().split('T')[0] + 'T23:59:59.999Z');
+
+    const dailyCash = await prisma.dailyCash.findUnique({
+      where: { date: dayStart }
+    });
+
+    const payments = await prisma.payment.findMany({
+      where: { createdAt: { gte: dayStart, lte: dayEnd } },
+      include: { 
+        rental: { 
+          include: { 
+            customer: true,
+            items: { include: { item: true } }
+          } 
+        } 
+      }
+    });
+
+    const expenses = await prisma.expense.findMany({
+      where: { date: { gte: dayStart, lte: dayEnd } },
+      orderBy: { date: 'desc' }
+    });
+
+    res.json({
+      ...dailyCash,
+      payments,
+      expenses
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

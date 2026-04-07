@@ -11,6 +11,8 @@ const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [historyModal, setHistoryModal] = useState(null);
+  const [customerRentals, setCustomerRentals] = useState([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState({ firstName: '', lastName: '', phone: '', address: '', idNumber: '', isBlacklisted: false });
   const [editingId, setEditingId] = useState(null);
 
@@ -20,6 +22,20 @@ const Customers = () => {
       setCustomers(res.data);
     } catch (err) {
       console.error('Erreur chargement clients:', err);
+    }
+  };
+
+  const handleShowHistory = async (customer) => {
+    setHistoryModal(customer);
+    setIsLoadingHistory(true);
+    setCustomerRentals([]);
+    try {
+      const res = await api.get(`/customers/${customer.id}/rentals`);
+      setCustomerRentals(res.data);
+    } catch (err) {
+      console.error('Erreur chargement historique:', err);
+    } finally {
+      setIsLoadingHistory(false);
     }
   };
 
@@ -158,7 +174,7 @@ const Customers = () => {
               </div>
               <div className="flex justify-between items-center pt-2 gap-2">
                 <button 
-                  onClick={() => setHistoryModal(customer)}
+                  onClick={() => handleShowHistory(customer)}
                   className="flex-1 flex items-center justify-center gap-2 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all border border-zinc-200 dark:border-zinc-700"
                 >
                   <History size={14} /> Historique
@@ -217,29 +233,50 @@ const Customers = () => {
             </div>
             
             <div className="space-y-4">
-              {historyModal.rentals && historyModal.rentals.length > 0 ? (
-                historyModal.rentals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(rental => (
-                  <div key={rental.id} className="p-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl border border-zinc-700 flex justify-between items-center group hover:border-gold/30 transition-all">
+              {isLoadingHistory ? (
+                <div className="text-center py-10 text-gold font-bold uppercase tracking-widest animate-pulse">
+                  Chargement de l'historique...
+                </div>
+              ) : customerRentals && customerRentals.length > 0 ? (
+                customerRentals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(rental => (
+                  <div key={rental.id} className="p-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl border border-zinc-700 flex justify-between items-start group hover:border-gold/30 transition-all">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="font-bold text-zinc-900 dark:text-white">Bon #{rental.id.toString().padStart(5, '0')}</span>
-                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${rental.status === 'ONGOING' ? 'bg-blue-900/20 text-blue-400 border-blue-900/50' : 'bg-green-900/20 text-green-400 border-green-900/50'}`}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-bold text-zinc-900 dark:text-white">BON #{rental.id.toString().padStart(5, '0')}</span>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${rental.status === 'ONGOING' ? 'bg-blue-900/20 text-blue-400 border-blue-900/50' : 'bg-green-900/20 text-green-400 border-green-900/50'}`}>
                           {rental.status === 'ONGOING' ? 'En cours' : 'Retourné'}
                         </span>
                       </div>
-                      <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter">
-                        Du {new Date(rental.startDate).toLocaleDateString()} au {new Date(rental.expectedReturn).toLocaleDateString()}
+                      <div className="flex flex-col gap-1 mb-3">
+                        <div className="text-[11px] text-blue-400 font-bold uppercase tracking-tight flex items-center gap-2">
+                          <span className="text-zinc-500 text-[9px]">Début:</span> {new Date(rental.startDate).toLocaleDateString()}
+                        </div>
+                        <div className="text-[11px] text-orange-400 font-bold uppercase tracking-tight flex items-center gap-2">
+                          <span className="text-zinc-500 text-[9px]">Retour prévu:</span> {new Date(rental.expectedReturn).toLocaleDateString()}
+                        </div>
+                        {rental.actualReturn && (
+                           <div className="text-[11px] text-green-400 font-bold uppercase tracking-tight flex items-center gap-2">
+                             <span className="text-zinc-500 text-[9px]">Retour effectif:</span> {new Date(rental.actualReturn).toLocaleDateString()}
+                           </div>
+                        )}
                       </div>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {rental.items.map((ri, i) => (
-                          <span key={i} className="text-[9px] bg-zinc-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-300 font-medium border border-zinc-300 dark:border-zinc-600">
-                            {ri.item.name}
-                          </span>
-                        ))}
+                      <div className="mt-3">
+                        <p className="text-[9px] font-black uppercase text-zinc-500 mb-2 border-b border-zinc-700/50 pb-1">Articles Loués:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {rental.items.map((ri, i) => (
+                            <div key={i} className="flex flex-col bg-zinc-200/50 dark:bg-zinc-900/50 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700">
+                              <span className="text-[11px] text-zinc-800 dark:text-gold font-bold uppercase">{ri.item.name}</span>
+                              <div className="flex gap-2 mt-0.5">
+                                <span className="text-[9px] text-zinc-500 font-medium">T: {ri.item.size}</span>
+                                <span className="text-[9px] text-zinc-500 font-medium">C: {ri.item.color}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-black text-gold text-sm">{rental.totalAmount} DA</div>
+                    <div className="text-right ml-4">
+                      <div className="font-black text-gold text-base">{rental.totalAmount} DA</div>
                       <div className="text-[10px] text-zinc-500 font-bold uppercase">Payé: {rental.paidAmount} DA</div>
                     </div>
                   </div>

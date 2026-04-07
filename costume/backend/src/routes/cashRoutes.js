@@ -11,5 +11,6 @@ router.post('/expense', cashController.createExpense);
 router.get('/expenses', cashController.getExpenses);
 router.get('/report', cashController.getDailyReport);
 router.get('/history', cashController.getHistory);
+router.get('/details/:date', cashController.getDayDetails);
 
 module.exports = router;

@@ -601,11 +601,11 @@ const Rentals = () => {
                             autoFocus
                         />
                         {scanTerm.length >= 2 && (
-                          <div className="absolute top-full left-0 w-full mt-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-50 overflow-hidden">
+                          <div className="absolute top-full left-0 w-full mt-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-50 overflow-y-auto max-h-[300px] scrollbar-thin scrollbar-thumb-gold">
                             {allItems.filter(item => 
                                 item.name.toLowerCase().includes(scanTerm.toLowerCase()) || 
                                 item.reference.toLowerCase().includes(scanTerm.toLowerCase())
-                            ).slice(0, 6).map(item => {
+                            ).map(item => {
                                 const isAvailable = items.some(i => i.id === item.id);
                                 return (
                                     <button
@@ -615,11 +615,14 @@ const Rentals = () => {
                                         className={`w-full p-3 text-left flex justify-between items-center border-b border-zinc-700 last:border-0 hover:bg-zinc-700 transition-colors ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <div>
-                                            <div className="font-bold text-zinc-900 dark:text-white">{item.name}</div>
-                                            <div className="text-xs text-zinc-500 uppercase font-mono">{item.reference} - {item.type}</div>
-                                            <div className="text-[10px] text-zinc-500 font-bold uppercase mt-1">
-                                                <span className="bg-zinc-800 px-1.5 py-0.5 rounded mr-2">C: {item.color}</span>
-                                                <span className="bg-zinc-800 px-1.5 py-0.5 rounded">T: {item.size}</span>
+                                            <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                                {item.name}
+                                                <span className="text-[10px] bg-gold/10 text-gold px-1.5 py-0.5 rounded border border-gold/20 uppercase font-black">Ref: {item.reference}</span>
+                                            </div>
+                                            <div className="text-[10px] text-zinc-400 font-bold uppercase mt-1 flex gap-3">
+                                                <span className="flex items-center gap-1"><span className="text-gold/50">Taille:</span> {item.size}</span>
+                                                <span className="flex items-center gap-1"><span className="text-gold/50">Couleur:</span> {item.color}</span>
+                                                <span className="flex items-center gap-1"><span className="text-gold/50">Type:</span> {item.type}</span>
                                             </div>
                                         </div>
                                         <div className="text-right">

@@ -78,31 +78,31 @@ const RentalReceipt = ({ rental, onClose }) => {
 
           <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-3">
             <div>
-              <p className="text-[10px] uppercase font-black mb-1">BON N°</p>
-              <p className="text-2xl font-black">#{rental.id.toString().padStart(5, '0')}</p>
+              <p className="text-[12px] uppercase font-black mb-1">BON N°</p>
+              <p className="text-3xl font-black">#{rental.id.toString().padStart(5, '0')}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] uppercase font-black mb-1">DATE</p>
-              <p className="text-sm font-black">{format(new Date(rental.createdAt), 'dd/MM/yyyy HH:mm')}</p>
+              <p className="text-[12px] uppercase font-black mb-1">DATE</p>
+              <p className="text-base font-black">{format(new Date(rental.createdAt), 'dd/MM/yyyy HH:mm')}</p>
             </div>
           </div>
 
-          <div className="space-y-2 mb-6 border-b border-black pb-4">
+          <div className="space-y-3 mb-6 border-b border-black pb-4">
             <div className="flex justify-between items-center">
-              <span className="font-black text-[11px] uppercase">CLIENT:</span>
-              <span className="font-black uppercase text-[13px]">{rental.customer.firstName} {rental.customer.lastName}</span>
+              <span className="font-black text-[12px] uppercase">CLIENT:</span>
+              <span className="font-black uppercase text-lg">{rental.customer.firstName} {rental.customer.lastName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="font-black text-[11px] uppercase">TEL:</span>
-              <span className="font-black text-[13px]">{rental.customer.phone}</span>
+              <span className="font-black text-[12px] uppercase">TEL:</span>
+              <span className="font-black text-lg">{rental.customer.phone}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="font-black text-[10px] uppercase">DOC GARANTIE:</span>
-              <span className="font-black uppercase text-[11px]">{guaranteeDocuments[rental.guaranteeDocument] || 'N/S'}</span>
+              <span className="font-black text-[11px] uppercase">DOC GARANTIE:</span>
+              <span className="font-black uppercase text-[13px]">{guaranteeDocuments[rental.guaranteeDocument] || 'N/S'}</span>
             </div>
             <div className="flex flex-col mt-2 pt-2 border-t border-dotted border-black">
-              <span className="font-black text-[10px] uppercase mb-1">PERIODE DE LOCATION:</span>
-              <div className="flex justify-between font-black text-[11px] bg-black text-white px-2 py-1 rounded">
+              <span className="font-black text-[12px] uppercase mb-1">PERIODE DE LOCATION:</span>
+              <div className="flex justify-between font-black text-base bg-black text-white px-3 py-1.5 rounded">
                 <span>DU {format(new Date(rental.startDate), 'dd/MM/yy')}</span>
                 <span>AU {format(new Date(rental.expectedReturn), 'dd/MM/yy')}</span>
               </div>
@@ -112,7 +112,7 @@ const RentalReceipt = ({ rental, onClose }) => {
           <div className="mb-6">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b-2 border-black text-[11px] uppercase font-black">
+                <tr className="border-b-2 border-black text-[13px] uppercase font-black">
                   <th className="py-2">ARTICLES</th>
                   <th className="py-2 text-right">TAILLE</th>
                 </tr>
@@ -121,12 +121,12 @@ const RentalReceipt = ({ rental, onClose }) => {
                 {rental.items.map((ri, idx) => (
                   <tr key={idx}>
                     <td className="py-3">
-                      <p className="font-black text-[12px] uppercase">{ri.item.name}</p>
-                      <p className="text-[9px] font-black font-mono">REF: {ri.item.reference}</p>
-                      {ri.remarks && <p className="text-[9px] font-black mt-1 uppercase border-l-2 border-black pl-2">NOTE: {ri.remarks}</p>}
-                      {ri.tailorModification && <p className="text-[9px] font-black mt-1 uppercase bg-black text-white px-1 inline-block">RETOUCHE: {ri.tailorModification}</p>}
+                      <p className="font-black text-base uppercase">{ri.item.name}</p>
+                      <p className="text-[11px] font-black font-mono">REF: {ri.item.reference}</p>
+                      {ri.remarks && <p className="text-[11px] font-black mt-1 uppercase border-l-2 border-black pl-2">NOTE: {ri.remarks}</p>}
+                      {ri.tailorModification && <p className="text-[11px] font-black mt-1 uppercase bg-black text-white px-2 inline-block">RETOUCHE: {ri.tailorModification}</p>}
                     </td>
-                    <td className="py-3 text-right font-black text-[12px] uppercase">{ri.item.size}</td>
+                    <td className="py-3 text-right font-black text-base uppercase">{ri.item.size}</td>
                   </tr>
                 ))}
               </tbody>
@@ -134,28 +134,28 @@ const RentalReceipt = ({ rental, onClose }) => {
           </div>
 
           {rental.remarks && (
-            <div className="border-2 border-black p-3 mb-6 text-[10px]">
-              <p className="font-black uppercase mb-1 border-b border-black inline-block">REMARQUES GENERALES:</p>
-              <p className="font-black">{rental.remarks}</p>
+            <div className="border-4 border-black p-4 mb-6 text-center">
+              <p className="font-black uppercase mb-2 border-b-2 border-black inline-block text-sm">REMARQUES IMPORTANTES:</p>
+              <p className="font-black text-base uppercase leading-tight">{rental.remarks}</p>
             </div>
           )}
 
-          <div className="flex flex-col items-end mb-8 space-y-2 bg-gray-50 p-4 border-2 border-black rounded-lg">
+          <div className="flex flex-col items-end mb-8 space-y-2 bg-white p-4 border-2 border-black rounded-lg">
               {rental.discount > 0 && (
-                <div className="w-full flex justify-between text-[11px] font-black">
+                <div className="w-full flex justify-between text-[13px] font-black">
                   <span className="uppercase">REMISE:</span>
                   <span>-{rental.discount} DA</span>
                 </div>
               )}
-              <div className="w-full flex justify-between text-sm font-black pt-2 border-t-2 border-black">
+              <div className="w-full flex justify-between text-base font-black pt-2 border-t-2 border-black">
                 <span className="uppercase">TOTAL LOCATION:</span>
-                <span className="text-lg">{rental.totalAmount} DA</span>
+                <span className="text-xl">{rental.totalAmount} DA</span>
               </div>
-              <div className="w-full flex justify-between text-[11px] font-black pt-2 border-t border-dotted border-black">
+              <div className="w-full flex justify-between text-[13px] font-black pt-2 border-t border-dotted border-black">
                 <span className="uppercase">VERSEMENT (AVANCE):</span>
                 <span className="border-b-2 border-black">{rental.paidAmount} DA</span>
               </div>
-              <div className="w-full flex justify-between text-xl font-black pt-3 border-t-4 border-double border-black bg-black text-white px-2 py-1 mt-2">
+              <div className="w-full flex justify-between text-2xl font-black pt-3 border-t-4 border-double border-black bg-black text-white px-2 py-1 mt-2">
                 <span className="uppercase tracking-tighter">RESTE à PAYER:</span>
                 <span>{balance} DA</span>
               </div>
