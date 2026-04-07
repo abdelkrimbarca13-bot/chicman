@@ -182,7 +182,10 @@ exports.getCashMovements = async (req, res) => {
     const cashMovements = await prisma.cashMovement.findMany({
       include: {
         rental: {
-          include: { customer: true }
+          include: { 
+            customer: true,
+            items: { include: { item: true } }
+          }
         }
       },
       orderBy: { date: 'desc' }

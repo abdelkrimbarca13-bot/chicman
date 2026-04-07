@@ -106,28 +106,38 @@ const Revenue = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left min-w-[600px]">
                     <thead>
-                      <tr className="text-[10px] sm:text-xs font-bold uppercase text-zinc-500 border-b border-zinc-800 pb-2">
-                        <th className="pb-3 px-2">Heure</th>
-                        <th className="pb-3 px-2 text-zinc-300">Client</th>
-                        <th className="pb-3 px-2">Type</th>
-                        <th className="pb-3 px-2">Description</th>
-                        <th className="pb-3 px-2 text-right text-gold">Montant</th>
+                      <tr className="text-[10px] sm:text-xs font-black uppercase text-zinc-500 border-b border-zinc-800 pb-2 bg-zinc-800/20">
+                        <th className="py-4 px-4 whitespace-nowrap">Heure</th>
+                        <th className="py-4 px-4 text-zinc-300">Client</th>
+                        <th className="py-4 px-4 whitespace-nowrap">Type</th>
+                        <th className="py-4 px-4">Articles</th>
+                        <th className="py-4 px-4 text-right text-gold">Montant</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800/50">
                       {groupedRevenue[date].items.map((movement, idx) => (
-                        <tr key={idx} className="text-sm hover:bg-white dark:bg-zinc-900/50 transition-colors">
-                          <td className="py-3 px-2 text-zinc-500 font-mono text-xs">{format(new Date(movement.date), 'HH:mm')}</td>
-                          <td className="py-3 px-2 font-medium text-zinc-200">{movement.rental.customer.firstName} {movement.rental.customer.lastName}</td>
-                          <td className="py-3 px-2">
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${getMovementTypeColor(movement.type)}`}>
+                        <tr key={idx} className="text-sm hover:bg-zinc-800/30 transition-all group">
+                          <td className="py-4 px-4 text-zinc-500 font-mono text-xs">{format(new Date(movement.date), 'HH:mm')}</td>
+                          <td className="py-4 px-4">
+                            <p className="font-bold text-white uppercase text-xs">{movement.rental.customer.firstName} {movement.rental.customer.lastName}</p>
+                            <p className="text-[10px] text-zinc-500 font-mono">{movement.rental.customer.phone}</p>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase border tracking-tighter ${getMovementTypeColor(movement.type)}`}>
                               {getMovementTypeLabel(movement.type)}
                             </span>
                           </td>
-                          <td className="py-3 px-2 text-zinc-500 text-xs italic">
-                            {movement.description || `Location #RENT-${movement.rentalId}`}
+                          <td className="py-4 px-4">
+                            <div className="flex flex-wrap gap-1 max-w-[200px]">
+                              {movement.rental?.items?.map((ri, j) => (
+                                <span key={j} className="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-[9px] font-medium text-zinc-400">
+                                  {ri.item.name} <span className="text-gold/50">(T:{ri.item.size})</span>
+                                </span>
+                              ))}
+                              {!movement.rental?.items?.length && <span className="text-[10px] text-zinc-600 italic">-</span>}
+                            </div>
                           </td>
-                          <td className="py-3 px-2 text-right font-black italic text-zinc-100">{movement.amount} DA</td>
+                          <td className="py-4 px-4 text-right font-black italic text-zinc-100">{movement.amount} DA</td>
                         </tr>
                       ))}
                     </tbody>
