@@ -275,6 +275,7 @@ exports.activateRental = async (req, res) => {
 
     const startDate = new Date();
     const expectedReturn = new Date(startDate.getTime() + (24 * 60 * 60 * 1000)); // +24 heures
+    expectedReturn.setHours(12, 0, 0, 0); // Toujours à midi
 
     const updated = await prisma.$transaction(async (tx) => {
       const updatedRental = await tx.rental.update({
