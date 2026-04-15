@@ -18,7 +18,8 @@ jobs:
           port: 22
           script: |
             cd /root/repo/chicman
-            git pull
+            git fetch origin
+            git reset --hard origin/main
             cd costume/frontend
             npm install
             npm run build

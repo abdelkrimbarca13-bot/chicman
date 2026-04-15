@@ -2,7 +2,8 @@
 
 # Update code
 echo "Pulling latest changes..."
-git pull origin main
+git fetch origin
+git reset --hard origin/main
 
 # Update Backend
 echo "Updating Backend..."
