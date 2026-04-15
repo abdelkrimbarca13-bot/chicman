@@ -86,7 +86,7 @@ const Layout = ({ children }) => {
         
         <div className="p-4 border-t border-gold/20">
           <div className="flex items-center mb-4 px-2 text-sm text-zinc-400">
-            <span className="truncate">Connecté en tant que: <span className="font-semibold text-zinc-900 dark:text-white">{user?.role}</span></span>
+            <span className="truncate">Connecté: <span className="font-bold text-zinc-900 dark:text-gold uppercase tracking-tighter">{user?.username}</span> <span className="text-[10px] opacity-50">({user?.role})</span></span>
           </div>
           <button
             onClick={toggleTheme}

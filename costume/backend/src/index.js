@@ -8,6 +8,7 @@ const rentalRoutes = require('./routes/rentalRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const cashRoutes = require('./routes/cashRoutes');
 const auditRoutes = require('./routes/auditRoutes');
+require('./utils/cron');
 
 const app = express();
 

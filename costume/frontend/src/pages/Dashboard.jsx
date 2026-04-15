@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Shirt, ClipboardList, CheckCircle, AlertTriangle, TrendingUp, Scissors, Droplets } from 'lucide-react';
+import { Shirt, ClipboardList, CheckCircle, AlertTriangle, TrendingUp, Scissors, Droplets, Printer } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -52,6 +52,57 @@ const Dashboard = () => {
     }
   };
 
+  const handlePrintRepairs = () => {
+    const printWindow = window.open('', '_blank');
+    const content = `
+      <html>
+        <head>
+          <title>Fiche Réparations - ${new Date().toLocaleDateString()}</title>
+          <style>
+            body { font-family: sans-serif; padding: 20px; }
+            table { width: 100% !important; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; font-size: 14px; }
+            th { background-color: #f2f2f2; font-weight: bold; text-transform: uppercase; }
+            h1 { color: #d4af37; border-bottom: 2px solid #d4af37; padding-bottom: 10px; }
+            .header-info { margin-bottom: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <h1>FICHE COUTURIÈRE : RÉPARATIONS POUR DEMAIN</h1>
+          <div class="header-info">Date d'impression: ${new Date().toLocaleString()}</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Article (Référence)</th>
+                <th>Type de Réparation / Modification</th>
+                <th>Notes / Remarques</th>
+                <th>Client</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${stats.tomorrowRepairs.map(ri => `
+                <tr>
+                  <td><strong>${ri.item.name}</strong><br/><small>REF: ${ri.item.reference}</small></td>
+                  <td>${ri.tailorModification || '<em style="color:#999">Aucune modif spécifiée</em>'}</td>
+                  <td>${ri.remarks || '-'}</td>
+                  <td>${ri.rental.customer.firstName} ${ri.rental.customer.lastName}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div style="margin-top: 50px; border-top: 1px dashed #ccc; padding-top: 20px; font-style: italic; font-size: 12px; text-align: center;">
+            Merci de valider chaque réparation une fois terminée.
+          </div>
+        </body>
+      </html>
+    `;
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const isPast11AM = new Date().getHours() >= 11;
+
   return (
     <div>
       <h1 className="text-3xl font-black mb-8 font-luxury tracking-wider text-gold border-b-2 border-gold/50 w-fit pb-2 uppercase">Tableau de Bord</h1>
@@ -82,9 +133,16 @@ const Dashboard = () => {
         {activeTab === 'delays' && (
           /* Alerte Retards */
           <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl p-6 overflow-hidden border border-gold/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center mb-6 text-red-500 dark:text-red-400">
-              <AlertTriangle className="mr-2" />
-              <h2 className="text-xl font-bold font-poppins uppercase tracking-wider">Alertes Retards</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center text-red-500 dark:text-red-400">
+                <AlertTriangle className="mr-2" />
+                <h2 className="text-xl font-bold font-poppins uppercase tracking-wider">Alertes Retards</h2>
+              </div>
+              {isPast11AM && stats?.delayedRentals?.length > 0 && (
+                <div className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-3 py-1 rounded-full text-[10px] font-black uppercase animate-pulse border border-red-200 dark:border-red-800">
+                  ⚠️ Rappel de 11h actif
+                </div>
+              )}
             </div>
             {(!stats?.delayedRentals || stats.delayedRentals.length === 0) ? (
               <p className="text-zinc-500 dark:text-zinc-400 text-sm italic">Aucun retard à signaler.</p>
@@ -126,9 +184,20 @@ const Dashboard = () => {
         {activeTab === 'repairs' && (
           /* Réparations pour Demain */
           <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl p-6 overflow-hidden border border-gold/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center mb-6 text-gold">
-              <Scissors className="mr-2" />
-              <h2 className="text-xl font-bold font-poppins uppercase tracking-wider">Réparations Demain</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center text-gold">
+                <Scissors className="mr-2" />
+                <h2 className="text-xl font-bold font-poppins uppercase tracking-wider">Réparations Demain</h2>
+              </div>
+              {stats?.tomorrowRepairs?.length > 0 && (
+                <button 
+                  onClick={handlePrintRepairs}
+                  className="flex items-center bg-gold hover:bg-gold/90 text-black px-3 py-1.5 rounded-md text-[10px] font-black uppercase transition-all active:scale-95 shadow-lg"
+                >
+                  <Printer size={14} className="mr-1.5" />
+                  Imprimer Fiche
+                </button>
+              )}
             </div>
             {(!stats?.tomorrowRepairs || stats.tomorrowRepairs.length === 0) ? (
               <p className="text-zinc-500 dark:text-zinc-400 text-sm italic">Aucune réparation prévue pour demain.</p>
@@ -203,7 +272,7 @@ const Dashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="text-zinc-800 dark:text-zinc-200">
-                    {(activeTab === 'cleaning' ? stats?.cleaningItemsList : stats?.rentedItemsList).map((item) => (
+                    {(activeTab === 'cleaning' ? (stats?.cleaningItemsList || []) : (stats?.rentedItemsList || [])).map((item) => (
                       <tr 
                         key={item.id} 
                         className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors"

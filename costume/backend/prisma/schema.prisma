@@ -13,6 +13,7 @@ model User {
   username  String   @unique
   password  String
   role      String   @default("EMPLOYEE")
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   auditLogs AuditLog[]
 }
@@ -120,11 +121,20 @@ model DailyCash {
   updatedAt     DateTime @updatedAt
 }
 
+model Withdrawal {
+  id        Int      @id @default(autoincrement())
+  amount    Float
+  date      DateTime @default(now())
+  performedBy String
+  createdAt DateTime @default(now())
+}
+
 model Expense {
   id          Int      @id @default(autoincrement())
   amount      Float
   description String
   date        DateTime @default(now())
   slipNumber  String?
+  performedBy String?
   createdAt   DateTime @default(now())
 }

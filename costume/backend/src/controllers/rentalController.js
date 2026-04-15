@@ -40,8 +40,8 @@ exports.createRental = async (req, res) => {
     const start = new Date(startDate);
     start.setHours(0, 0, 0, 0);
     const end = new Date(expectedReturn);
-    // Set to 12:00 PM for the return deadline
-    end.setHours(12, 0, 0, 0);
+    // Set to 11:00 AM for the return deadline
+    end.setHours(11, 0, 0, 0);
 
     // 1. Récupérer les détails des articles sélectionnés (pour connaître leurs ensembleId)
     const selectedItemsDetails = await prisma.item.findMany({
@@ -275,7 +275,7 @@ exports.activateRental = async (req, res) => {
 
     const startDate = new Date();
     const expectedReturn = new Date(startDate.getTime() + (24 * 60 * 60 * 1000)); // +24 heures
-    expectedReturn.setHours(12, 0, 0, 0); // Toujours à midi
+    expectedReturn.setHours(11, 0, 0, 0); // Toujours à 11h00
 
     const updated = await prisma.$transaction(async (tx) => {
       const updatedRental = await tx.rental.update({
@@ -405,8 +405,8 @@ exports.updateRental = async (req, res) => {
     const start = new Date(startDate);
     start.setHours(0, 0, 0, 0);
     const end = new Date(expectedReturn);
-    // Set to 12:00 PM to avoid late alert if returned same day at noon
-    end.setHours(12, 0, 0, 0);
+    // Set to 11:00 AM to trigger alert if not returned by 11:00
+    end.setHours(11, 0, 0, 0);
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Release old items

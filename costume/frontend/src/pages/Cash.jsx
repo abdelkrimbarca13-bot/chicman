@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
-import { DollarSign, ArrowDownCircle, ArrowUpCircle, Plus, Receipt, Calculator, Calendar, X, User, ShoppingBag, Info, Search, Filter } from 'lucide-react';
+import { DollarSign, ArrowDownCircle, ArrowUpCircle, Plus, Receipt, Calculator, Calendar, X, User, ShoppingBag, Info, Search, Filter, Download, Printer, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,6 +10,7 @@ const Cash = () => {
   const [dailyCash, setDailyCash] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [history, setHistory] = useState([]);
+  const [withdrawals, setWithdrawals] = useState([]);
   const [activeTab, setActiveTab] = useState('current');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
@@ -17,17 +18,18 @@ const Cash = () => {
   // Modal states
   const [isInitialCashModalOpen, setIsInitialCashModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isWithdrawalModalOpen, setIsWithdrawalModalOpen] = useState(false);
   const [detailModal, setDetailModal] = useState(null); // { date, payments, expenses, totals }
+  const [globalSummary, setGlobalSummary] = useState(null);
   
   const [initialAmount, setInitialAmount] = useState('');
+  const [withdrawalAmount, setWithdrawalAmount] = useState('');
   const [newExpense, setNewExpense] = useState({ amount: '', description: '', slipNumber: '', category: 'AUTRE' });
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
-    setError(null);
     try {
       const today = new Date().toISOString().split('T')[0];
       
@@ -38,6 +40,8 @@ const Cash = () => {
 
       if (isAdmin) {
         calls.push(api.get('/cash/history'));
+        calls.push(api.get('/cash/summary')); // Pour avoir le solde global total
+        calls.push(api.get('/cash/withdrawals')); // Historique des retraits admin
       }
 
       const results = await Promise.all(calls);
@@ -47,9 +51,14 @@ const Cash = () => {
       if (isAdmin && results[2]) {
         setHistory(results[2].data);
       }
+      if (isAdmin && results[3]) {
+        setGlobalSummary(results[3].data);
+      }
+      if (isAdmin && results[4]) {
+        setWithdrawals(results[4].data);
+      }
     } catch (err) {
       console.error('Erreur chargement caisse', err);
-      setError('Erreur lors du chargement des données de la caisse.');
     } finally {
       setLoading(false);
     }
@@ -85,6 +94,52 @@ const Cash = () => {
       fetchData();
     } catch {
       alert('Erreur lors de l\'enregistrement');
+    }
+  };
+
+  const handleCreateWithdrawal = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/cash/withdrawal', { amount: parseFloat(withdrawalAmount) });
+      setIsWithdrawalModalOpen(false);
+      setWithdrawalAmount('');
+      fetchData();
+    } catch {
+      alert('Erreur lors de l\'enregistrement du retrait');
+    }
+  };
+
+  const fetchGlobalSummary = async () => {
+    if (!filterStartDate || !filterEndDate) {
+      setGlobalSummary(null);
+      return;
+    }
+    try {
+      const res = await api.get(`/cash/summary?startDate=${filterStartDate}&endDate=${filterEndDate}`);
+      setGlobalSummary(res.data);
+    } catch (err) {
+      console.error('Erreur summary', err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'history') {
+      fetchGlobalSummary();
+    }
+  }, [filterStartDate, filterEndDate, activeTab]);
+
+  const handleExportExcel = async () => {
+    try {
+      const response = await api.get('/cash/export-excel', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'historique_caisse.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      alert('Erreur lors de l\'export Excel');
     }
   };
 
@@ -128,12 +183,17 @@ const Cash = () => {
 
       {activeTab === 'current' ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
             {isAdmin && (
               <>
+                <div className="bg-zinc-950 p-6 rounded-2xl border-2 border-gold shadow-2xl relative overflow-hidden group shadow-gold/10">
+                    <p className="text-[10px] font-black text-gold/60 uppercase tracking-widest mb-1">CASH TOTAL (Global)</p>
+                    <h3 className="text-3xl font-black text-gold font-luxury">{globalSummary?.globalCash || 0} DA</h3>
+                    <p className="mt-4 text-[10px] font-bold text-gold/40 uppercase tracking-tighter">Solde réel depuis début</p>
+                </div>
                 <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gold/10 relative overflow-hidden group">
                     <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Monnaie Initiale</p>
-                    <h3 className="text-2xl font-black text-zinc-900 dark:text-white">{dailyCash.initialCash} DA</h3>
+                    <h3 className="text-xl font-black text-zinc-900 dark:text-white">{dailyCash.initialCash} DA</h3>
                     <button onClick={() => setIsInitialCashModalOpen(true)} className="mt-4 text-[10px] font-black uppercase text-gold hover:underline flex items-center gap-1"><Plus size={12} /> Modifier</button>
                 </div>
 
@@ -158,6 +218,14 @@ const Cash = () => {
             </div>
 
             {isAdmin && (
+              <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gold/10 relative overflow-hidden group cursor-pointer hover:border-red-500/50 transition-all">
+                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Retrait d'argent (Admin)</p>
+                  <h3 className="text-2xl font-black text-red-500">SORTIE CASH</h3>
+                  <button onClick={() => setIsWithdrawalModalOpen(true)} className="mt-4 text-[10px] font-black uppercase text-red-500 hover:underline flex items-center gap-1"><LogOut size={12} /> Effectuer un retrait</button>
+              </div>
+            )}
+
+            {isAdmin && (
               <div className="bg-gold p-6 rounded-2xl shadow-2xl relative overflow-hidden group shadow-gold/20">
                   <p className="text-[10px] font-black text-rich-black/60 uppercase tracking-widest mb-1">Solde Final Caisse</p>
                   <h3 className="text-3xl font-black text-rich-black">{dailyCash.finalBalance} DA</h3>
@@ -177,17 +245,19 @@ const Cash = () => {
                             <tr>
                                 <th className="px-6 py-4">Bon N°</th>
                                 <th className="px-6 py-4">Description</th>
+                                <th className="px-6 py-4">Par</th>
                                 <th className="px-6 py-4 text-right">Montant</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-800 text-zinc-300">
                             {expenses.length === 0 ? (
-                                <tr><td colSpan="3" className="px-6 py-12 text-center text-zinc-600 font-bold italic text-sm">Aucune dépense</td></tr>
+                                <tr><td colSpan="4" className="px-6 py-12 text-center text-zinc-600 font-bold italic text-sm">Aucune dépense</td></tr>
                             ) : (
                                 expenses.map((exp, idx) => (
                                     <tr key={idx} className="hover:bg-zinc-800/50">
                                         <td className="px-6 py-4 font-mono text-xs font-bold text-gold">{exp.slipNumber || 'N/S'}</td>
                                         <td className="px-6 py-4 text-sm font-medium text-zinc-900 dark:text-white">{exp.description}</td>
+                                        <td className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">{exp.performedBy || 'N/S'}</td>
                                         <td className="px-6 py-4 text-right font-black text-red-400">-{exp.amount} DA</td>
                                     </tr>
                                 ))
@@ -228,36 +298,106 @@ const Cash = () => {
                         <input type="date" className="flex-1 p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold text-white" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
                     </div>
                 </div>
-                <button onClick={() => { setFilterStartDate(''); setFilterEndDate(''); }} className="px-6 py-2 text-gold border border-gold/20 hover:bg-gold/10 font-black text-xs uppercase rounded-lg">Réinitialiser</button>
+                <div className="flex gap-3">
+                    <button onClick={() => { setFilterStartDate(''); setFilterEndDate(''); }} className="px-6 py-2 text-zinc-500 hover:text-white font-black text-xs uppercase rounded-lg border border-zinc-800">Réinitialiser</button>
+                    <button onClick={handleExportExcel} className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-black text-xs uppercase rounded-lg shadow-lg shadow-green-900/20 transition-all active:scale-95">
+                        <Download size={14} /> Excel
+                    </button>
+                </div>
             </div>
 
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gold/10 overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-zinc-800/50 uppercase text-[10px] font-black text-zinc-500">
-                        <tr>
-                            <th className="px-6 py-4">Date</th>
-                            <th className="px-6 py-4">Départ</th>
-                            <th className="px-6 py-4 text-green-400">Recettes (+)</th>
-                            <th className="px-6 py-4 text-red-400">Dépenses (-)</th>
-                            <th className="px-6 py-4 text-gold">Solde Final</th>
-                            <th className="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800 text-zinc-300">
-                        {filteredHistory.map((day) => (
-                            <tr key={day.id} className="hover:bg-zinc-800/30 transition-all group cursor-pointer" onClick={() => showDayDetails(day.date.split('T')[0])}>
-                                <td className="px-6 py-4 font-bold text-sm text-zinc-400">{format(new Date(day.date), 'dd/MM/yyyy')}</td>
-                                <td className="px-6 py-4 font-bold text-sm">{day.initialCash} DA</td>
-                                <td className="px-6 py-4 font-black text-sm text-green-400">+{day.totalRentals} DA</td>
-                                <td className="px-6 py-4 font-black text-sm text-red-400">-{day.totalExpenses} DA</td>
-                                <td className="px-6 py-4 font-black text-base text-gold">{day.finalBalance} DA</td>
-                                <td className="px-6 py-4 text-right">
-                                    <button className="p-2 bg-zinc-800 rounded-lg text-gold group-hover:bg-gold group-hover:text-rich-black transition-all"><Search size={16}/></button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            {globalSummary && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="bg-zinc-900 p-6 rounded-2xl border border-green-500/30">
+                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Recettes Période</p>
+                        <h3 className="text-2xl font-black text-green-400">+{globalSummary.totalIncome} DA</h3>
+                    </div>
+                    <div className="bg-zinc-900 p-6 rounded-2xl border border-red-500/30">
+                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Dépenses Période</p>
+                        <h3 className="text-2xl font-black text-red-400">-{globalSummary.totalExpenses} DA</h3>
+                    </div>
+                    <div className="bg-zinc-900 p-6 rounded-2xl border border-gold/50 shadow-xl shadow-gold/10">
+                        <p className="text-[10px] font-black text-rich-black uppercase tracking-widest mb-1 bg-gold px-2 py-0.5 rounded w-fit">Recette Net Cumulée</p>
+                        <h3 className="text-2xl font-black text-gold">{globalSummary.netRevenue} DA</h3>
+                    </div>
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                {/* Historique des Journaux de Caisse */}
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gold/10 overflow-hidden shadow-xl">
+                    <div className="p-4 bg-zinc-800/50 border-b border-zinc-800">
+                        <h3 className="font-black text-gold uppercase tracking-widest text-xs flex items-center gap-2">
+                            <Calendar size={16} /> Historique des Journaux
+                        </h3>
+                    </div>
+                    <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-zinc-800 uppercase text-[9px] font-black text-zinc-500 sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-4 py-3">Date</th>
+                                    <th className="px-4 py-3">Départ</th>
+                                    <th className="px-4 py-3 text-green-400">Recettes</th>
+                                    <th className="px-4 py-3 text-red-400">Dépenses</th>
+                                    <th className="px-4 py-3 text-gold text-right">Solde Final</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-800 text-zinc-300">
+                                {filteredHistory.map((day) => (
+                                    <tr key={day.id} className="hover:bg-zinc-800/30 transition-all cursor-pointer" onClick={() => showDayDetails(day.date.split('T')[0])}>
+                                        <td className="px-4 py-3 font-bold text-xs text-zinc-400">{format(new Date(day.date), 'dd/MM/yyyy')}</td>
+                                        <td className="px-4 py-3 font-bold text-xs">{day.initialCash} DA</td>
+                                        <td className="px-4 py-3 font-black text-xs text-green-400">+{day.totalRentals} DA</td>
+                                        <td className="px-4 py-3 font-black text-xs text-red-400">-{day.totalExpenses} DA</td>
+                                        <td className="px-4 py-3 font-black text-sm text-gold text-right">{day.finalBalance} DA</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Historique des Retraits Admin */}
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-red-500/10 overflow-hidden shadow-xl">
+                    <div className="p-4 bg-red-900/10 border-b border-zinc-800">
+                        <h3 className="font-black text-red-500 uppercase tracking-widest text-xs flex items-center gap-2">
+                            <LogOut size={16} /> Historique des Retraits Admin
+                        </h3>
+                    </div>
+                    <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-zinc-800 uppercase text-[9px] font-black text-zinc-500 sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-4 py-3">Date/Heure</th>
+                                    <th className="px-4 py-3">Admin</th>
+                                    <th className="px-4 py-3 text-right">Montant</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-800 text-zinc-300">
+                                {withdrawals.length === 0 ? (
+                                    <tr><td colSpan="3" className="px-4 py-12 text-center text-zinc-600 font-bold italic text-xs">Aucun retrait enregistré</td></tr>
+                                ) : (
+                                    withdrawals.map((w) => (
+                                        <tr key={w.id} className="hover:bg-zinc-800/30 transition-all">
+                                            <td className="px-4 py-3 font-bold text-xs text-zinc-400">
+                                                {format(new Date(w.date), 'dd/MM/yyyy HH:mm')}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                                                        <User size={12} className="text-zinc-500" />
+                                                    </div>
+                                                    <span className="text-xs font-black uppercase text-zinc-200">{w.performedBy}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-black text-red-500">-{w.amount} DA</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
       )}
@@ -419,6 +559,40 @@ const Cash = () => {
                     <textarea className="w-full p-3 bg-zinc-800 border-2 border-zinc-700 rounded-xl text-white font-medium min-h-[100px]" value={newExpense.description} onChange={(e) => setNewExpense({...newExpense, description: e.target.value})} placeholder="Détails de la dépense..." required />
                 </div>
                 <button type="submit" className="w-full py-4 bg-red-600 text-white rounded-xl font-black uppercase mt-2">CONFIRMER LA SORTIE</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Withdrawal Modal */}
+      {isWithdrawalModalOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-red-500/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                <h2 className="text-xl font-black text-red-500 uppercase tracking-widest font-luxury">Retrait d'Argent (ADMIN)</h2>
+                <button onClick={() => setIsWithdrawalModalOpen(false)} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
+            </div>
+            <form onSubmit={handleCreateWithdrawal} className="p-6 space-y-6">
+                <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20 mb-4">
+                  <p className="text-[10px] text-red-400 font-bold uppercase text-center leading-relaxed">
+                    Attention : Ce retrait sera enregistré au nom de <span className="text-white underline">{user?.username}</span> et sera déduit du solde final de la caisse.
+                  </p>
+                </div>
+                <div>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-1 tracking-widest">Montant du Retrait</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-4 bg-zinc-800 border-2 border-red-500/50 rounded-xl text-white font-black text-3xl text-center" 
+                      value={withdrawalAmount} 
+                      onChange={(e) => setWithdrawalAmount(e.target.value)} 
+                      placeholder="0.00" 
+                      required 
+                    />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button type="submit" className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-black uppercase transition-all active:scale-95 shadow-lg shadow-red-900/20">CONFIRMER LE RETRAIT</button>
+                  <button type="button" onClick={() => setIsWithdrawalModalOpen(false)} className="w-full py-3 text-zinc-500 font-bold uppercase text-xs">Annuler</button>
+                </div>
             </form>
           </div>
         </div>

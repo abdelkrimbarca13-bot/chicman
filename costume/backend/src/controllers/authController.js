@@ -27,9 +27,37 @@ exports.getAllUsers = async (req, res) => {
       return res.status(403).json({ message: 'Accès refusé.' });
     }
     const users = await prisma.user.findMany({
-      select: { id: true, username: true, role: true, createdAt: true }
+      select: { id: true, username: true, role: true, isActive: true, createdAt: true }
     });
     res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, password, role, isActive } = req.body;
+
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+
+    let updateData = {};
+    if (username) updateData.username = username;
+    if (role) updateData.role = role;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const user = await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: updateData
+    });
+
+    res.json({ message: 'Utilisateur mis à jour !', userId: user.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -59,16 +87,17 @@ exports.login = async (req, res) => {
     const { username, password } = req.body;
     const user = await prisma.user.findUnique({ where: { username } });
     if (!user) return res.status(401).json({ message: 'Auth failed' });
+    if (!user.isActive) return res.status(403).json({ message: 'Compte désactivé' });
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) return res.status(401).json({ message: 'Auth failed' });
 
     const token = jwt.sign(
-      { userId: user.id, role: user.role },
+      { userId: user.id, role: user.role, username: user.username },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
-    res.status(200).json({ token, userId: user.id, role: user.role });
+    res.status(200).json({ token, userId: user.id, role: user.role, username: user.username });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
