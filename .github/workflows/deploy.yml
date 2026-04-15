@@ -17,7 +17,16 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
-            cd /root/repo/chicman
+            echo "Current Directory: $(pwd)"
+            ls -la
+            echo "Checking target directory..."
+            if [ -d "/root/repo/chicman" ]; then
+              cd /root/repo/chicman
+            else
+              echo "ERROR: Directory /root/repo/chicman not found!"
+              ls -la /root/repo/
+              exit 1
+            fi
             git fetch origin
             git reset --hard origin/main
             cd costume/frontend
