@@ -17,25 +17,16 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
+            echo "SSH connection successful."
+            echo "Current User: $(whoami)"
             echo "Current Directory: $(pwd)"
-            ls -la
-            echo "Checking target directory..."
+            echo "Checking /root/repo/chicman..."
             if [ -d "/root/repo/chicman" ]; then
-              cd /root/repo/chicman
+              echo "SUCCESS: Found /root/repo/chicman"
+              ls -la /root/repo/chicman | head -n 5
             else
-              echo "ERROR: Directory /root/repo/chicman not found!"
-              ls -la /root/repo/
+              echo "ERROR: Directory /root/repo/chicman NOT found."
+              echo "Listing /root/repo/:"
+              ls -la /root/repo/ || echo "Cannot list /root/repo/"
               exit 1
             fi
-            git fetch origin
-            git reset --hard origin/main
-            cd costume/frontend
-            npm install
-            npm run build
-            cp -R dist/* /var/www/chic/
-            cd ../backend
-            npm install
-            npx prisma generate
-            npx prisma migrate deploy
-            pm2 restart all
-            systemctl restart nginx
