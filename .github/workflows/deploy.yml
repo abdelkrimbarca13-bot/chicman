@@ -24,43 +24,29 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
-            echo "Searching for project directory in more locations..."
+            echo "Searching for project directory using pm2..."
             
-            # Try to find the directory named 'costume' starting from / (limited depth for speed)
-            FOUND_PATH=$(find / -maxdepth 4 -name "costume" -type d 2>/dev/null | grep -v "snap" | head -n 1)
+            # Detect path from PM2 if possible
+            PM2_PATH=$(pm2 show all 2>/dev/null | grep "interpreting directory" | awk '{print $NF}' | head -n 1)
             
-            if [ -z "$FOUND_PATH" ]; then
-              # Try finding chicman instead
-              FOUND_PATH=$(find / -maxdepth 4 -name "chicman" -type d 2>/dev/null | grep -v "snap" | head -n 1)
+            if [ -z "$PM2_PATH" ]; then
+                # Fallback to search for package.json in costume folder
+                echo "PM2 detection failed, searching filesystem..."
+                PM2_PATH=$(find / -name "package.json" -path "*/costume/backend/*" 2>/dev/null | head -n 1 | sed 's|/costume/backend/package.json||')
             fi
             
-            if [ -n "$FOUND_PATH" ]; then
-              PROJECT_DIR="$FOUND_PATH"
-              # If the path points to 'costume' but not the root of the repo, we might need the parent
-              if [[ "$PROJECT_DIR" == *"/costume" ]]; then
-                # Check if it's the root or a subfolder
-                if [ -d "$PROJECT_DIR/backend" ]; then
-                   # This looks like the right place, or maybe one level up?
-                   echo "Detected costume folder at $PROJECT_DIR"
-                fi
-              fi
+            if [ -n "$PM2_PATH" ] && [ -d "$PM2_PATH" ]; then
+              PROJECT_DIR="$PM2_PATH"
+              echo "✅ Project detected via PM2/Filesystem at: $PROJECT_DIR"
             else
-              echo "❌ ERROR: Project directory not found."
-              echo "Contents of /home:"
-              ls -F /home
-              echo "Contents of /var/www:"
-              ls -F /var/www
+              echo "❌ ERROR: Could not locate project directory."
+              echo "Diagnostic Info:"
+              pm2 list
+              find /var/www -maxdepth 2
               exit 1
             fi
             
-            echo "✅ Project found in: $PROJECT_DIR"
             cd "$PROJECT_DIR"
-            
-            # If we are in 'costume' folder but it's part of a 'chicman' repo
-            if [ -d "../.git" ]; then
-               cd ..
-               echo "Moved up to repository root: $(pwd)"
-            fi
             
             echo "Fetching latest code..."
             git fetch origin
