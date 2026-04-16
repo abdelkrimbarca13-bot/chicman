@@ -24,25 +24,43 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
-            echo "Searching for project directory..."
-            # Try a few common locations
-            if [ -d "/root/repo/chicman" ]; then
-              PROJECT_DIR="/root/repo/chicman"
-            elif [ -d "/root/chicman" ]; then
-              PROJECT_DIR="/root/chicman"
-            elif [ -d "/root/costume" ]; then
-              PROJECT_DIR="/root/costume"
-            elif [ -d "/var/www/chicman" ]; then
-              PROJECT_DIR="/var/www/chicman"
+            echo "Searching for project directory in more locations..."
+            
+            # Try to find the directory named 'costume' starting from / (limited depth for speed)
+            FOUND_PATH=$(find / -maxdepth 4 -name "costume" -type d 2>/dev/null | grep -v "snap" | head -n 1)
+            
+            if [ -z "$FOUND_PATH" ]; then
+              # Try finding chicman instead
+              FOUND_PATH=$(find / -maxdepth 4 -name "chicman" -type d 2>/dev/null | grep -v "snap" | head -n 1)
+            fi
+            
+            if [ -n "$FOUND_PATH" ]; then
+              PROJECT_DIR="$FOUND_PATH"
+              # If the path points to 'costume' but not the root of the repo, we might need the parent
+              if [[ "$PROJECT_DIR" == *"/costume" ]]; then
+                # Check if it's the root or a subfolder
+                if [ -d "$PROJECT_DIR/backend" ]; then
+                   # This looks like the right place, or maybe one level up?
+                   echo "Detected costume folder at $PROJECT_DIR"
+                fi
+              fi
             else
-              echo "❌ ERROR: Project directory not found in common locations."
-              echo "Available folders in /root:"
-              ls -F /root
+              echo "❌ ERROR: Project directory not found."
+              echo "Contents of /home:"
+              ls -F /home
+              echo "Contents of /var/www:"
+              ls -F /var/www
               exit 1
             fi
             
             echo "✅ Project found in: $PROJECT_DIR"
             cd "$PROJECT_DIR"
+            
+            # If we are in 'costume' folder but it's part of a 'chicman' repo
+            if [ -d "../.git" ]; then
+               cd ..
+               echo "Moved up to repository root: $(pwd)"
+            fi
             
             echo "Fetching latest code..."
             git fetch origin
