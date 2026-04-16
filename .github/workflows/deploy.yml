@@ -24,47 +24,59 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
-            echo "Searching for project directory using pm2..."
+            echo "Directly targeting project directory: /var/www/costume"
             
-            # Detect path from PM2 if possible
-            PM2_PATH=$(pm2 show all 2>/dev/null | grep "interpreting directory" | awk '{print $NF}' | head -n 1)
+            PROJECT_DIR="/var/www/costume"
             
-            if [ -z "$PM2_PATH" ]; then
-                # Fallback to search for package.json in costume folder
-                echo "PM2 detection failed, searching filesystem..."
-                PM2_PATH=$(find / -name "package.json" -path "*/costume/backend/*" 2>/dev/null | head -n 1 | sed 's|/costume/backend/package.json||')
+            if [ ! -d "$PROJECT_DIR" ]; then
+                echo "❌ ERROR: /var/www/costume not found. Searching fallback..."
+                PROJECT_DIR=$(find /var/www -name "package.json" -path "*/costume/backend/*" 2>/dev/null | head -n 1 | sed 's|/costume/backend/package.json||')
             fi
             
-            if [ -n "$PM2_PATH" ] && [ -d "$PM2_PATH" ]; then
-              PROJECT_DIR="$PM2_PATH"
-              echo "✅ Project detected via PM2/Filesystem at: $PROJECT_DIR"
-            else
-              echo "❌ ERROR: Could not locate project directory."
-              echo "Diagnostic Info:"
-              pm2 list
-              find /var/www -maxdepth 2
-              exit 1
+            if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR" ]; then
+                echo "❌ ERROR: Could not locate project directory."
+                exit 1
             fi
             
+            echo "✅ Using project directory: $PROJECT_DIR"
             cd "$PROJECT_DIR"
             
-            echo "Fetching latest code..."
+            echo "Fetching latest code from GitHub..."
+            # Ensure we are in a git repo
+            if [ ! -d ".git" ]; then
+                echo "❌ ERROR: Not a git repository at $PROJECT_DIR"
+                exit 1
+            fi
+            
             git fetch origin
             git reset --hard origin/main
             
+            # The structure is usually /var/www/costume/costume/backend
+            # Based on the user's local path 'costume/costume/backend'
+            
             echo "Updating Backend..."
-            cd costume/backend
+            cd costume/backend || { echo "❌ Backend folder not found"; exit 1; }
             npm install
             npx prisma generate
             npx prisma migrate deploy
             
             echo "Updating Frontend..."
-            cd ../frontend
+            cd ../frontend || { echo "❌ Frontend folder not found"; exit 1; }
             npm install
             npm run build
-            cp -R dist/* /var/www/chic/
+            
+            # Verify dist folder
+            if [ -d "dist" ]; then
+                echo "Copying build to /var/www/chic/"
+                cp -R dist/* /var/www/chic/
+            else
+                echo "❌ ERROR: Build failed, dist folder not found."
+                exit 1
+            fi
             
             echo "Restarting services..."
+            # Try to restart pm2 with specific name if possible
             pm2 restart all
             systemctl restart nginx
-            echo "Deployment successful!"
+            
+            echo "✅ Deployment successful!"
