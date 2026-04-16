@@ -10,8 +10,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Check Secrets Presence
+        run: |
+          if [ -z "${{ secrets.VPS_HOST }}" ]; then echo "❌ VPS_HOST is MISSING"; else echo "✅ VPS_HOST is set"; fi
+          if [ -z "${{ secrets.VPS_USER }}" ]; then echo "❌ VPS_USER is MISSING"; else echo "✅ VPS_USER is set"; fi
+          if [ -z "${{ secrets.VPS_PASSWORD }}" ]; then echo "❌ VPS_PASSWORD is MISSING"; else echo "✅ VPS_PASSWORD is set"; fi
+
       - name: Deploy using ssh
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
