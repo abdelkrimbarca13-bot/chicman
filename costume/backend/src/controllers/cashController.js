@@ -1,5 +1,6 @@
 const prisma = require('../utils/prisma');
 const XLSX = require('xlsx');
+const { logAction } = require('../utils/audit');
 
 exports.getDailyCash = async (req, res) => {
   try {
@@ -187,12 +188,17 @@ async function updateDailyStats(date) {
 exports.createExpense = async (req, res) => {
   try {
     const { amount, description, slipNumber } = req.body;
+    
+    if (!amount || isNaN(parseFloat(amount))) {
+      return res.status(400).json({ message: 'Montant invalide' });
+    }
+
     const expense = await prisma.expense.create({
       data: {
         amount: parseFloat(amount),
         description,
         slipNumber: slipNumber || null,
-        performedBy: req.userData.username,
+        performedBy: req.userData.username || 'Inconnu',
         date: new Date()
       }
     });
@@ -200,6 +206,8 @@ exports.createExpense = async (req, res) => {
     const today = new Date().toISOString().split('T')[0] + 'T00:00:00.000Z';
     const todayDate = new Date(today);
     await updateDailyStats(todayDate);
+
+    await logAction(req.userData.userId, 'CREATE_EXPENSE', { amount: expense.amount, description: expense.description });
 
     res.status(201).json(expense);
   } catch (error) {
@@ -213,11 +221,16 @@ exports.createWithdrawal = async (req, res) => {
       return res.status(403).json({ message: 'Seul l\'administrateur peut effectuer des retraits.' });
     }
     const { amount, description } = req.body;
+
+    if (!amount || isNaN(parseFloat(amount))) {
+      return res.status(400).json({ message: 'Montant invalide' });
+    }
+
     const withdrawal = await prisma.withdrawal.create({
       data: {
         amount: parseFloat(amount),
         description,
-        performedBy: req.userData.username,
+        performedBy: req.userData.username || 'Inconnu',
         date: new Date()
       }
     });
@@ -225,6 +238,8 @@ exports.createWithdrawal = async (req, res) => {
     const today = new Date().toISOString().split('T')[0] + 'T00:00:00.000Z';
     const todayDate = new Date(today);
     await updateDailyStats(todayDate);
+
+    await logAction(req.userData.userId, 'CREATE_WITHDRAWAL', { amount: withdrawal.amount, description: withdrawal.description });
 
     res.status(201).json(withdrawal);
   } catch (error) {

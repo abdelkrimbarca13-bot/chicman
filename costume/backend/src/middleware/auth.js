@@ -15,7 +15,11 @@ module.exports = (req, res, next) => {
     }
 
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    req.userData = { userId: decodedToken.userId, role: decodedToken.role };
+    req.userData = { 
+      userId: decodedToken.userId, 
+      role: decodedToken.role,
+      username: decodedToken.username 
+    };
     next();
   } catch (error) {
     console.error('JWT Verification Error:', error.message);
