@@ -27,6 +27,7 @@ model Item {
   size        String
   color       String
   status      String       @default("AVAILABLE")
+  statusRemarks String?
   rentalPrice Float        @default(0)
   quantity    Int          @default(1)
   ensembleId  String?

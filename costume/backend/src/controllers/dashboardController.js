@@ -71,15 +71,33 @@ exports.getStats = async (req, res) => {
       where: { status: 'RENTED' }
     });
 
+    // Récupérer les articles marqués manuellement en réparation (PENDING_REPAIR ou REPAIRING)
+    const manualRepairs = await prisma.item.findMany({
+      where: {
+        status: { in: ['REPAIRING', 'PENDING_REPAIR'] }
+      }
+    });
+
+    // Formater les réparations manuelles pour correspondre au format attendu par le dashboard
+    const formattedManualRepairs = manualRepairs.map(item => ({
+      id: `manual-${item.id}`,
+      item: item,
+      tailorModification: 'Réparation / Maintenance',
+      remarks: item.statusRemarks || '',
+      rental: {
+        customer: { firstName: 'STOCK', lastName: 'INTERNE', phone: '-' }
+      }
+    }));
+
     res.json({
       activeRentals,
       availableItems,
       rentedItems,
-      repairingItems,
+      repairingItems: repairingItems + manualRepairs.length,
       cleaningItems,
       dailyRevenue: req.userData.role === 'ADMIN' ? dailyRevenue : null,
       delayedRentals,
-      tomorrowRepairs,
+      tomorrowRepairs: [...tomorrowRepairs, ...formattedManualRepairs],
       cleaningItemsList,
       rentedItemsList
     });

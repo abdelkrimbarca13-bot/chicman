@@ -352,14 +352,14 @@ exports.deleteRental = async (req, res) => {
 exports.returnRental = async (req, res) => {
   try {
     const { id } = req.params;
+    const { items: returnedItems } = req.body; // items: [{ id, status, statusRemarks }]
+    
     const rental = await prisma.rental.findUnique({
       where: { id: parseInt(id) },
       include: { items: true }
     });
 
     if (!rental) return res.status(404).json({ message: 'Rental not found' });
-
-    const itemIds = rental.items.map(ri => ri.itemId);
 
     await prisma.$transaction(async (tx) => {
       await tx.rental.update({
@@ -370,15 +370,28 @@ exports.returnRental = async (req, res) => {
         }
       });
 
-      await tx.item.updateMany({
-        where: { id: { in: itemIds } },
-        data: { status: 'CLEANING' }
-      });
+      if (returnedItems && Array.isArray(returnedItems) && returnedItems.length > 0) {
+        for (const ri of returnedItems) {
+          await tx.item.update({
+            where: { id: parseInt(ri.id) },
+            data: { 
+              status: ri.status,
+              statusRemarks: (ri.status === 'PENDING_REPAIR' || ri.status === 'TAILOR') ? ri.statusRemarks : null
+            }
+          });
+        }
+      } else {
+        const itemIds = rental.items.map(ri => ri.itemId);
+        await tx.item.updateMany({
+          where: { id: { in: itemIds } },
+          data: { status: 'CLEANING' }
+        });
+      }
     });
 
     await logAction(req.userData.userId, 'RETURN_RENTAL', { rentalId: id });
 
-    res.json({ message: 'Items returned and moved to cleaning' });
+    res.json({ message: 'Items returned successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

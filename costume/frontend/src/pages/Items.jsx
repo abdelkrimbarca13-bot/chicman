@@ -46,18 +46,18 @@ const Items = () => {
 
         // Mapper les colonnes Excel vers le format attendu par la DB
         const itemsToImport = data.map(row => ({
-          name: row['Modèle'] || row['Nom'] || 'Sans nom',
+          name: row['Nom'] || row['Modèle'] || 'Sans nom',
           model: row['Modèle'] || '',
           type: row['Type'] || 'Autre',
           size: row['Taille']?.toString() || '',
           color: row['Couleur'] || '',
           rentalPrice: parseFloat(row['Prix']) || 0,
-          reference: row['Référence'] || 'ART-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+          reference: row['Référence']?.toString() || 'ART-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
           quantity: 1,
           status: 'AVAILABLE'
         }));
 
-        if (confirm(`Importer ${itemsToImport.length} articles ?`)) {
+        if (confirm(`Importer/Mettre à jour ${itemsToImport.length} articles ?`)) {
           await api.post('/items/bulk', itemsToImport);
           alert('Importation réussie !');
           fetchItems();
@@ -69,23 +69,21 @@ const Items = () => {
     reader.readAsBinaryString(file);
   };
 
-  const handleExcelExport = () => {
-    const exportData = items.map(item => ({
-      'Référence': item.reference,
-      'Nom': item.name,
-      'Modèle': item.model,
-      'Type': item.type,
-      'Taille': item.size,
-      'Couleur': item.color,
-      'Prix Location': item.rentalPrice,
-      'Statut': item.status,
-      'Ensemble ID': item.ensembleId
-    }));
+  const downloadTemplate = () => {
+    const templateData = [{
+      'Référence': '',
+      'Nom': '',
+      'Modèle': '',
+      'Type': '',
+      'Taille': '',
+      'Couleur': '',
+      'Prix': ''
+    }];
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
+    const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Articles");
-    XLSX.writeFile(wb, `Inventaire_Articles_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Modèle Importation");
+    XLSX.writeFile(wb, "Modele_Import_Articles.xlsx");
   };
 
   useEffect(() => {
@@ -248,10 +246,10 @@ const Items = () => {
                 <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleExcelImport} />
             </label>
             <button 
-                onClick={handleExcelExport}
+                onClick={downloadTemplate}
                 className="w-full sm:w-auto bg-zinc-100 dark:bg-zinc-800 text-gold px-4 py-2 rounded-lg flex items-center justify-center hover:bg-zinc-700 shadow-lg cursor-pointer transition-all border border-gold/20 font-bold text-sm"
             >
-                <Download size={18} className="mr-2" /> Export Excel
+                <Download size={18} className="mr-2" /> Modèle Excel
             </button>
             <button 
                 onClick={() => { setCurrentItem({ name: '', model: '', reference: '', type: 'Veste', size: '', color: '', quantity: 1, rentalPrice: 0 }); setIsModalOpen(true); }}
@@ -284,6 +282,7 @@ const Items = () => {
           <option value="RENTED">Loué</option>
           <option value="CLEANING">Nettoyage</option>
           <option value="REPAIRING">Réparation</option>
+          <option value="PENDING_REPAIR">Attente Réparation</option>
         </select>
       </div>
 
@@ -328,6 +327,7 @@ const Items = () => {
                       item.status === 'AVAILABLE' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900/50' :
                       item.status === 'RENTED' ? 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-900/50' :
                       item.status === 'CLEANING' ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50' :
+                      item.status === 'PENDING_REPAIR' ? 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900/50' :
                       'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-900/50'
                     }`}
                   >
@@ -335,6 +335,7 @@ const Items = () => {
                     <option value="RENTED">Loué</option>
                     <option value="CLEANING">Nettoyage</option>
                     <option value="REPAIRING">Réparation</option>
+                    <option value="PENDING_REPAIR">Attente Réparation</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 flex space-x-3">

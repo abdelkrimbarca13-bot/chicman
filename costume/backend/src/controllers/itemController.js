@@ -45,7 +45,11 @@ exports.getAllItems = async (req, res) => {
         if (item.ensembleId && busyEnsembleIds.has(item.ensembleId)) return false;
         
         // Bloqué physiquement si location immédiate
-        if (isStartingToday && ['CLEANING', 'REPAIRING', 'RENTED'].includes(item.status)) return false;
+        // PENDING_REPAIR est disponible aujourd'hui (isStartingToday === true)
+        if (isStartingToday && ['CLEANING', 'REPAIRING', 'RENTED', 'TAILOR'].includes(item.status)) return false;
+
+        // Si la location ne commence PAS aujourd'hui, PENDING_REPAIR n'est plus disponible
+        if (!isStartingToday && ['CLEANING', 'REPAIRING', 'RENTED', 'TAILOR', 'PENDING_REPAIR'].includes(item.status)) return false;
 
         return true;
       });
@@ -89,7 +93,7 @@ exports.updateItemStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     
-    if (!['AVAILABLE', 'RENTED', 'CLEANING', 'REPAIRING'].includes(status)) {
+    if (!['AVAILABLE', 'RENTED', 'CLEANING', 'REPAIRING', 'TAILOR', 'PENDING_REPAIR'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
     
@@ -140,21 +144,39 @@ exports.getItemByReference = async (req, res) => {
 
 exports.bulkCreateItems = async (req, res) => {
   try {
-    const items = req.body; // Liste d'articles
+    const items = req.body;
     if (!Array.isArray(items)) return res.status(400).json({ error: 'Format invalide' });
 
-    const results = await prisma.$transaction(
-      items.map(item => 
-        prisma.item.upsert({
-          where: { reference: item.reference },
-          update: item,
-          create: item
-        })
-      )
-    );
+    let createdCount = 0;
+    let updatedCount = 0;
 
-    await logAction(req.userData.userId, 'BULK_IMPORT_ITEMS', { count: results.length });
-    res.status(201).json({ message: `${results.length} articles importés ou mis à jour.` });
+    await prisma.$transaction(async (tx) => {
+      for (const itemData of items) {
+        const existingItem = await tx.item.findUnique({
+          where: { reference: itemData.reference }
+        });
+
+        if (existingItem) {
+          // Si l'article existe, on ne met à jour QUE si le prix a changé
+          if (existingItem.rentalPrice !== itemData.rentalPrice) {
+            await tx.item.update({
+              where: { id: existingItem.id },
+              data: { rentalPrice: itemData.rentalPrice }
+            });
+            updatedCount++;
+          }
+        } else {
+          // Si l'article n'existe pas, on le crée
+          await tx.item.create({ data: itemData });
+          createdCount++;
+        }
+      }
+    });
+
+    await logAction(req.userData.userId, 'BULK_IMPORT_ITEMS', { created: createdCount, updated: updatedCount });
+    res.status(201).json({ 
+      message: `Importation terminée : ${createdCount} nouveaux articles créés, ${updatedCount} prix mis à jour.` 
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

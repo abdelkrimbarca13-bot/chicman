@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import Items from './pages/Items';
 import Customers from './pages/Customers';
 import Rentals from './pages/Rentals';
+import Tailor from './pages/Tailor';
+import Repairs from './pages/Repairs';
 import Revenue from './pages/Revenue';
 import Cash from './pages/Cash';
 import Audit from './pages/Audit';
@@ -29,6 +31,8 @@ function App() {
             <Route path="/items" element={<PrivateRoute><Items /></PrivateRoute>} />
             <Route path="/customers" element={<PrivateRoute><Customers /></PrivateRoute>} />
             <Route path="/rentals" element={<PrivateRoute><Rentals /></PrivateRoute>} />
+            <Route path="/tailor" element={<PrivateRoute><Tailor /></PrivateRoute>} />
+            <Route path="/repairs" element={<PrivateRoute><Repairs /></PrivateRoute>} />
             <Route path="/revenue" element={<PrivateRoute><Revenue /></PrivateRoute>} />
             <Route path="/cash" element={<PrivateRoute><Cash /></PrivateRoute>} />
             <Route path="/audit" element={<PrivateRoute><Audit /></PrivateRoute>} />

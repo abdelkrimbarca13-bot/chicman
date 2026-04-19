@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Calendar, CheckCircle, Search, Trash2, Smartphone, DollarSign, X, FileText, Play, Info, Scissors, PlusCircle, Edit2 } from 'lucide-react';
+import { Plus, Calendar, CheckCircle, Search, Trash2, Smartphone, DollarSign, X, FileText, Play, Info, Scissors, PlusCircle, Edit2, History, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import RentalReceipt from '../components/RentalReceipt';
 
@@ -18,6 +18,7 @@ const Rentals = () => {
   const [paymentModal, setPaymentModal] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [receiptModal, setReceiptModal] = useState(null);
+  const [returnModal, setReturnModal] = useState(null);
   const [scanTerm, setScanTerm] = useState('');
   const [newRental, setNewRental] = useState({
     firstName: '',
@@ -253,10 +254,34 @@ const Rentals = () => {
     }
   };
 
-  const handleReturn = async (id) => {
-    if (confirm('Marquer comme retourné ?')) {
-      await api.post(`/rentals/${id}/return`);
+  const handleReturn = (rental) => {
+    setReturnModal({
+      id: rental.id,
+      items: rental.items.map(ri => ({
+        id: ri.item.id,
+        name: ri.item.name,
+        reference: ri.item.reference,
+        status: 'CLEANING',
+        statusRemarks: ''
+      }))
+    });
+  };
+
+  const submitReturn = async () => {
+    try {
+      await api.post(`/rentals/${returnModal.id}/return`, {
+        items: returnModal.items.map(item => ({
+          id: item.id,
+          status: item.status,
+          statusRemarks: item.statusRemarks
+        }))
+      });
+      setReturnModal(null);
       fetchData();
+      alert('Retour enregistré avec succès');
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors du retour');
     }
   };
 
@@ -538,7 +563,7 @@ const Rentals = () => {
                           </>
                         ) : (
                           <button 
-                            onClick={() => handleReturn(rental.id)}
+                            onClick={() => handleReturn(rental)}
                             className="text-green-600 hover:text-green-900 flex items-center font-bold text-sm"
                           >
                             <CheckCircle size={16} className="mr-1"/> Retourner
@@ -810,6 +835,101 @@ const Rentals = () => {
                     CONFIRMER LE PAIEMENT
                 </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {returnModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-gold/30 overflow-hidden">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-100 dark:bg-zinc-800">
+                <h2 className="text-2xl font-black text-gold font-luxury tracking-widest uppercase flex items-center gap-3">
+                    <History size={24} /> Retour de Location #{returnModal.id.toString().padStart(5, '0')}
+                </h2>
+                <button onClick={() => setReturnModal(null)} className="text-zinc-500 hover:text-white p-2 hover:bg-zinc-700 rounded-full transition-colors">
+                    <X size={24} />
+                </button>
+            </div>
+            
+            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-4">Définir le statut pour chaque article :</p>
+                {returnModal.items.map((item, index) => (
+                    <div key={index} className="p-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl border border-zinc-700 space-y-3">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <div className="font-bold text-zinc-900 dark:text-white">{item.name}</div>
+                                <div className="text-[10px] text-zinc-500 font-mono font-bold uppercase">REF: {item.reference}</div>
+                            </div>
+                            <div className="flex bg-zinc-900 rounded-lg p-1 border border-zinc-700">
+                                <button 
+                                    onClick={() => {
+                                        const newItems = [...returnModal.items];
+                                        newItems[index].status = 'CLEANING';
+                                        setReturnModal({...returnModal, items: newItems});
+                                    }}
+                                    className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase transition-all ${item.status === 'CLEANING' ? 'bg-blue-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                >
+                                    Nettoyage
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        const newItems = [...returnModal.items];
+                                        newItems[index].status = 'AVAILABLE';
+                                        setReturnModal({...returnModal, items: newItems});
+                                    }}
+                                    className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase transition-all ${item.status === 'AVAILABLE' ? 'bg-green-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                >
+                                    Disponible
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        const newItems = [...returnModal.items];
+                                        newItems[index].status = 'PENDING_REPAIR';
+                                        setReturnModal({...returnModal, items: newItems});
+                                    }}
+                                    className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase transition-all ${item.status === 'PENDING_REPAIR' ? 'bg-red-600 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                >
+                                    Réparation
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {item.status === 'PENDING_REPAIR' && (
+                            <div className="animate-in slide-in-from-top-2 duration-200">
+                                <label className="block text-[10px] font-black uppercase text-gold/60 mb-1.5 ml-1 tracking-widest">
+                                    Détails de la réparation
+                                </label>
+                                <textarea 
+                                    className="w-full p-3 bg-white dark:bg-zinc-900 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-zinc-900 dark:text-white text-sm"
+                                    placeholder="Décrivez la réparation nécessaire..."
+                                    rows="2"
+                                    value={item.statusRemarks}
+                                    onChange={(e) => {
+                                        const newItems = [...returnModal.items];
+                                        newItems[index].statusRemarks = e.target.value;
+                                        setReturnModal({...returnModal, items: newItems});
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            <div className="p-6 border-t border-zinc-800 flex gap-4 bg-zinc-100 dark:bg-zinc-800">
+                <button 
+                    onClick={() => setReturnModal(null)}
+                    className="flex-1 py-3 border border-zinc-700 text-zinc-400 font-bold rounded-xl hover:bg-zinc-700 transition-colors uppercase text-xs tracking-widest"
+                >
+                    Annuler
+                </button>
+                <button 
+                    onClick={submitReturn}
+                    className="flex-[2] py-3 bg-green-600 text-white font-black rounded-xl hover:bg-green-500 shadow-xl shadow-green-900/20 transition-all transform active:scale-95 uppercase text-xs tracking-widest flex items-center justify-center gap-2"
+                >
+                    <CheckCircle2 size={18} /> Valider le Retour
+                </button>
+            </div>
           </div>
         </div>
       )}

@@ -151,7 +151,7 @@ const Dashboard = () => {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] uppercase font-black">
-                      <th className="py-3 px-2 whitespace-nowrap">Client</th>
+                      <th className="py-3 px-2 whitespace-nowrap">Client / Contact</th>
                       <th className="py-3 px-2 whitespace-nowrap">Articles</th>
                       <th className="py-3 px-2 whitespace-nowrap text-center">Date retour</th>
                     </tr>
@@ -160,10 +160,14 @@ const Dashboard = () => {
                     {stats.delayedRentals.map(rental => (
                       <tr 
                         key={rental.id} 
-                        onClick={() => navigate(`/rentals?rentalId=${rental.id}`)}
                         className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"
                       >
-                        <td className="py-4 px-2 font-medium group-hover:text-gold text-sm truncate max-w-[120px]">{rental.customer?.firstName} {rental.customer?.lastName}</td>
+                        <td className="py-4 px-2 font-medium group-hover:text-gold text-sm truncate max-w-[120px]">
+                            <div onClick={() => navigate(`/rentals?rentalId=${rental.id}`)}>{rental.customer?.firstName} {rental.customer?.lastName}</div>
+                            <a href={`tel:${rental.customer?.phone}`} className="text-[10px] font-mono font-bold text-gold hover:underline flex items-center gap-1 mt-1">
+                                {rental.customer?.phone}
+                            </a>
+                        </td>
                         <td className="py-4 px-2">
                             <div className="flex flex-wrap gap-1">
                                 {rental.items?.map((ri, idx) => (
