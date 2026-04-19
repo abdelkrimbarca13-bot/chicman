@@ -208,12 +208,7 @@ const Cash = () => {
                 <div className="bg-zinc-950 p-6 rounded-2xl border-2 border-gold shadow-2xl relative overflow-hidden group shadow-gold/10">
                     <p className="text-[10px] font-black text-gold/60 uppercase tracking-widest mb-1">CASH TOTAL (Global)</p>
                     <h3 className="text-3xl font-black text-gold font-luxury">{globalSummary?.globalCash || 0} DA</h3>
-                    <p className="mt-4 text-[10px] font-bold text-gold/40 uppercase tracking-tighter">Solde réel depuis début</p>
-                </div>
-                <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gold/10 relative overflow-hidden group">
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Monnaie Initiale</p>
-                    <h3 className="text-xl font-black text-zinc-900 dark:text-white">{dailyCash.initialCash} DA</h3>
-                    <button onClick={() => setIsInitialCashModalOpen(true)} className="mt-4 text-[10px] font-black uppercase text-gold hover:underline flex items-center gap-1"><Plus size={12} /> Modifier</button>
+                    <p className="mt-4 text-[10px] font-bold text-gold/40 uppercase tracking-tighter">Solde réel (Entrées - Sorties)</p>
                 </div>
 
                 <div 

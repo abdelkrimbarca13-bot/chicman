@@ -316,15 +316,7 @@ exports.getGlobalSummary = async (req, res) => {
     const allWithdrawals = await prisma.withdrawal.aggregate({ _sum: { amount: true } });
     
     // Le cash total est simplement la somme des entrées moins la somme des sorties
-    // On ne somme plus allInitialCash car ce sont des reports quotidiens
-    // Si on veut inclure un fond de caisse initial "historique", il faudrait identifier le tout premier.
-    const firstDailyCash = await prisma.dailyCash.findFirst({
-      orderBy: { date: 'asc' }
-    });
-    const initialFund = firstDailyCash ? firstDailyCash.initialCash : 0;
-
-    const globalCash = initialFund + 
-                       (allRentals._sum.amount || 0) - 
+    const globalCash = (allRentals._sum.amount || 0) - 
                        (allExpenses._sum.amount || 0) - 
                        (allWithdrawals._sum.amount || 0);
 
@@ -412,18 +404,30 @@ exports.exportHistoryExcel = async (req, res) => {
       orderBy: { date: 'desc' }
     });
 
-    const data = history.map(item => ({
+    const allWithdrawals = await prisma.withdrawal.findMany({
+      orderBy: { date: 'desc' }
+    });
+
+    const summaryData = history.map(item => ({
       'Date': new Date(item.date).toLocaleDateString(),
-      'Initial Cash': item.initialCash,
-      'Total Rentals': item.totalRentals,
-      'Total Expenses': item.totalExpenses,
-      'Final Balance': item.finalBalance,
-      'Status': item.status
+      'Recettes (+)': item.totalRentals,
+      'Dépenses (-)': item.totalExpenses,
+      'Solde Final': item.finalBalance
+    }));
+
+    const withdrawalData = allWithdrawals.map(w => ({
+      'Date': new Date(w.date).toLocaleDateString(),
+      'Montant Sortie': w.amount,
+      'Auteur Sortie': w.performedBy || 'N/S',
+      'Motif': w.description || 'N/S'
     }));
 
     const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Historique');
+    const sheet1 = XLSX.utils.json_to_sheet(summaryData);
+    const sheet2 = XLSX.utils.json_to_sheet(withdrawalData);
+    
+    XLSX.utils.book_append_sheet(workbook, sheet1, 'Résumé Quotidien');
+    XLSX.utils.book_append_sheet(workbook, sheet2, 'Détails Sorties Cash');
 
     const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
