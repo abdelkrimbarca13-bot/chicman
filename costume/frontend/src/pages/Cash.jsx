@@ -24,11 +24,12 @@ const Cash = () => {
   
   const [initialAmount, setInitialAmount] = useState('');
   const [withdrawalAmount, setWithdrawalAmount] = useState('');
+  const [withdrawalDescription, setWithdrawalDescription] = useState('');
   const [newExpense, setNewExpense] = useState({ amount: '', description: '', slipNumber: '', category: 'AUTRE' });
 
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     setLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -57,16 +58,16 @@ const Cash = () => {
       if (isAdmin && results[4]) {
         setWithdrawals(results[4].data);
       }
-    } catch (err) {
-      console.error('Erreur chargement caisse', err);
+    } catch {
+      console.error('Erreur chargement caisse');
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAdmin]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const handleSetInitialCash = async (e) => {
     e.preventDefault();
@@ -100,33 +101,51 @@ const Cash = () => {
   const handleCreateWithdrawal = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/cash/withdrawal', { amount: parseFloat(withdrawalAmount) });
+      await api.post('/cash/withdrawal', { 
+        amount: parseFloat(withdrawalAmount),
+        description: withdrawalDescription
+      });
       setIsWithdrawalModalOpen(false);
       setWithdrawalAmount('');
+      setWithdrawalDescription('');
       fetchData();
     } catch {
       alert('Erreur lors de l\'enregistrement du retrait');
     }
   };
 
-  const fetchGlobalSummary = async () => {
+  const fetchGlobalSummary = React.useCallback(async () => {
     if (!filterStartDate || !filterEndDate) {
       setGlobalSummary(null);
+      // Re-fetch default history if filters cleared
+      if (activeTab === 'history') {
+        const hRes = await api.get('/cash/history');
+        const wRes = await api.get('/cash/withdrawals');
+        setHistory(hRes.data);
+        setWithdrawals(wRes.data);
+      }
       return;
     }
     try {
-      const res = await api.get(`/cash/summary?startDate=${filterStartDate}&endDate=${filterEndDate}`);
-      setGlobalSummary(res.data);
-    } catch (err) {
-      console.error('Erreur summary', err);
+      const query = `?startDate=${filterStartDate}&endDate=${filterEndDate}`;
+      const [sRes, hRes, wRes] = await Promise.all([
+        api.get(`/cash/summary${query}`),
+        api.get(`/cash/history${query}`),
+        api.get(`/cash/withdrawals${query}`)
+      ]);
+      setGlobalSummary(sRes.data);
+      setHistory(hRes.data);
+      setWithdrawals(wRes.data);
+    } catch {
+      console.error('Erreur summary');
     }
-  };
+  }, [filterStartDate, filterEndDate, activeTab]);
 
   useEffect(() => {
     if (activeTab === 'history') {
       fetchGlobalSummary();
     }
-  }, [filterStartDate, filterEndDate, activeTab]);
+  }, [fetchGlobalSummary, activeTab]);
 
   const handleExportExcel = async () => {
     try {
@@ -369,18 +388,22 @@ const Cash = () => {
                             <thead className="bg-zinc-800 uppercase text-[9px] font-black text-zinc-500 sticky top-0 z-10">
                                 <tr>
                                     <th className="px-4 py-3">Date/Heure</th>
+                                    <th className="px-4 py-3">Motif / Association</th>
                                     <th className="px-4 py-3">Admin</th>
                                     <th className="px-4 py-3 text-right">Montant</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-800 text-zinc-300">
                                 {withdrawals.length === 0 ? (
-                                    <tr><td colSpan="3" className="px-4 py-12 text-center text-zinc-600 font-bold italic text-xs">Aucun retrait enregistré</td></tr>
+                                    <tr><td colSpan="4" className="px-4 py-12 text-center text-zinc-600 font-bold italic text-xs">Aucun retrait enregistré</td></tr>
                                 ) : (
                                     withdrawals.map((w) => (
                                         <tr key={w.id} className="hover:bg-zinc-800/30 transition-all">
                                             <td className="px-4 py-3 font-bold text-xs text-zinc-400">
                                                 {format(new Date(w.date), 'dd/MM/yyyy HH:mm')}
+                                            </td>
+                                            <td className="px-4 py-3 text-xs font-medium text-white">
+                                                {w.description || <span className="text-zinc-600 italic">Sans motif</span>}
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2">
@@ -586,6 +609,16 @@ const Cash = () => {
                       value={withdrawalAmount} 
                       onChange={(e) => setWithdrawalAmount(e.target.value)} 
                       placeholder="0.00" 
+                      required 
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-1 tracking-widest">Motif du Retrait (Association)</label>
+                    <textarea 
+                      className="w-full p-3 bg-zinc-800 border-2 border-zinc-700 rounded-xl text-white font-medium min-h-[80px]" 
+                      value={withdrawalDescription} 
+                      onChange={(e) => setWithdrawalDescription(e.target.value)} 
+                      placeholder="Indiquez la raison ou l'association..." 
                       required 
                     />
                 </div>

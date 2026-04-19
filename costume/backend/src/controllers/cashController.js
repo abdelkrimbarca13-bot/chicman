@@ -212,10 +212,11 @@ exports.createWithdrawal = async (req, res) => {
     if (req.userData.role !== 'ADMIN') {
       return res.status(403).json({ message: 'Seul l\'administrateur peut effectuer des retraits.' });
     }
-    const { amount } = req.body;
+    const { amount, description } = req.body;
     const withdrawal = await prisma.withdrawal.create({
       data: {
         amount: parseFloat(amount),
+        description,
         performedBy: req.userData.username,
         date: new Date()
       }
@@ -236,9 +237,14 @@ exports.getWithdrawals = async (req, res) => {
     if (req.userData.role !== 'ADMIN') {
       return res.status(403).json({ message: 'Accès refusé.' });
     }
-    const { date } = req.query;
+    const { startDate, endDate, date } = req.query;
     let where = {};
-    if (date) {
+    if (startDate && endDate) {
+      where.date = {
+        gte: new Date(new Date(startDate).setUTCHours(0, 0, 0, 0)),
+        lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999))
+      };
+    } else if (date) {
       const dayStart = new Date(new Date(date).toISOString().split('T')[0] + 'T00:00:00.000Z');
       const dayEnd = new Date(new Date(date).toISOString().split('T')[0] + 'T23:59:59.999Z');
       where.date = { gte: dayStart, lte: dayEnd };
@@ -293,9 +299,16 @@ exports.getGlobalSummary = async (req, res) => {
     const allRentals = await prisma.payment.aggregate({ _sum: { amount: true } });
     const allExpenses = await prisma.expense.aggregate({ _sum: { amount: true } });
     const allWithdrawals = await prisma.withdrawal.aggregate({ _sum: { amount: true } });
-    const allInitialCash = await prisma.dailyCash.aggregate({ _sum: { initialCash: true } });
+    
+    // Le cash total est simplement la somme des entrées moins la somme des sorties
+    // On ne somme plus allInitialCash car ce sont des reports quotidiens
+    // Si on veut inclure un fond de caisse initial "historique", il faudrait identifier le tout premier.
+    const firstDailyCash = await prisma.dailyCash.findFirst({
+      orderBy: { date: 'asc' }
+    });
+    const initialFund = firstDailyCash ? firstDailyCash.initialCash : 0;
 
-    const globalCash = (allInitialCash._sum.initialCash || 0) + 
+    const globalCash = initialFund + 
                        (allRentals._sum.amount || 0) - 
                        (allExpenses._sum.amount || 0) - 
                        (allWithdrawals._sum.amount || 0);
@@ -315,11 +328,16 @@ exports.getGlobalSummary = async (req, res) => {
 
 exports.getExpenses = async (req, res) => {
   try {
-    const { date } = req.query;
+    const { startDate, endDate } = req.query;
     let where = {};
-    if (date) {
-      const dayStart = new Date(new Date(date).toISOString().split('T')[0] + 'T00:00:00.000Z');
-      const dayEnd = new Date(new Date(date).toISOString().split('T')[0] + 'T23:59:59.999Z');
+    if (startDate && endDate) {
+      where.date = {
+        gte: new Date(new Date(startDate).setUTCHours(0, 0, 0, 0)),
+        lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999))
+      };
+    } else if (req.query.date) {
+      const dayStart = new Date(new Date(req.query.date).toISOString().split('T')[0] + 'T00:00:00.000Z');
+      const dayEnd = new Date(new Date(req.query.date).toISOString().split('T')[0] + 'T23:59:59.999Z');
       where.date = { gte: dayStart, lte: dayEnd };
     }
     const expenses = await prisma.expense.findMany({
@@ -351,7 +369,16 @@ exports.getHistory = async (req, res) => {
     if (req.userData.role !== 'ADMIN') {
         return res.status(403).json({ message: 'Accès refusé.' });
     }
+    const { startDate, endDate } = req.query;
+    let where = {};
+    if (startDate && endDate) {
+      where.date = {
+        gte: new Date(new Date(startDate).setUTCHours(0, 0, 0, 0)),
+        lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999))
+      };
+    }
     const history = await prisma.dailyCash.findMany({
+      where,
       orderBy: { date: 'desc' }
     });
     res.json(history);

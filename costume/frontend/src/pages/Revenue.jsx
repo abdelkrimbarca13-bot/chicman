@@ -6,6 +6,9 @@ import { TrendingUp, Calendar, ChevronRight, ChevronDown } from 'lucide-react';
 const Revenue = () => {
   const [groupedRevenue, setGroupedRevenue] = useState({});
   const [expandedDays, setExpandedDays] = useState({});
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const getMovementTypeLabel = (type) => {
     const labels = {
@@ -42,18 +45,27 @@ const Revenue = () => {
     }
   };
 
-  useEffect(() => {
-    api.get('/rentals/cash/movements').then(res => {
+  const fetchRevenue = React.useCallback(() => {
+    setLoading(true);
+    let url = '/rentals/cash/movements';
+    if (startDate && endDate) {
+      url += `?startDate=${startDate}&endDate=${endDate}`;
+    }
+    api.get(url).then(res => {
       if (Array.isArray(res.data)) {
         groupMovementsByDay(res.data);
       } else {
         setGroupedRevenue({});
       }
-    }).catch(err => {
-      console.error(err);
+    }).catch(() => {
+      console.error('Erreur revenue');
       setGroupedRevenue({});
-    });
-  }, []);
+    }).finally(() => setLoading(false));
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    fetchRevenue();
+  }, [fetchRevenue]);
 
   const toggleDay = (date) => {
     setExpandedDays(prev => ({ ...prev, [date]: !prev[date] }));
@@ -62,18 +74,35 @@ const Revenue = () => {
   const sortedDates = Object.keys(groupedRevenue).sort((a, b) => new Date(b) - new Date(a));
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white">Suivi des Revenus</h1>
-        <div className="w-full sm:w-auto bg-gold text-black px-6 py-3 rounded-xl shadow-lg flex items-center">
-            <TrendingUp className="mr-3" />
-            <div>
-                <p className="text-[10px] uppercase font-bold opacity-80">Total Aujourd'hui</p>
-                <p className="text-xl md:text-2xl font-black italic">
-                    {groupedRevenue[format(new Date(), 'yyyy-MM-dd')]?.total || 0} DA
-                </p>
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white uppercase tracking-widest border-b-2 border-gold/30 pb-2">Suivi des Revenus</h1>
+        <div className="flex gap-4 items-center">
+            {loading && <div className="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>}
+            <div className="w-full sm:w-auto bg-gold text-black px-6 py-3 rounded-xl shadow-lg flex items-center">
+                <TrendingUp className="mr-3" />
+                <div>
+                    <p className="text-[10px] uppercase font-bold opacity-80">Total Sélectionné</p>
+                    <p className="text-xl md:text-2xl font-black italic">
+                        {Object.values(groupedRevenue).reduce((sum, day) => sum + day.total, 0)} DA
+                    </p>
+                </div>
             </div>
         </div>
+      </div>
+
+      <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex flex-wrap gap-6 items-end mb-6">
+          <div className="flex-1 min-w-[300px]">
+              <label className="block text-xs font-black uppercase text-zinc-500 mb-2 tracking-widest">Filtrer par Période</label>
+              <div className="flex items-center gap-3">
+                  <input type="date" className="flex-1 p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold text-white" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  <span className="text-zinc-600 font-bold">au</span>
+                  <input type="date" className="flex-1 p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold text-white" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </div>
+          </div>
+          <button onClick={() => { setStartDate(''); setEndDate(''); }} className="px-6 py-2 text-zinc-500 hover:text-white font-black text-xs uppercase rounded-lg border border-zinc-800">
+              Réinitialiser
+          </button>
       </div>
 
       <div className="space-y-4">

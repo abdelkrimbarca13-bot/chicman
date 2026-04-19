@@ -179,7 +179,16 @@ exports.getAllRentals = async (req, res) => {
 
 exports.getCashMovements = async (req, res) => {
   try {
+    const { startDate, endDate } = req.query;
+    let where = {};
+    if (startDate && endDate) {
+      where.date = {
+        gte: new Date(new Date(startDate).setUTCHours(0, 0, 0, 0)),
+        lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999))
+      };
+    }
     const cashMovements = await prisma.cashMovement.findMany({
+      where,
       include: {
         rental: {
           include: { 
