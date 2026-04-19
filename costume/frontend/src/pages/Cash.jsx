@@ -509,18 +509,20 @@ const Cash = () => {
                         <tr>
                           <th className="px-4 py-3">Réf/Bon</th>
                           <th className="px-4 py-3">Motif / Description</th>
+                          <th className="px-4 py-3">Par</th>
                           <th className="px-4 py-3">Date/Heure</th>
                           <th className="px-4 py-3 text-right">Montant</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-800 text-zinc-300">
                         {detailModal.expenses.length === 0 ? (
-                          <tr><td colSpan="4" className="p-4 text-center text-zinc-600 font-bold italic text-xs">Aucune dépense</td></tr>
+                          <tr><td colSpan="5" className="p-4 text-center text-zinc-600 font-bold italic text-xs">Aucune dépense</td></tr>
                         ) : (
                           detailModal.expenses.map((e, i) => (
                             <tr key={i} className="text-xs">
                               <td className="px-4 py-3 font-bold text-gold">{e.slipNumber || 'N/S'}</td>
                               <td className="px-4 py-3 font-medium text-white">{e.description}</td>
+                              <td className="px-4 py-3 text-[10px] font-black uppercase text-zinc-500">{e.performedBy || 'N/S'}</td>
                               <td className="px-4 py-3 text-zinc-500">{format(new Date(e.date), 'HH:mm')}</td>
                               <td className="px-4 py-3 text-right font-black text-red-400">-{e.amount} DA</td>
                             </tr>
