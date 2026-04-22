@@ -45,11 +45,11 @@ exports.getAllItems = async (req, res) => {
         if (item.ensembleId && busyEnsembleIds.has(item.ensembleId)) return false;
         
         // Bloqué physiquement si location immédiate
-        // PENDING_REPAIR est disponible aujourd'hui (isStartingToday === true)
         if (isStartingToday && ['CLEANING', 'REPAIRING', 'RENTED', 'TAILOR'].includes(item.status)) return false;
 
-        // Si la location ne commence PAS aujourd'hui, PENDING_REPAIR n'est plus disponible
-        if (!isStartingToday && ['CLEANING', 'REPAIRING', 'RENTED', 'TAILOR', 'PENDING_REPAIR'].includes(item.status)) return false;
+        // Si la location ne commence PAS aujourd'hui, on ne bloque que par les états de maintenance longue (REPAIRING)
+        // Les états transitoires (CLEANING, RENTED, TAILOR) sont gérés par les chevauchements de dates
+        if (!isStartingToday && ['REPAIRING', 'PENDING_REPAIR'].includes(item.status)) return false;
 
         return true;
       });

@@ -34,6 +34,65 @@ const Audit = () => {
     </div>
   );
 
+  const formatDetails = (details, action) => {
+    if (!details) return '-';
+    try {
+      const data = JSON.parse(details);
+      
+      switch (action) {
+        case 'CREATE_RENTAL':
+        case 'UPDATE_RENTAL':
+        case 'ACTIVATE_RENTAL':
+        case 'RETURN_RENTAL':
+        case 'DELETE_RENTAL':
+          return `Location #${data.rentalId?.toString().padStart(5, '0') || '?'}`;
+          
+        case 'CREATE_ITEM':
+        case 'UPDATE_ITEM':
+        case 'DELETE_ITEM':
+        case 'UPDATE_ITEM_STATUS':
+          return `Article: ${data.name || data.reference || data.id || '?'}`;
+          
+        case 'CREATE_CUSTOMER':
+        case 'UPDATE_CUSTOMER':
+        case 'DELETE_CUSTOMER':
+        case 'TOGGLE_BLACKLIST':
+          return `Client: ${data.name || data.customerId || '?'}`;
+          
+        case 'CREATE_EXPENSE':
+          return `Dépense: ${data.amount} DA - ${data.description}`;
+          
+        case 'CREATE_WITHDRAWAL':
+          return `Retrait: ${data.amount} DA - ${data.description}`;
+          
+        default:
+          return details;
+      }
+    } catch {
+      return details;
+    }
+  };
+
+  const actionMapping = {
+    'CREATE_RENTAL': 'Création Location',
+    'ACTIVATE_RENTAL': 'Activation Location',
+    'RETURN_RENTAL': 'Retour Location',
+    'UPDATE_RENTAL': 'Modification Location',
+    'DELETE_RENTAL': 'Suppression Location',
+    'CREATE_ITEM': 'Création Article',
+    'UPDATE_ITEM': 'Modification Article',
+    'UPDATE_ITEM_STATUS': 'MàJ Statut Article',
+    'DELETE_ITEM': 'Suppression Article',
+    'BULK_IMPORT_ITEMS': 'Import Massif Articles',
+    'CREATE_CUSTOMER': 'Nouveau Client',
+    'UPDATE_CUSTOMER': 'Modification Client',
+    'DELETE_CUSTOMER': 'Suppression Client',
+    'TOGGLE_BLACKLIST': 'Liste Noire',
+    'CREATE_EXPENSE': 'Nouvelle Dépense',
+    'CREATE_WITHDRAWAL': 'Sortie de Caisse',
+    'LOGIN': 'Connexion'
+  };
+
   return (
     <div>
       <h1 className="text-3xl font-black mb-8 font-luxury tracking-wider text-gold border-b-2 border-gold/50 w-fit pb-2 uppercase">Historique des Actions</h1>
@@ -59,14 +118,14 @@ const Audit = () => {
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter ${
                       log.action.includes('DELETE') ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50' :
-                      log.action.includes('CREATE') ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-900/50' :
+                      log.action.includes('CREATE') || log.action.includes('ACTIVATE') ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-900/50' :
                       'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50'
                     }`}>
-                      {log.action}
+                      {actionMapping[log.action] || log.action}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-xs font-mono text-zinc-500 max-w-xs truncate">
-                    {log.details || '-'}
+                    {formatDetails(log.details, log.action)}
                   </td>
                   <td className="px-6 py-4 flex items-center gap-2 text-xs">
                     <Clock size={14} className="text-zinc-500" />

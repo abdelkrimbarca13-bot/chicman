@@ -255,13 +255,14 @@ const Rentals = () => {
   };
 
   const handleReturn = (rental) => {
+    const immediateAvailableTypes = ['Chaussures', 'Cravate', 'Ceinture', 'Gilet accessoire'];
     setReturnModal({
       id: rental.id,
       items: rental.items.map(ri => ({
         id: ri.item.id,
         name: ri.item.name,
         reference: ri.item.reference,
-        status: 'CLEANING',
+        status: immediateAvailableTypes.includes(ri.item.type) ? 'AVAILABLE' : 'CLEANING',
         statusRemarks: ''
       }))
     });

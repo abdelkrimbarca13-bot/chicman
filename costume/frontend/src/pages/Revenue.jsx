@@ -14,7 +14,8 @@ const Revenue = () => {
     const labels = {
       DEPOSIT: 'Versement initial',
       REMAINDER: 'Solde location',
-      REFUND: 'Remboursement'
+      REFUND: 'Remboursement',
+      RENTAL_TOTAL: 'Total du Bon'
     };
     return labels[type] || type;
   };
@@ -23,7 +24,8 @@ const Revenue = () => {
     const colors = {
       DEPOSIT: 'bg-gold/10 text-gold border-gold/20',
       REMAINDER: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-      REFUND: 'bg-red-500/10 text-red-500 border-red-500/20'
+      REFUND: 'bg-red-500/10 text-red-500 border-red-500/20',
+      RENTAL_TOTAL: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
     };
     return colors[type] || 'bg-zinc-800 text-zinc-400 border-zinc-700';
   };
@@ -76,7 +78,7 @@ const Revenue = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white uppercase tracking-widest border-b-2 border-gold/30 pb-2">Suivi des Revenus</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-white uppercase tracking-widest border-b-2 border-gold/30 pb-2">Chiffre d'Affaires (Bons)</h1>
         <div className="flex gap-4 items-center">
             {loading && <div className="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>}
             <div className="w-full sm:w-auto bg-gold text-black px-6 py-3 rounded-xl shadow-lg flex items-center">

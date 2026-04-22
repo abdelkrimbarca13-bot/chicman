@@ -55,8 +55,8 @@ exports.createRental = async (req, res) => {
         rental: {
           status: { in: ['ONGOING', 'DELAYED'] },
           AND: [
-            { startDate: { lte: end } },
-            { expectedReturn: { gte: start } }
+            { startDate: { lt: end } },
+            { expectedReturn: { gt: start } }
           ]
         },
         OR: [
@@ -182,24 +182,39 @@ exports.getCashMovements = async (req, res) => {
     const { startDate, endDate } = req.query;
     let where = {};
     if (startDate && endDate) {
-      where.date = {
+      where.createdAt = {
         gte: new Date(new Date(startDate).setUTCHours(0, 0, 0, 0)),
         lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999))
       };
+    } else {
+      // Default to last 30 days if no range
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      where.createdAt = { gte: thirtyDaysAgo };
     }
-    const cashMovements = await prisma.cashMovement.findMany({
+
+    const rentals = await prisma.rental.findMany({
       where,
       include: {
-        rental: {
-          include: { 
-            customer: true,
-            items: { include: { item: true } }
-          }
-        }
+        customer: true,
+        items: { include: { item: true } }
       },
-      orderBy: { date: 'desc' }
+      orderBy: { createdAt: 'desc' }
     });
-    res.json(cashMovements);
+
+    // Map rentals to the "movement" structure for the frontend
+    const movements = rentals.map(r => ({
+      id: r.id,
+      date: r.createdAt,
+      amount: r.totalAmount,
+      type: 'RENTAL_TOTAL',
+      rental: {
+        customer: r.customer,
+        items: r.items
+      }
+    }));
+
+    res.json(movements);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -356,7 +371,7 @@ exports.returnRental = async (req, res) => {
     
     const rental = await prisma.rental.findUnique({
       where: { id: parseInt(id) },
-      include: { items: true }
+      include: { items: { include: { item: true } } }
     });
 
     if (!rental) return res.status(404).json({ message: 'Rental not found' });
@@ -370,22 +385,35 @@ exports.returnRental = async (req, res) => {
         }
       });
 
+      const immediateAvailableTypes = ['Chaussures', 'Cravate', 'Ceinture', 'Gilet accessoire'];
+
       if (returnedItems && Array.isArray(returnedItems) && returnedItems.length > 0) {
         for (const ri of returnedItems) {
+          const rentalItem = rental.items.find(i => i.itemId === parseInt(ri.id));
+          let finalStatus = ri.status;
+          
+          // Override if it's a special type and was set to CLEANING by default
+          if (rentalItem && immediateAvailableTypes.includes(rentalItem.item.type) && finalStatus === 'CLEANING') {
+            finalStatus = 'AVAILABLE';
+          }
+
           await tx.item.update({
             where: { id: parseInt(ri.id) },
             data: { 
-              status: ri.status,
-              statusRemarks: (ri.status === 'PENDING_REPAIR' || ri.status === 'TAILOR') ? ri.statusRemarks : null
+              status: finalStatus,
+              statusRemarks: (finalStatus === 'PENDING_REPAIR' || finalStatus === 'TAILOR') ? ri.statusRemarks : null
             }
           });
         }
       } else {
-        const itemIds = rental.items.map(ri => ri.itemId);
-        await tx.item.updateMany({
-          where: { id: { in: itemIds } },
-          data: { status: 'CLEANING' }
-        });
+        // Bulk return - handle types individually
+        for (const ri of rental.items) {
+          const status = immediateAvailableTypes.includes(ri.item.type) ? 'AVAILABLE' : 'CLEANING';
+          await tx.item.update({
+            where: { id: ri.itemId },
+            data: { status }
+          });
+        }
       }
     });
 
