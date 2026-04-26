@@ -241,16 +241,20 @@ const Items = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold font-luxury tracking-wider text-gold border-b-2 border-gold/50 w-fit pb-2 uppercase">Gestion du Stock</h1>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <label className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-green-700 shadow-lg cursor-pointer transition-all border border-green-500/20 font-bold text-sm">
-                <Plus size={18} className="mr-2" /> Import Excel
-                <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleExcelImport} />
-            </label>
-            <button 
-                onClick={downloadTemplate}
-                className="w-full sm:w-auto bg-zinc-100 dark:bg-zinc-800 text-gold px-4 py-2 rounded-lg flex items-center justify-center hover:bg-zinc-700 shadow-lg cursor-pointer transition-all border border-gold/20 font-bold text-sm"
-            >
-                <Download size={18} className="mr-2" /> Modèle Excel
-            </button>
+            {user?.role === 'ADMIN' && (
+              <>
+                <label className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-green-700 shadow-lg cursor-pointer transition-all border border-green-500/20 font-bold text-sm">
+                    <Plus size={18} className="mr-2" /> Import Excel
+                    <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleExcelImport} />
+                </label>
+                <button 
+                    onClick={downloadTemplate}
+                    className="w-full sm:w-auto bg-zinc-100 dark:bg-zinc-800 text-gold px-4 py-2 rounded-lg flex items-center justify-center hover:bg-zinc-700 shadow-lg cursor-pointer transition-all border border-gold/20 font-bold text-sm"
+                >
+                    <Download size={18} className="mr-2" /> Modèle Excel
+                </button>
+              </>
+            )}
             <button 
                 onClick={() => { setCurrentItem({ name: '', model: '', reference: '', type: 'Veste', size: '', color: '', quantity: 1, rentalPrice: 0 }); setIsModalOpen(true); }}
                 className="w-full sm:w-auto bg-gold text-rich-black px-4 py-2 rounded-lg flex items-center justify-center hover:bg-light-gold shadow-lg shadow-gold/10 transition-all active:scale-95 text-sm font-bold"

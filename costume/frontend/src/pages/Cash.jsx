@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
-import { DollarSign, ArrowDownCircle, ArrowUpCircle, Plus, Receipt, Calculator, Calendar, X, User, ShoppingBag, Info, Search, Filter, Download, Printer, LogOut } from 'lucide-react';
+import { DollarSign, ArrowDownCircle, ArrowUpCircle, Plus, Receipt, Calculator, Calendar, X, User, ShoppingBag, Info, Search, Filter, Download, Printer, LogOut, Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 
@@ -28,7 +28,11 @@ const Cash = () => {
   const [newExpense, setNewExpense] = useState({ amount: '', description: '', slipNumber: '', category: 'AUTRE' });
 
   const [loading, setLoading] = useState(true);
-
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [editingWithdrawal, setEditingWithdrawal] = useState(null);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [editAmount, setEditAmount] = useState('');
+  
   const fetchData = React.useCallback(async () => {
     setLoading(true);
     try {
@@ -41,8 +45,8 @@ const Cash = () => {
 
       if (isAdmin) {
         calls.push(api.get('/cash/history'));
-        calls.push(api.get('/cash/summary')); // Pour avoir le solde global total
-        calls.push(api.get('/cash/withdrawals')); // Historique des retraits admin
+        calls.push(api.get('/cash/summary')); 
+        calls.push(api.get('/cash/withdrawals')); 
       }
 
       const results = await Promise.all(calls);
@@ -76,41 +80,119 @@ const Cash = () => {
       setIsInitialCashModalOpen(false);
       setInitialAmount('');
       fetchData();
-    } catch {
-      alert('Erreur lors de la mise à jour');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur lors de la mise à jour');
     }
   };
 
   const handleCreateExpense = async (e) => {
     e.preventDefault();
     try {
-      // On combine la catégorie dans la description pour la traçabilité si le champ n'existe pas
-      const payload = { 
-        ...newExpense, 
-        description: `[${newExpense.category}] ${newExpense.description}` 
-      };
-      await api.post('/cash/expense', payload);
+      if (editingExpense) {
+        await api.put(`/cash/expense/${editingExpense.id}`, newExpense);
+      } else {
+        // On combine la catégorie dans la description pour la traçabilité si le champ n'existe pas
+        const payload = { 
+          ...newExpense, 
+          description: `[${newExpense.category}] ${newExpense.description}` 
+        };
+        await api.post('/cash/expense', payload);
+      }
       setIsExpenseModalOpen(false);
+      setEditingExpense(null);
       setNewExpense({ amount: '', description: '', slipNumber: '', category: 'AUTRE' });
       fetchData();
-    } catch {
-      alert('Erreur lors de l\'enregistrement');
+      if (detailModal) {
+        // Refresh detail modal if open
+        const res = await api.get(`/cash/details/${detailModal.date}`);
+        setDetailModal(res.data);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de l\'enregistrement');
+    }
+  };
+
+  const handleDeleteExpense = async (id) => {
+    if (!isAdmin) return;
+    if (confirm('Supprimer cette dépense ?')) {
+      try {
+        await api.delete(`/cash/expense/${id}`);
+        fetchData();
+        if (detailModal) {
+            const res = await api.get(`/cash/details/${detailModal.date}`);
+            setDetailModal(res.data);
+        }
+      } catch (err) {
+        alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la suppression');
+      }
     }
   };
 
   const handleCreateWithdrawal = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/cash/withdrawal', { 
-        amount: parseFloat(withdrawalAmount),
-        description: withdrawalDescription
-      });
+      if (editingWithdrawal) {
+        await api.put(`/cash/withdrawal/${editingWithdrawal.id}`, {
+          amount: parseFloat(withdrawalAmount),
+          description: withdrawalDescription
+        });
+      } else {
+        await api.post('/cash/withdrawal', { 
+          amount: parseFloat(withdrawalAmount),
+          description: withdrawalDescription
+        });
+      }
       setIsWithdrawalModalOpen(false);
+      setEditingWithdrawal(null);
       setWithdrawalAmount('');
       setWithdrawalDescription('');
       fetchData();
-    } catch {
-      alert('Erreur lors de l\'enregistrement du retrait');
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de l\'enregistrement du retrait');
+    }
+  };
+
+  const handleDeleteWithdrawal = async (id) => {
+    if (!isAdmin) return;
+    if (confirm('Supprimer ce retrait ?')) {
+      try {
+        await api.delete(`/cash/withdrawal/${id}`);
+        fetchData();
+      } catch (err) {
+        alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la suppression');
+      }
+    }
+  };
+
+  const handleDeletePayment = async (id) => {
+    if (!isAdmin) return;
+    if (confirm('Supprimer ce paiement ? Attention, cela impactera le solde de la location associée.')) {
+        try {
+            await api.delete(`/cash/payment/${id}`);
+            fetchData();
+            if (detailModal) {
+                const res = await api.get(`/cash/details/${detailModal.date}`);
+                setDetailModal(res.data);
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la suppression');
+        }
+    }
+  };
+
+  const handleUpdatePayment = async (e) => {
+    e.preventDefault();
+    try {
+        await api.put(`/cash/payment/${editingPayment.id}`, { amount: parseFloat(editAmount) });
+        setEditingPayment(null);
+        setEditAmount('');
+        fetchData();
+        if (detailModal) {
+            const res = await api.get(`/cash/details/${detailModal.date}`);
+            setDetailModal(res.data);
+        }
+    } catch (err) {
+        alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la modification');
     }
   };
 
@@ -146,6 +228,7 @@ const Cash = () => {
       fetchGlobalSummary();
     }
   }, [fetchGlobalSummary, activeTab]);
+
 
   const handleExportExcel = async () => {
     try {
@@ -244,6 +327,7 @@ const Cash = () => {
                   <p className="text-[10px] font-black text-rich-black/60 uppercase tracking-widest mb-1">Solde Final Caisse</p>
                   <h3 className="text-3xl font-black text-rich-black">{dailyCash.finalBalance} DA</h3>
                   <p className="mt-4 text-[10px] font-bold text-rich-black/40 uppercase tracking-tighter">Argent réel en caisse</p>
+                  <button onClick={() => setIsInitialCashModalOpen(true)} className="mt-2 text-[10px] font-black uppercase text-rich-black/60 hover:text-rich-black hover:underline flex items-center gap-1"><Plus size={12} /> Ajouter Monnaie</button>
               </div>
             )}
           </div>
@@ -261,6 +345,7 @@ const Cash = () => {
                                 <th className="px-6 py-4">Description</th>
                                 <th className="px-6 py-4">Par</th>
                                 <th className="px-6 py-4 text-right">Montant</th>
+                                {isAdmin && <th className="px-6 py-4 text-right">Actions</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-800 text-zinc-300">
@@ -273,6 +358,18 @@ const Cash = () => {
                                         <td className="px-6 py-4 text-sm font-medium text-zinc-900 dark:text-white">{exp.description}</td>
                                         <td className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">{exp.performedBy || 'N/S'}</td>
                                         <td className="px-6 py-4 text-right font-black text-red-400">-{exp.amount} DA</td>
+                                        {isAdmin && (
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <button onClick={() => { 
+                                                      setEditingExpense(exp); 
+                                                      setNewExpense({ amount: exp.amount, description: exp.description, slipNumber: exp.slipNumber || '', category: 'AUTRE' });
+                                                      setIsExpenseModalOpen(true);
+                                                    }} className="p-1.5 text-blue-400 hover:bg-blue-400/10 rounded-lg" title="Modifier"><Edit2 size={14} /></button>
+                                                    <button onClick={() => handleDeleteExpense(exp.id)} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg" title="Supprimer"><Trash2 size={14} /></button>
+                                                </div>
+                                            </td>
+                                        )}
                                     </tr>
                                 ))
                             )}
@@ -312,13 +409,17 @@ const Cash = () => {
                         <input type="date" className="flex-1 p-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm font-bold text-white" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
                     </div>
                 </div>
+
                 <div className="flex gap-3">
                     <button onClick={() => { setFilterStartDate(''); setFilterEndDate(''); }} className="px-6 py-2 text-zinc-500 hover:text-white font-black text-xs uppercase rounded-lg border border-zinc-800">Réinitialiser</button>
-                    <button onClick={handleExportExcel} className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-black text-xs uppercase rounded-lg shadow-lg shadow-green-900/20 transition-all active:scale-95">
-                        <Download size={14} /> Excel
-                    </button>
+                    {isAdmin && (
+                        <button onClick={handleExportExcel} className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-black text-xs uppercase rounded-lg shadow-lg shadow-green-900/20 transition-all active:scale-95">
+                            <Download size={14} /> Excel
+                        </button>
+                    )}
                 </div>
             </div>
+
 
             {globalSummary && (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -386,11 +487,12 @@ const Cash = () => {
                                     <th className="px-4 py-3">Motif / Association</th>
                                     <th className="px-4 py-3">Admin</th>
                                     <th className="px-4 py-3 text-right">Montant</th>
+                                    {isAdmin && <th className="px-4 py-3 text-right">Actions</th>}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-800 text-zinc-300">
                                 {withdrawals.length === 0 ? (
-                                    <tr><td colSpan="4" className="px-4 py-12 text-center text-zinc-600 font-bold italic text-xs">Aucun retrait enregistré</td></tr>
+                                    <tr><td colSpan={isAdmin ? 5 : 4} className="px-4 py-12 text-center text-zinc-600 font-bold italic text-xs">Aucun retrait enregistré</td></tr>
                                 ) : (
                                     withdrawals.map((w) => (
                                         <tr key={w.id} className="hover:bg-zinc-800/30 transition-all">
@@ -409,6 +511,19 @@ const Cash = () => {
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 text-right font-black text-red-500">-{w.amount} DA</td>
+                                            {isAdmin && (
+                                                <td className="px-4 py-3 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <button onClick={() => {
+                                                            setEditingWithdrawal(w);
+                                                            setWithdrawalAmount(w.amount);
+                                                            setWithdrawalDescription(w.description);
+                                                            setIsWithdrawalModalOpen(true);
+                                                        }} className="p-1.5 text-blue-400 hover:bg-blue-400/10 rounded-lg" title="Modifier"><Edit2 size={14}/></button>
+                                                        <button onClick={() => handleDeleteWithdrawal(w.id)} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg" title="Supprimer"><Trash2 size={14}/></button>
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))
                                 )}
@@ -462,14 +577,15 @@ const Cash = () => {
                           <th className="px-4 py-3">Client</th>
                           <th className="px-4 py-3">Articles</th>
                           <th className="px-4 py-3 text-right">Montant</th>
+                          {isAdmin && <th className="px-4 py-3 text-right">Actions</th>}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-800 text-zinc-300">
                         {detailModal.payments.length === 0 ? (
-                          <tr><td colSpan="4" className="p-4 text-center text-zinc-600 font-bold italic text-xs">Aucun revenu</td></tr>
+                          <tr><td colSpan={isAdmin ? 5 : 4} className="p-4 text-center text-zinc-600 font-bold italic text-xs">Aucun revenu</td></tr>
                         ) : (
                           detailModal.payments.map((p, i) => (
-                            <tr key={i} className="text-xs">
+                            <tr key={i} className="text-xs hover:bg-zinc-800/20 transition-all group">
                               <td className="px-4 py-3 font-bold text-gold">#{p.rentalId.toString().padStart(5, '0')}</td>
                               <td className="px-4 py-3">
                                 <p className="font-bold text-white uppercase">{p.rental.customer.firstName} {p.rental.customer.lastName}</p>
@@ -479,12 +595,20 @@ const Cash = () => {
                                 <div className="flex flex-wrap gap-1">
                                   {p.rental.items.map((ri, j) => (
                                     <span key={j} className="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-[9px]">
-                                      {ri.item.name} (T:{ri.item.size})
+                                      {ri.item.name} (T:{ri.item.size}, C:{ri.item.color})
                                     </span>
                                   ))}
                                 </div>
                               </td>
-                              <td className="px-4 py-3 text-right font-black text-green-400">{p.amount} DA</td>
+                              <td className="px-4 py-3 text-right font-black text-green-400">+{p.amount} DA</td>
+                              {isAdmin && (
+                                <td className="px-4 py-3 text-right">
+                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => { setEditingPayment(p); setEditAmount(p.amount); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded transition-colors" title="Modifier"><Edit2 size={12} /></button>
+                                        <button onClick={() => handleDeletePayment(p.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Supprimer"><Trash2 size={12} /></button>
+                                    </div>
+                                </td>
+                              )}
                             </tr>
                           ))
                         )}
@@ -507,11 +631,12 @@ const Cash = () => {
                           <th className="px-4 py-3">Par</th>
                           <th className="px-4 py-3">Date/Heure</th>
                           <th className="px-4 py-3 text-right">Montant</th>
+                          {isAdmin && <th className="px-4 py-3 text-right">Actions</th>}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-800 text-zinc-300">
                         {detailModal.expenses.length === 0 ? (
-                          <tr><td colSpan="5" className="p-4 text-center text-zinc-600 font-bold italic text-xs">Aucune dépense</td></tr>
+                          <tr><td colSpan={isAdmin ? 6 : 5} className="p-4 text-center text-zinc-600 font-bold italic text-xs">Aucune dépense</td></tr>
                         ) : (
                           detailModal.expenses.map((e, i) => (
                             <tr key={i} className="text-xs">
@@ -520,6 +645,18 @@ const Cash = () => {
                               <td className="px-4 py-3 text-[10px] font-black uppercase text-zinc-500">{e.performedBy || 'N/S'}</td>
                               <td className="px-4 py-3 text-zinc-500">{format(new Date(e.date), 'HH:mm')}</td>
                               <td className="px-4 py-3 text-right font-black text-red-400">-{e.amount} DA</td>
+                              {isAdmin && (
+                                <td className="px-4 py-3 text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <button onClick={() => { 
+                                      setEditingExpense(e); 
+                                      setNewExpense({ amount: e.amount, description: e.description, slipNumber: e.slipNumber || '', category: 'AUTRE' });
+                                      setIsExpenseModalOpen(true);
+                                    }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded transition-colors"><Edit2 size={12} /></button>
+                                    <button onClick={() => handleDeleteExpense(e.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded transition-colors"><Trash2 size={12} /></button>
+                                  </div>
+                                </td>
+                              )}
                             </tr>
                           ))
                         )}
@@ -536,11 +673,26 @@ const Cash = () => {
       {isInitialCashModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl p-8 w-full max-w-md border border-gold/20">
-            <h2 className="text-xl font-black text-gold uppercase mb-6">Modifier Monnaie Initiale</h2>
+            <h2 className="text-xl font-black text-gold uppercase mb-6">Ajouter Monnaie d'Ouverture</h2>
             <form onSubmit={handleSetInitialCash} className="space-y-4">
               <input type="number" className="w-full p-4 bg-zinc-800 border-2 border-zinc-700 rounded-xl text-white font-black text-2xl" value={initialAmount} onChange={(e) => setInitialAmount(e.target.value)} placeholder="0.00" required />
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setIsInitialCashModalOpen(false)} className="flex-1 py-3 text-zinc-400 font-bold">Annuler</button>
+                {isAdmin && dailyCash.initialCash > 0 && (
+                    <button 
+                        type="button" 
+                        onClick={async () => {
+                            if (confirm('Réinitialiser le fond de caisse à 0 ?')) {
+                                await api.post('/cash/initial', { amount: 0 });
+                                setIsInitialCashModalOpen(false);
+                                fetchData();
+                            }
+                        }}
+                        className="px-4 py-3 bg-red-500/10 text-red-500 rounded-xl font-bold border border-red-500/20"
+                    >
+                        Réinitialiser
+                    </button>
+                )}
                 <button type="submit" className="flex-1 py-3 bg-gold text-rich-black rounded-xl font-black uppercase">Enregistrer</button>
               </div>
             </form>
@@ -553,8 +705,8 @@ const Cash = () => {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-gold/20">
             <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
-                <h2 className="text-xl font-black text-red-400 uppercase tracking-widest font-luxury">Sortie de Caisse</h2>
-                <button onClick={() => setIsExpenseModalOpen(false)} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
+                <h2 className="text-xl font-black text-red-400 uppercase tracking-widest font-luxury">{editingExpense ? 'Modifier' : 'Sortie de'} Caisse</h2>
+                <button onClick={() => { setIsExpenseModalOpen(false); setEditingExpense(null); }} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
             </div>
             <form onSubmit={handleCreateExpense} className="p-6 space-y-4">
                 <div>
@@ -578,7 +730,7 @@ const Cash = () => {
                     <label className="block text-xs font-black uppercase text-zinc-500 mb-1 tracking-widest">Justification</label>
                     <textarea className="w-full p-3 bg-zinc-800 border-2 border-zinc-700 rounded-xl text-white font-medium min-h-[100px]" value={newExpense.description} onChange={(e) => setNewExpense({...newExpense, description: e.target.value})} placeholder="Détails de la dépense..." required />
                 </div>
-                <button type="submit" className="w-full py-4 bg-red-600 text-white rounded-xl font-black uppercase mt-2">CONFIRMER LA SORTIE</button>
+                <button type="submit" className="w-full py-4 bg-red-600 text-white rounded-xl font-black uppercase mt-2">{editingExpense ? 'ENREGISTRER LES MODIFICATIONS' : 'CONFIRMER LA SORTIE'}</button>
             </form>
           </div>
         </div>
@@ -589,8 +741,8 @@ const Cash = () => {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-red-500/20">
             <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
-                <h2 className="text-xl font-black text-red-500 uppercase tracking-widest font-luxury">Retrait d'Argent (ADMIN)</h2>
-                <button onClick={() => setIsWithdrawalModalOpen(false)} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
+                <h2 className="text-xl font-black text-red-500 uppercase tracking-widest font-luxury">{editingWithdrawal ? 'Modifier' : 'Retrait d\'Argent'} (ADMIN)</h2>
+                <button onClick={() => { setIsWithdrawalModalOpen(false); setEditingWithdrawal(null); }} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
             </div>
             <form onSubmit={handleCreateWithdrawal} className="p-6 space-y-6">
                 <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20 mb-4">
@@ -620,13 +772,32 @@ const Cash = () => {
                     />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <button type="submit" className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-black uppercase transition-all active:scale-95 shadow-lg shadow-red-900/20">CONFIRMER LE RETRAIT</button>
-                  <button type="button" onClick={() => setIsWithdrawalModalOpen(false)} className="w-full py-3 text-zinc-500 font-bold uppercase text-xs">Annuler</button>
+                  <button type="submit" className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-black uppercase transition-all active:scale-95 shadow-lg shadow-red-900/20">{editingWithdrawal ? 'SAUVEGARDER' : 'CONFIRMER LE RETRAIT'}</button>
+                  <button type="button" onClick={() => { setIsWithdrawalModalOpen(false); setEditingWithdrawal(null); }} className="w-full py-3 text-zinc-500 font-bold uppercase text-xs">Annuler</button>
                 </div>
             </form>
           </div>
         </div>
       )}
+      {/* Payment Editing Modal */}
+      {editingPayment && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-gold/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                <h2 className="text-xl font-black text-gold uppercase tracking-widest font-luxury">Modifier Versement</h2>
+                <button onClick={() => { setEditingPayment(null); setEditAmount(''); }} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
+            </div>
+            <form onSubmit={handleUpdatePayment} className="p-6 space-y-4">
+                <div>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-1 tracking-widest">Montant</label>
+                    <input type="number" className="w-full p-4 bg-zinc-800 border-2 border-zinc-700 rounded-xl text-green-400 font-black text-2xl" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} required />
+                </div>
+                <button type="submit" className="w-full py-4 bg-gold text-rich-black rounded-xl font-black uppercase mt-2">SAUVEGARDER</button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

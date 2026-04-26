@@ -156,7 +156,7 @@ exports.createRental = async (req, res) => {
 
     res.status(201).json(rental);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -173,7 +173,7 @@ exports.getAllRentals = async (req, res) => {
     });
     res.json(rentals);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -216,7 +216,7 @@ exports.getCashMovements = async (req, res) => {
 
     res.json(movements);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -232,7 +232,7 @@ exports.getRevenue = async (req, res) => {
     });
     res.json(payments);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -277,7 +277,7 @@ exports.addPayment = async (req, res) => {
 
     res.status(201).json(payment);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -318,7 +318,7 @@ exports.activateRental = async (req, res) => {
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -360,7 +360,7 @@ exports.deleteRental = async (req, res) => {
 
     res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -421,7 +421,7 @@ exports.returnRental = async (req, res) => {
 
     res.json({ message: 'Items returned successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -502,8 +502,15 @@ exports.updateRental = async (req, res) => {
     });
 
     await logAction(req.userData.userId, 'UPDATE_RENTAL', { rentalId: id });
+    
+    // Update daily stats for both the original start date and potentially the new start date
+    await updateDailyStats(existingRental.startDate);
+    if (existingRental.startDate.toISOString() !== start.toISOString()) {
+      await updateDailyStats(start);
+    }
+
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };

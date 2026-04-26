@@ -56,7 +56,7 @@ exports.getDailyCash = async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -91,12 +91,17 @@ exports.getDayDetails = async (req, res) => {
     });
 
     res.json({
-      ...dailyCash,
+      date: dayStart,
+      initialCash: dailyCash?.initialCash || 0,
+      totalRentals: dailyCash?.totalRentals || 0,
+      totalExpenses: dailyCash?.totalExpenses || 0,
+      finalBalance: dailyCash?.finalBalance || 0,
+      status: dailyCash?.status || 'OPEN',
       payments,
       expenses
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -109,15 +114,20 @@ exports.setInitialCash = async (req, res) => {
     const today = new Date().toISOString().split('T')[0] + 'T00:00:00.000Z';
     const todayDate = new Date(today);
 
+    const amountFloat = parseFloat(amount);
+    if (isNaN(amountFloat)) {
+      return res.status(400).json({ message: 'Montant initial invalide' });
+    }
+
     const dailyCash = await prisma.dailyCash.upsert({
       where: { date: todayDate },
       update: { 
-        initialCash: parseFloat(amount)
+        initialCash: amountFloat
       },
       create: {
         date: todayDate,
-        initialCash: parseFloat(amount),
-        finalBalance: parseFloat(amount),
+        initialCash: amountFloat,
+        finalBalance: amountFloat,
         status: 'OPEN'
       }
     });
@@ -127,13 +137,19 @@ exports.setInitialCash = async (req, res) => {
 
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
-async function updateDailyStats(date) {
-  // Use the date as is, but ensure it's the start of the day in UTC
-  const todayStr = new Date(date).toISOString().split('T')[0] + 'T00:00:00.000Z';
+async function updateDailyStats(dateInput) {
+  // Ensure we have a valid Date object and normalize to start of day in UTC
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) {
+    console.error('Invalid date passed to updateDailyStats:', dateInput);
+    return;
+  }
+  
+  const todayStr = d.toISOString().split('T')[0] + 'T00:00:00.000Z';
   const dayStart = new Date(todayStr);
   const dayEnd = new Date(todayStr);
   dayEnd.setUTCHours(23, 59, 59, 999);
@@ -207,11 +223,11 @@ exports.createExpense = async (req, res) => {
     const todayDate = new Date(today);
     await updateDailyStats(todayDate);
 
-    await logAction(req.userData.userId, 'CREATE_EXPENSE', { amount: expense.amount, description: expense.description });
+    await logAction(req.userData.userId, 'CREATE_EXPENSE', { expenseId: expense.id, amount: expense.amount, description: expense.description });
 
     res.status(201).json(expense);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -239,11 +255,11 @@ exports.createWithdrawal = async (req, res) => {
     const todayDate = new Date(today);
     await updateDailyStats(todayDate);
 
-    await logAction(req.userData.userId, 'CREATE_WITHDRAWAL', { amount: withdrawal.amount, description: withdrawal.description });
+    await logAction(req.userData.userId, 'CREATE_WITHDRAWAL', { withdrawalId: withdrawal.id, amount: withdrawal.amount, description: withdrawal.description });
 
     res.status(201).json(withdrawal);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -270,7 +286,7 @@ exports.getWithdrawals = async (req, res) => {
     });
     res.json(withdrawals);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -329,7 +345,7 @@ exports.getGlobalSummary = async (req, res) => {
       period: { startDate, endDate }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -353,7 +369,7 @@ exports.getExpenses = async (req, res) => {
     });
     res.json(expenses);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -367,7 +383,7 @@ exports.getDailyReport = async (req, res) => {
     const report = await updateDailyStats(todayDate);
     res.json(report);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -390,7 +406,7 @@ exports.getHistory = async (req, res) => {
     });
     res.json(history);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -435,8 +451,262 @@ exports.exportHistoryExcel = async (req, res) => {
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.send(buffer);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
 exports.updateDailyStats = updateDailyStats;
+
+exports.searchBySlipNumber = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    const { query } = req.query;
+    if (!query) return res.status(400).json({ message: 'Requête invalide' });
+
+    // 1. Chercher dans les dépenses (par slipNumber exact)
+    const expense = await prisma.expense.findFirst({
+      where: { slipNumber: query },
+      orderBy: { date: 'desc' }
+    });
+
+    if (expense) {
+      // Chercher les logs d'audit associés à cette dépense
+      const logs = await prisma.auditLog.findMany({
+        where: {
+          OR: [
+            { details: { contains: `"expenseId":${expense.id}` } },
+            { details: { contains: `"expenseId":"${expense.id}"` } }
+          ]
+        },
+        include: { user: true },
+        orderBy: { createdAt: 'desc' }
+      });
+      return res.json({ type: 'EXPENSE', data: expense, logs });
+    }
+
+      // 2. Chercher dans les locations (par ID)
+      const rentalId = parseInt(query.replace(/[^0-9]/g, '')); 
+      if (!isNaN(rentalId)) {
+        const rental = await prisma.rental.findUnique({
+          where: { id: rentalId },
+          include: {
+            customer: true,
+            items: { include: { item: true } },
+            payments: { orderBy: { createdAt: 'desc' } }
+          }
+        });
+
+        if (rental) {
+          const logs = await prisma.auditLog.findMany({
+            where: {
+              OR: [
+                { details: { contains: `"rentalId":${rentalId}` } },
+                { details: { contains: `"rentalId":"${rentalId}"` } }
+              ]
+            },
+            include: { user: true },
+            orderBy: { createdAt: 'desc' }
+          });
+
+          return res.json({ type: 'RENTAL', data: rental, logs });
+        }
+      }
+
+    res.status(404).json({ message: 'Aucun bon trouvé avec ce numéro.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message, error: error.message });
+  }
+};
+exports.updateExpense = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    const { id } = req.params;
+    const { amount, description, slipNumber } = req.body;
+
+    const oldExpense = await prisma.expense.findUnique({ where: { id: parseInt(id) } });
+    if (!oldExpense) return res.status(404).json({ message: 'Dépense non trouvée' });
+
+    const amountFloat = parseFloat(amount);
+    if (isNaN(amountFloat)) {
+      return res.status(400).json({ message: 'Montant invalide' });
+    }
+
+    const updatedExpense = await prisma.expense.update({
+      where: { id: parseInt(id) },
+      data: {
+        amount: amountFloat,
+        description,
+        slipNumber: slipNumber || null
+      }
+    });
+
+    await updateDailyStats(updatedExpense.date);
+    await logAction(req.userData.userId, 'UPDATE_EXPENSE', { id, oldAmount: oldExpense.amount, newAmount: updatedExpense.amount });
+
+    res.json(updatedExpense);
+  } catch (error) {
+    res.status(500).json({ message: error.message, error: error.message });
+  }
+};
+
+exports.deleteExpense = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    const { id } = req.params;
+    const expense = await prisma.expense.findUnique({ where: { id: parseInt(id) } });
+    if (!expense) return res.status(404).json({ message: 'Dépense non trouvée' });
+
+    await prisma.expense.delete({ where: { id: parseInt(id) } });
+    await updateDailyStats(expense.date);
+    await logAction(req.userData.userId, 'DELETE_EXPENSE', { id, amount: expense.amount });
+
+    res.json({ message: 'Dépense supprimée' });
+  } catch (error) {
+    res.status(500).json({ message: error.message, error: error.message });
+  }
+};
+
+exports.updateWithdrawal = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    const { id } = req.params;
+    const { amount, description } = req.body;
+
+    const oldWithdrawal = await prisma.withdrawal.findUnique({ where: { id: parseInt(id) } });
+    if (!oldWithdrawal) return res.status(404).json({ message: 'Retrait non trouvé' });
+
+    const amountFloat = parseFloat(amount);
+    if (isNaN(amountFloat)) {
+      return res.status(400).json({ message: 'Montant invalide' });
+    }
+
+    const updatedWithdrawal = await prisma.withdrawal.update({
+      where: { id: parseInt(id) },
+      data: {
+        amount: amountFloat,
+        description
+      }
+    });
+
+    await updateDailyStats(updatedWithdrawal.date);
+    await logAction(req.userData.userId, 'UPDATE_WITHDRAWAL', { id, oldAmount: oldWithdrawal.amount, newAmount: updatedWithdrawal.amount });
+
+    res.json(updatedWithdrawal);
+  } catch (error) {
+    res.status(500).json({ message: error.message, error: error.message });
+  }
+};
+
+exports.deleteWithdrawal = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    const { id } = req.params;
+    const withdrawal = await prisma.withdrawal.findUnique({ where: { id: parseInt(id) } });
+    if (!withdrawal) return res.status(404).json({ message: 'Retrait non trouvé' });
+
+    await prisma.withdrawal.delete({ where: { id: parseInt(id) } });
+    await updateDailyStats(withdrawal.date);
+    await logAction(req.userData.userId, 'DELETE_WITHDRAWAL', { id, amount: withdrawal.amount });
+
+    res.json({ message: 'Retrait supprimé' });
+  } catch (error) {
+    res.status(500).json({ message: error.message, error: error.message });
+  }
+};
+
+exports.updatePayment = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    const { id } = req.params;
+    const { amount } = req.body;
+
+    const payment = await prisma.payment.findUnique({ where: { id: parseInt(id) } });
+    if (!payment) return res.status(404).json({ message: 'Paiement non trouvé' });
+
+    const amountFloat = parseFloat(amount);
+    if (isNaN(amountFloat)) {
+      return res.status(400).json({ message: 'Montant invalide' });
+    }
+
+    const updatedPayment = await prisma.$transaction(async (tx) => {
+      const up = await tx.payment.update({
+        where: { id: parseInt(id) },
+        data: { amount: amountFloat }
+      });
+
+      // Update rental paidAmount
+      const rental = await tx.rental.findUnique({
+        where: { id: payment.rentalId },
+        include: { payments: true }
+      });
+      const totalPaid = rental.payments.reduce((sum, p) => sum + p.amount, 0);
+      await tx.rental.update({
+        where: { id: payment.rentalId },
+        data: { paidAmount: totalPaid }
+      });
+
+      return up;
+    });
+
+    await updateDailyStats(payment.createdAt);
+    await logAction(req.userData.userId, 'UPDATE_PAYMENT', { 
+      id, 
+      rentalId: payment.rentalId,
+      oldAmount: payment.amount, 
+      newAmount: updatedPayment.amount 
+    });
+
+    res.json(updatedPayment);
+  } catch (error) {
+    res.status(500).json({ message: error.message, error: error.message });
+  }
+};
+
+exports.deletePayment = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    const { id } = req.params;
+    const payment = await prisma.payment.findUnique({ where: { id: parseInt(id) } });
+    if (!payment) return res.status(404).json({ message: 'Paiement non trouvé' });
+
+    await prisma.$transaction(async (tx) => {
+      await tx.payment.delete({ where: { id: parseInt(id) } });
+
+      // Update rental paidAmount
+      const rental = await tx.rental.findUnique({
+        where: { id: payment.rentalId },
+        include: { payments: true }
+      });
+      const totalPaid = rental.payments.reduce((sum, p) => sum + p.amount, 0);
+      await tx.rental.update({
+        where: { id: payment.rentalId },
+        data: { paidAmount: totalPaid }
+      });
+    });
+
+    await updateDailyStats(payment.createdAt);
+    await logAction(req.userData.userId, 'DELETE_PAYMENT', { 
+      id, 
+      rentalId: payment.rentalId,
+      amount: payment.amount 
+    });
+
+    res.json({ message: 'Paiement supprimé' });
+  } catch (error) {
+    res.status(500).json({ message: error.message, error: error.message });
+  }
+};

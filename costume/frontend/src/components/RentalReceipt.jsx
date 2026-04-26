@@ -114,6 +114,7 @@ const RentalReceipt = ({ rental, onClose }) => {
               <thead>
                 <tr className="border-b-2 border-black text-[13px] uppercase font-black">
                   <th className="py-2">ARTICLES</th>
+                  <th className="py-2 text-center">COULEUR</th>
                   <th className="py-2 text-right">TAILLE</th>
                 </tr>
               </thead>
@@ -126,6 +127,7 @@ const RentalReceipt = ({ rental, onClose }) => {
                       {ri.remarks && <p className="text-[11px] font-black mt-1 uppercase border-l-2 border-black pl-2">NOTE: {ri.remarks}</p>}
                       {ri.tailorModification && <p className="text-[11px] font-black mt-1 uppercase bg-black text-white px-2 inline-block">RETOUCHE: {ri.tailorModification}</p>}
                     </td>
+                    <td className="py-3 text-center font-black text-base uppercase">{ri.item.color}</td>
                     <td className="py-3 text-right font-black text-base uppercase">{ri.item.size}</td>
                   </tr>
                 ))}

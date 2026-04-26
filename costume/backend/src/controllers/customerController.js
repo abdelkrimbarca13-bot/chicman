@@ -8,7 +8,7 @@ exports.getAllCustomers = async (req, res) => {
     });
     res.json(customers);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -18,7 +18,7 @@ exports.createCustomer = async (req, res) => {
     await logAction(req.userData.userId, 'CREATE_CUSTOMER', { customerId: customer.id, name: `${customer.firstName} ${customer.lastName}` });
     res.status(201).json(customer);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -32,7 +32,7 @@ exports.updateCustomer = async (req, res) => {
     await logAction(req.userData.userId, 'UPDATE_CUSTOMER', { customerId: id, name: `${customer.firstName} ${customer.lastName}` });
     res.json(customer);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -47,7 +47,7 @@ exports.toggleBlacklist = async (req, res) => {
     await logAction(req.userData.userId, 'TOGGLE_BLACKLIST', { customerId: id, name: `${customer.firstName} ${customer.lastName}`, isBlacklisted: !!isBlacklisted });
     res.json(customer);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
@@ -79,7 +79,7 @@ exports.deleteCustomer = async (req, res) => {
     
     res.status(204).send();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message, error: error.message });
   }
 };
 
