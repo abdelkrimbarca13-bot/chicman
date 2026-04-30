@@ -26,10 +26,16 @@ exports.getDailyCash = async (req, res) => {
       });
     }
 
-    // Récupérer les détails des revenus (paiements) et dépenses pour aujourd'hui
+    // Récupérer les détails des revenus (paiements), ventes et dépenses pour aujourd'hui
     const payments = await prisma.payment.findMany({
       where: { createdAt: { gte: dayStart, lte: dayEnd } },
       include: { rental: { include: { customer: true } } }
+    });
+
+    const sales = await prisma.sale.findMany({
+      where: { createdAt: { gte: dayStart, lte: dayEnd } },
+      include: { items: true },
+      orderBy: { createdAt: 'desc' }
     });
 
     const expenses = await prisma.expense.findMany({
@@ -41,6 +47,7 @@ exports.getDailyCash = async (req, res) => {
       ...dailyCash,
       details: {
         payments,
+        sales,
         expenses
       }
     };
@@ -85,6 +92,12 @@ exports.getDayDetails = async (req, res) => {
       }
     });
 
+    const sales = await prisma.sale.findMany({
+      where: { createdAt: { gte: dayStart, lte: dayEnd } },
+      include: { items: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
     const expenses = await prisma.expense.findMany({
       where: { date: { gte: dayStart, lte: dayEnd } },
       orderBy: { date: 'desc' }
@@ -98,6 +111,7 @@ exports.getDayDetails = async (req, res) => {
       finalBalance: dailyCash?.finalBalance || 0,
       status: dailyCash?.status || 'OPEN',
       payments,
+      sales,
       expenses
     });
   } catch (error) {
@@ -160,6 +174,12 @@ async function updateDailyStats(dateInput) {
     }
   });
 
+  const sales = await prisma.sale.findMany({
+    where: {
+      createdAt: { gte: dayStart, lte: dayEnd }
+    }
+  });
+
   const expenses = await prisma.expense.findMany({
     where: {
       date: { gte: dayStart, lte: dayEnd }
@@ -172,7 +192,8 @@ async function updateDailyStats(dateInput) {
     }
   });
 
-  const totalRentals = payments.reduce((sum, p) => sum + p.amount, 0);
+  const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0);
+  const totalRentals = payments.reduce((sum, p) => sum + p.amount, 0) + totalSales;
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const totalWithdrawals = withdrawals.reduce((sum, w) => sum + w.amount, 0);
 
@@ -183,7 +204,7 @@ async function updateDailyStats(dateInput) {
   const initialCash = dailyCash ? dailyCash.initialCash : 0;
   const finalBalance = initialCash + totalRentals - totalExpenses - totalWithdrawals;
 
-  return await prisma.dailyCash.upsert({
+  const updatedDailyCash = await prisma.dailyCash.upsert({
     where: { date: dayStart },
     update: {
       totalRentals,
@@ -199,6 +220,38 @@ async function updateDailyStats(dateInput) {
       status: 'OPEN'
     }
   });
+
+  // Propagate the balance to all subsequent days
+  const futureDays = await prisma.dailyCash.findMany({
+    where: { date: { gt: dayStart } },
+    orderBy: { date: 'asc' }
+  });
+
+  let currentInitialCash = updatedDailyCash.finalBalance;
+  for (const day of futureDays) {
+    const dayEnd = new Date(day.date);
+    dayEnd.setUTCHours(23, 59, 59, 999);
+
+    const withdrawalsForDay = await prisma.withdrawal.aggregate({
+      where: { date: { gte: day.date, lte: dayEnd } },
+      _sum: { amount: true }
+    });
+    const totalWithdrawalsDay = withdrawalsForDay._sum.amount || 0;
+    
+    const newFinalBalance = currentInitialCash + day.totalRentals - day.totalExpenses - totalWithdrawalsDay;
+
+    await prisma.dailyCash.update({
+      where: { id: day.id },
+      data: {
+        initialCash: currentInitialCash,
+        finalBalance: newFinalBalance
+      }
+    });
+
+    currentInitialCash = newFinalBalance;
+  }
+
+  return updatedDailyCash;
 }
 
 exports.createExpense = async (req, res) => {
@@ -328,11 +381,13 @@ exports.getGlobalSummary = async (req, res) => {
 
     // Calcul du CASH TOTAL (depuis le début)
     const allRentals = await prisma.payment.aggregate({ _sum: { amount: true } });
+    const allSales = await prisma.sale.aggregate({ _sum: { totalAmount: true } });
     const allExpenses = await prisma.expense.aggregate({ _sum: { amount: true } });
     const allWithdrawals = await prisma.withdrawal.aggregate({ _sum: { amount: true } });
     
     // Le cash total est simplement la somme des entrées moins la somme des sorties
-    const globalCash = (allRentals._sum.amount || 0) - 
+    const globalCash = (allRentals._sum.amount || 0) + 
+                       (allSales._sum.totalAmount || 0) -
                        (allExpenses._sum.amount || 0) - 
                        (allWithdrawals._sum.amount || 0);
 

@@ -3,7 +3,6 @@ import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Search, Edit2, Trash2, QrCode, History, X, Printer, AlertCircle, CheckCircle2, Download, Scissors } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import * as XLSX from 'xlsx';
 
 const Items = () => {
   const { user } = useAuth();
@@ -38,6 +37,7 @@ const Items = () => {
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
+        const XLSX = await import('xlsx');
         const bstr = evt.target.result;
         const wb = XLSX.read(bstr, { type: 'binary' });
         const wsname = wb.SheetNames[0];
@@ -69,7 +69,8 @@ const Items = () => {
     reader.readAsBinaryString(file);
   };
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
+    const XLSX = await import('xlsx');
     const templateData = [{
       'Référence': '',
       'Nom': '',
@@ -335,11 +336,11 @@ const Items = () => {
                       'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-900/50'
                     }`}
                   >
-                    <option value="AVAILABLE">Disponible</option>
-                    <option value="RENTED">Loué</option>
-                    <option value="CLEANING">Nettoyage</option>
-                    <option value="REPAIRING">Réparation</option>
-                    <option value="PENDING_REPAIR">Attente Réparation</option>
+                    <option value="AVAILABLE" className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">Disponible</option>
+                    <option value="RENTED" className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">Loué</option>
+                    <option value="CLEANING" className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">Nettoyage</option>
+                    <option value="REPAIRING" className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">Réparation</option>
+                    <option value="PENDING_REPAIR" className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">Attente Réparation</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 flex space-x-3">

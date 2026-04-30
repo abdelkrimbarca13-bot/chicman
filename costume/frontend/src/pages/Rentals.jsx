@@ -237,8 +237,10 @@ const Rentals = () => {
         guaranteeDocument: ''
       });
       fetchData();
-    } catch {
-      alert(`Erreur lors de la ${isEditMode ? 'modification' : 'création'}`);
+    } catch (err) {
+      if (err.response?.status !== 401) {
+        alert(err.response?.data?.message || `Erreur lors de la ${isEditMode ? 'modification' : 'création'}`);
+      }
     }
   };
 

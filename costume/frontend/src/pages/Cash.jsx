@@ -617,6 +617,52 @@ const Cash = () => {
                   </div>
                 </div>
 
+                {/* Sales Section */}
+                {detailModal.sales && (
+                  <div>
+                    <h3 className="text-sm font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2 mt-8">
+                      <ShoppingBag className="text-blue-400" size={18} /> Ventes (Produits)
+                    </h3>
+                    <div className="bg-zinc-800/30 rounded-xl border border-zinc-800 overflow-hidden">
+                      <table className="w-full text-left">
+                        <thead className="bg-zinc-800 text-[10px] font-black text-zinc-500 uppercase">
+                          <tr>
+                            <th className="px-4 py-3">Réf</th>
+                            <th className="px-4 py-3">Client</th>
+                            <th className="px-4 py-3">Articles Vendus</th>
+                            <th className="px-4 py-3 text-right">Montant</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-800 text-zinc-300">
+                          {detailModal.sales.length === 0 ? (
+                            <tr><td colSpan="4" className="p-4 text-center text-zinc-600 font-bold italic text-xs">Aucune vente</td></tr>
+                          ) : (
+                            detailModal.sales.map((s, i) => (
+                              <tr key={i} className="text-xs hover:bg-zinc-800/20 transition-all group">
+                                <td className="px-4 py-3 font-bold text-blue-400">#{s.id.toString().padStart(5, '0')}</td>
+                                <td className="px-4 py-3">
+                                  <p className="font-bold text-white uppercase">{s.customerName}</p>
+                                  <p className="text-[10px] text-zinc-500">{s.customerPhone}</p>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="flex flex-wrap gap-1">
+                                    {s.items.map((si, j) => (
+                                      <span key={j} className="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-[9px]">
+                                        {si.name} (T:{si.size || '-'}, C:{si.color || '-'})
+                                      </span>
+                                    ))}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-right font-black text-blue-400">+{s.totalAmount} DA</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
                 {/* Expenses Section */}
                 <div>
                   <h3 className="text-sm font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">

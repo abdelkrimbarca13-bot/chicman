@@ -87,11 +87,16 @@ exports.createRental = async (req, res) => {
         }
     }
 
+    const deposit = parseFloat(paidAmount) || 0;
+    const total = parseFloat(totalAmount) || 0;
+    const disc = parseFloat(discount) || 0;
+
+    if (deposit > total) {
+      return res.status(400).json({ message: 'Le versement initial ne peut pas dépasser le montant total.' });
+    }
+
     // Create rental in transaction
     const rental = await prisma.$transaction(async (tx) => {
-      const deposit = parseFloat(paidAmount) || 0;
-      const total = parseFloat(totalAmount) || 0;
-      const disc = parseFloat(discount) || 0;
 
       const newRental = await tx.rental.create({
         data: {
@@ -457,6 +462,13 @@ exports.updateRental = async (req, res) => {
     const end = new Date(expectedReturn);
     // Set to 11:00 AM to trigger alert if not returned by 11:00
     end.setHours(11, 0, 0, 0);
+
+    const total = parseFloat(totalAmount) || 0;
+    const paid = parseFloat(paidAmount) || 0;
+
+    if (paid > total) {
+      return res.status(400).json({ message: 'Le montant payé ne peut pas dépasser le montant total.' });
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Release old items

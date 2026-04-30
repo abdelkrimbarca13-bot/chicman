@@ -34,6 +34,10 @@ model Item {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   rentals     RentalItem[]
+
+  @@index([status])
+  @@index([type])
+  @@index([ensembleId])
 }
 
 model Customer {
@@ -47,6 +51,8 @@ model Customer {
   isBlacklisted Boolean  @default(false)
   createdAt     DateTime @default(now())
   rentals       Rental[]
+
+  @@index([phone])
 }
 
 model Rental {
@@ -70,6 +76,9 @@ model Rental {
   payments          Payment[]
   customer          Customer       @relation(fields: [customerId], references: [id])
   items             RentalItem[]
+
+  @@index([startDate, expectedReturn])
+  @@index([status])
 }
 
 model AuditLog {
@@ -87,6 +96,8 @@ model Payment {
   rentalId  Int
   createdAt DateTime @default(now())
   rental    Rental   @relation(fields: [rentalId], references: [id])
+
+  @@index([createdAt])
 }
 
 model CashMovement {
@@ -98,6 +109,8 @@ model CashMovement {
   date        DateTime
   createdAt   DateTime @default(now())
   rental      Rental   @relation(fields: [rentalId], references: [id])
+
+  @@index([date])
 }
 
 model RentalItem {
@@ -120,6 +133,8 @@ model DailyCash {
   status        String   @default("OPEN")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([date])
 }
 
 model Withdrawal {
@@ -129,6 +144,8 @@ model Withdrawal {
   date        DateTime @default(now())
   performedBy String
   createdAt   DateTime @default(now())
+
+  @@index([date])
 }
 
 model Expense {
@@ -139,4 +156,31 @@ model Expense {
   slipNumber  String?
   performedBy String?
   createdAt   DateTime @default(now())
+
+  @@index([date])
+}
+
+model Sale {
+  id            Int        @id @default(autoincrement())
+  customerName  String
+  customerPhone String
+  totalAmount   Float      @default(0)
+  remarks       String?
+  performedBy   String
+  createdAt     DateTime   @default(now())
+  items         SaleItem[]
+
+  @@index([createdAt])
+}
+
+model SaleItem {
+  id        Int    @id @default(autoincrement())
+  saleId    Int
+  itemRef   String
+  itemName  String
+  itemType  String
+  itemSize  String
+  itemColor String
+  price     Float
+  sale      Sale   @relation(fields: [saleId], references: [id])
 }

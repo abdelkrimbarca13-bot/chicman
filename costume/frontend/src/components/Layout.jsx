@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { LayoutDashboard, Shirt, Users, ClipboardList, LogOut, TrendingUp, Wallet, Menu, X, History, Settings, Sun, Moon, Scissors, Wrench } from 'lucide-react';
+import { LayoutDashboard, Shirt, Users, ClipboardList, LogOut, TrendingUp, Wallet, Menu, X, History, Settings, Sun, Moon, Scissors, Wrench, ShoppingCart } from 'lucide-react';
 
 const Layout = ({ children }) => {
   const { logout, user } = useAuth();
@@ -21,6 +21,7 @@ const Layout = ({ children }) => {
     { name: 'Articles', path: '/items', icon: <Shirt size={20} /> },
     { name: 'Clients', path: '/customers', icon: <Users size={20} /> },
     { name: 'Locations', path: '/rentals', icon: <ClipboardList size={20} /> },
+    { name: 'Ventes', path: '/sales', icon: <ShoppingCart size={20} /> },
     { name: 'Caisse', path: '/cash', icon: <Wallet size={20} /> },
   ];
 
