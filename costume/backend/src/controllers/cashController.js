@@ -43,12 +43,22 @@ exports.getDailyCash = async (req, res) => {
       orderBy: { date: 'desc' }
     });
 
+    const initialCashLogs = await prisma.auditLog.findMany({
+      where: {
+        action: 'SET_INITIAL_CASH',
+        createdAt: { gte: dayStart, lte: dayEnd }
+      },
+      include: { user: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
     const response = {
       ...dailyCash,
       details: {
         payments,
         sales,
-        expenses
+        expenses,
+        initialCashLogs
       }
     };
 
@@ -103,6 +113,15 @@ exports.getDayDetails = async (req, res) => {
       orderBy: { date: 'desc' }
     });
 
+    const initialCashLogs = await prisma.auditLog.findMany({
+      where: {
+        action: 'SET_INITIAL_CASH',
+        createdAt: { gte: dayStart, lte: dayEnd }
+      },
+      include: { user: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
     res.json({
       date: dayStart,
       initialCash: dailyCash?.initialCash || 0,
@@ -112,7 +131,8 @@ exports.getDayDetails = async (req, res) => {
       status: dailyCash?.status || 'OPEN',
       payments,
       sales,
-      expenses
+      expenses,
+      initialCashLogs
     });
   } catch (error) {
     res.status(500).json({ message: error.message, error: error.message });
@@ -147,6 +167,9 @@ exports.setInitialCash = async (req, res) => {
     });
 
     await updateDailyStats(todayDate);
+    
+    await logAction(req.userData.userId, 'SET_INITIAL_CASH', { amount: amountFloat });
+    
     const updated = await prisma.dailyCash.findUnique({ where: { date: todayDate } });
 
     res.json(updated);

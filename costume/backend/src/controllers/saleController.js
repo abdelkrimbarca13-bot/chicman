@@ -141,3 +141,82 @@ exports.getSaleById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.updateSale = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { totalAmount } = req.body;
+
+    const sale = await prisma.sale.findUnique({ where: { id: parseInt(id) } });
+    if (!sale) return res.status(404).json({ message: 'Vente non trouvée' });
+
+    const updatedSale = await prisma.sale.update({
+      where: { id: parseInt(id) },
+      data: { totalAmount: parseFloat(totalAmount) }
+    });
+
+    // Update daily stats
+    const saleDate = updatedSale.createdAt.toISOString().split('T')[0] + 'T00:00:00.000Z';
+    await updateDailyStats(new Date(saleDate));
+
+    await logAction(req.userData.userId, 'UPDATE_SALE', { id, oldAmount: sale.totalAmount, newAmount: updatedSale.totalAmount });
+
+    res.json(updatedSale);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteSale = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sale = await prisma.sale.findUnique({ 
+      where: { id: parseInt(id) },
+      include: { items: true }
+    });
+
+    if (!sale) return res.status(404).json({ message: 'Vente non trouvée' });
+
+    await prisma.$transaction(async (tx) => {
+      // Recreate items in inventory
+      for (const item of sale.items) {
+        // Only recreate if reference doesn't exist to avoid unique constraint errors
+        const existingItem = await tx.item.findUnique({ where: { reference: item.itemRef }});
+        if (!existingItem) {
+          await tx.item.create({
+            data: {
+              reference: item.itemRef,
+              name: item.itemName,
+              type: item.itemType,
+              size: item.itemSize,
+              color: item.itemColor,
+              status: 'AVAILABLE',
+              rentalPrice: 0,
+              quantity: 1
+            }
+          });
+        }
+      }
+
+      // Delete SaleItems
+      await tx.saleItem.deleteMany({
+        where: { saleId: parseInt(id) }
+      });
+
+      // Delete Sale
+      await tx.sale.delete({
+        where: { id: parseInt(id) }
+      });
+    });
+
+    // Update daily stats
+    const saleDate = sale.createdAt.toISOString().split('T')[0] + 'T00:00:00.000Z';
+    await updateDailyStats(new Date(saleDate));
+
+    await logAction(req.userData.userId, 'DELETE_SALE', { id, amount: sale.totalAmount });
+
+    res.json({ message: 'Vente supprimée et articles remis en stock' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

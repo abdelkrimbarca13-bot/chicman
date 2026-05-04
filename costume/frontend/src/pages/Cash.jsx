@@ -33,6 +33,9 @@ const Cash = () => {
   const [editingPayment, setEditingPayment] = useState(null);
   const [editAmount, setEditAmount] = useState('');
   
+  const [editingSale, setEditingSale] = useState(null);
+  const [editSaleAmount, setEditSaleAmount] = useState('');
+  
   const fetchData = React.useCallback(async () => {
     setLoading(true);
     try {
@@ -193,6 +196,38 @@ const Cash = () => {
         }
     } catch (err) {
         alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la modification');
+    }
+  };
+
+  const handleDeleteSale = async (id) => {
+    if (!isAdmin) return;
+    if (confirm('Supprimer cette vente ? Les articles seront remis en stock.')) {
+      try {
+        await api.delete(`/sales/${id}`);
+        fetchData();
+        if (detailModal) {
+          const res = await api.get(`/cash/details/${detailModal.date}`);
+          setDetailModal(res.data);
+        }
+      } catch (err) {
+        alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la suppression de la vente');
+      }
+    }
+  };
+
+  const handleUpdateSale = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/sales/${editingSale.id}`, { totalAmount: parseFloat(editSaleAmount) });
+      setEditingSale(null);
+      setEditSaleAmount('');
+      fetchData();
+      if (detailModal) {
+        const res = await api.get(`/cash/details/${detailModal.date}`);
+        setDetailModal(res.data);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la modification de la vente');
     }
   };
 
@@ -548,6 +583,19 @@ const Cash = () => {
             </div>
             
             <div className="p-6 space-y-8">
+                {detailModal.initialCash > 0 && (
+                  <div className="bg-zinc-800/30 p-4 rounded-xl border border-zinc-700 flex justify-between items-center">
+                    <div>
+                      <p className="text-xs font-black text-zinc-500 uppercase tracking-widest">Fond de Caisse Initial</p>
+                      {detailModal.initialCashLogs && detailModal.initialCashLogs.length > 0 && (
+                        <p className="text-[10px] text-zinc-400 mt-1">
+                          Dernière modif par <span className="font-bold text-white uppercase">{detailModal.initialCashLogs[0].user.username}</span> à {format(new Date(detailModal.initialCashLogs[0].createdAt), 'HH:mm')}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-xl font-black text-white">{detailModal.initialCash} DA</p>
+                  </div>
+                )}
                 {/* Summary in modal */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700 text-center">
@@ -630,7 +678,9 @@ const Cash = () => {
                             <th className="px-4 py-3">Réf</th>
                             <th className="px-4 py-3">Client</th>
                             <th className="px-4 py-3">Articles Vendus</th>
+                            <th className="px-4 py-3">Par</th>
                             <th className="px-4 py-3 text-right">Montant</th>
+                            {isAdmin && <th className="px-4 py-3 text-right">Actions</th>}
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-800 text-zinc-300">
@@ -653,7 +703,16 @@ const Cash = () => {
                                     ))}
                                   </div>
                                 </td>
+                                <td className="px-4 py-3 font-bold text-[10px] uppercase text-zinc-400">{s.performedBy}</td>
                                 <td className="px-4 py-3 text-right font-black text-blue-400">+{s.totalAmount} DA</td>
+                                {isAdmin && (
+                                  <td className="px-4 py-3 text-right">
+                                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <button onClick={() => { setEditingSale(s); setEditSaleAmount(s.totalAmount); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded transition-colors" title="Modifier"><Edit2 size={12} /></button>
+                                          <button onClick={() => handleDeleteSale(s.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Supprimer"><Trash2 size={12} /></button>
+                                      </div>
+                                  </td>
+                                )}
                               </tr>
                             ))
                           )}
@@ -839,6 +898,25 @@ const Cash = () => {
                     <input type="number" className="w-full p-4 bg-zinc-800 border-2 border-zinc-700 rounded-xl text-green-400 font-black text-2xl" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} required />
                 </div>
                 <button type="submit" className="w-full py-4 bg-gold text-rich-black rounded-xl font-black uppercase mt-2">SAUVEGARDER</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Sale Editing Modal */}
+      {editingSale && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-blue-500/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                <h2 className="text-xl font-black text-blue-400 uppercase tracking-widest font-luxury">Modifier Vente #{editingSale.id.toString().padStart(5, '0')}</h2>
+                <button onClick={() => { setEditingSale(null); setEditSaleAmount(''); }} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
+            </div>
+            <form onSubmit={handleUpdateSale} className="p-6 space-y-4">
+                <div>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-1 tracking-widest">Montant Total</label>
+                    <input type="number" className="w-full p-4 bg-zinc-800 border-2 border-zinc-700 rounded-xl text-blue-400 font-black text-2xl" value={editSaleAmount} onChange={(e) => setEditSaleAmount(e.target.value)} required />
+                </div>
+                <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black uppercase mt-2 transition-colors">SAUVEGARDER</button>
             </form>
           </div>
         </div>
