@@ -225,7 +225,7 @@ async function updateDailyStats(dateInput) {
   });
 
   const initialCash = dailyCash ? dailyCash.initialCash : 0;
-  const finalBalance = initialCash + totalRentals - totalExpenses - totalWithdrawals;
+  const finalBalance = initialCash + totalRentals - totalExpenses;
 
   const updatedDailyCash = await prisma.dailyCash.upsert({
     where: { date: dayStart },
@@ -261,7 +261,7 @@ async function updateDailyStats(dateInput) {
     });
     const totalWithdrawalsDay = withdrawalsForDay._sum.amount || 0;
     
-    const newFinalBalance = currentInitialCash + day.totalRentals - day.totalExpenses - totalWithdrawalsDay;
+    const newFinalBalance = currentInitialCash + day.totalRentals - day.totalExpenses;
 
     await prisma.dailyCash.update({
       where: { id: day.id },
@@ -411,8 +411,7 @@ exports.getGlobalSummary = async (req, res) => {
     // Le cash total est simplement la somme des entrées moins la somme des sorties
     const globalCash = (allRentals._sum.amount || 0) + 
                        (allSales._sum.totalAmount || 0) -
-                       (allExpenses._sum.amount || 0) - 
-                       (allWithdrawals._sum.amount || 0);
+                       (allExpenses._sum.amount || 0);
 
     res.json({
       totalIncome,

@@ -91,11 +91,12 @@ model AuditLog {
 }
 
 model Payment {
-  id        Int      @id @default(autoincrement())
-  amount    Float
-  rentalId  Int
-  createdAt DateTime @default(now())
-  rental    Rental   @relation(fields: [rentalId], references: [id])
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  rentalId    Int
+  performedBy String?
+  createdAt   DateTime @default(now())
+  rental      Rental   @relation(fields: [rentalId], references: [id])
 
   @@index([createdAt])
 }

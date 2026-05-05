@@ -572,7 +572,7 @@ const Cash = () => {
 
       {/* Detail Modal */}
       {detailModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[60]">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-40">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gold/20">
             <div className="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-white dark:bg-zinc-900 z-10">
                 <div>
@@ -624,6 +624,7 @@ const Cash = () => {
                           <th className="px-4 py-3">Bon</th>
                           <th className="px-4 py-3">Client</th>
                           <th className="px-4 py-3">Articles</th>
+                          <th className="px-4 py-3">Par</th>
                           <th className="px-4 py-3 text-right">Montant</th>
                           {isAdmin && <th className="px-4 py-3 text-right">Actions</th>}
                         </tr>
@@ -648,6 +649,7 @@ const Cash = () => {
                                   ))}
                                 </div>
                               </td>
+                              <td className="px-4 py-3 font-bold text-[10px] uppercase text-zinc-400">{p.performedBy || 'N/S'}</td>
                               <td className="px-4 py-3 text-right font-black text-green-400">+{p.amount} DA</td>
                               {isAdmin && (
                                 <td className="px-4 py-3 text-right">

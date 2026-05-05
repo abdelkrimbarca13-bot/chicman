@@ -133,7 +133,8 @@ exports.createRental = async (req, res) => {
         await tx.payment.create({
           data: {
             amount: deposit,
-            rentalId: newRental.id
+            rentalId: newRental.id,
+            performedBy: req.userData.username
           }
         });
 
@@ -267,7 +268,8 @@ exports.addPayment = async (req, res) => {
     const payment = await prisma.payment.create({
       data: {
         amount: parseFloat(amount),
-        rentalId: parseInt(id)
+        rentalId: parseInt(id),
+        performedBy: req.userData.username
       }
     });
 
