@@ -14,6 +14,7 @@ const Cash = () => {
   const [activeTab, setActiveTab] = useState('current');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
+  const [error, setError] = useState(null);
   
   // Modal states
   const [isInitialCashModalOpen, setIsInitialCashModalOpen] = useState(false);
@@ -56,17 +57,14 @@ const Cash = () => {
       
       setDailyCash(results[0].data);
       setExpenses(results[1].data);
-      if (isAdmin && results[2]) {
-        setHistory(results[2].data);
-      }
-      if (isAdmin && results[3]) {
-        setGlobalSummary(results[3].data);
-      }
-      if (isAdmin && results[4]) {
-        setWithdrawals(results[4].data);
-      }
-    } catch {
-      console.error('Erreur chargement caisse');
+      if (isAdmin && results[2]) setHistory(results[2].data || []);
+      if (isAdmin && results[3]) setGlobalSummary(results[3].data || null);
+      if (isAdmin && results[4]) setWithdrawals(results[4].data || []);
+      
+      setError(null);
+    } catch (err) {
+      console.error('Erreur chargement caisse', err);
+      setError("Impossible de charger les données de la caisse. Veuillez vérifier la connexion au serveur.");
     } finally {
       setLoading(false);
     }
@@ -304,7 +302,21 @@ const Cash = () => {
     </div>
   );
 
-  if (!dailyCash) return null;
+  if (error) return (
+    <div className="p-8 bg-red-900/20 border-2 border-red-500 rounded-2xl text-center">
+        <ShieldAlert className="mx-auto text-red-500 mb-4" size={48} />
+        <h2 className="text-xl font-black text-red-500 uppercase mb-2">Erreur de Chargement</h2>
+        <p className="text-red-200/70 font-bold mb-6">{error}</p>
+        <button onClick={fetchData} className="px-8 py-3 bg-red-500 text-white font-black uppercase rounded-xl hover:bg-red-600 transition-all">Réessayer</button>
+    </div>
+  );
+
+  if (!dailyCash) return (
+    <div className="p-12 text-center">
+        <p className="text-zinc-500 font-bold italic">Aucune donnée de caisse disponible pour aujourd'hui.</p>
+        <button onClick={fetchData} className="mt-4 text-gold hover:underline font-black uppercase">Actualiser</button>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -410,7 +422,7 @@ const Cash = () => {
                                   amount: -e.amount,
                                   color: 'text-red-400'
                                 })),
-                                ...withdrawals.filter(w => new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]).map(w => ({ 
+                                ...withdrawals?.filter(w => new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]).map(w => ({ 
                                   time: new Date(w.date), 
                                   type: 'RETRAIT', 
                                   desc: w.description || 'Retrait Admin', 
@@ -453,7 +465,7 @@ const Cash = () => {
                     <div className="space-y-4 border-y-2 border-dashed border-zinc-800 py-8">
                         <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Monnaie Initiale (+)</span><span className="font-black text-white">{dailyCash.initialCash} DA</span></div>
                         <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Total Entrées (+)</span><span className="font-black text-green-400">{dailyCash.totalRentals} DA</span></div>
-                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dépenses/Retraits (-)</span><span className="font-black text-red-400">-{dailyCash.totalExpenses + (withdrawals.filter(w => new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]).reduce((sum, w) => sum + w.amount, 0))} DA</span></div>
+                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dépenses/Retraits (-)</span><span className="font-black text-red-400">-{dailyCash.totalExpenses + (withdrawals?.filter(w => new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]).reduce((sum, w) => sum + w.amount, 0) || 0)} DA</span></div>
                     </div>
                     <div className="flex justify-between items-center pt-6">
                         <span className="text-lg font-black text-white uppercase tracking-widest font-luxury">CAISSE AUJOURD'HUI</span>
@@ -526,7 +538,7 @@ const Cash = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-800 text-zinc-300">
-                                {filteredHistory.length === 0 ? (
+                                {(filteredHistory || []).length === 0 ? (
                                     <tr><td colSpan="5" className="px-4 py-12 text-center text-zinc-600 font-bold italic text-xs">Aucun historique trouvé</td></tr>
                                 ) : (
                                     filteredHistory.map((day) => (
