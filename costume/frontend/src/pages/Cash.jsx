@@ -287,12 +287,19 @@ const Cash = () => {
     }
   };
 
-  const filteredHistory = history.filter(item => {
-    if (!filterStartDate && !filterEndDate) return true;
-    const itemDate = new Date(item.date).toISOString().split('T')[0];
-    if (filterStartDate && itemDate < filterStartDate) return false;
-    if (filterEndDate && itemDate > filterEndDate) return false;
-    return true;
+  const filteredHistory = (history || []).filter(day => {
+    try {
+      if (!day.date) return false;
+      const dateObj = new Date(day.date);
+      if (isNaN(dateObj.getTime())) return false;
+      
+      const d = dateObj.toISOString().split('T')[0];
+      const s = filterStartDate || '0000-00-00';
+      const e = filterEndDate || '9999-12-31';
+      return d >= s && d <= e;
+    } catch (e) {
+      return false;
+    }
   });
 
   if (loading) return (
@@ -422,7 +429,11 @@ const Cash = () => {
                                   amount: -e.amount,
                                   color: 'text-red-400'
                                 })),
-                                ...withdrawals?.filter(w => new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]).map(w => ({ 
+                                ...withdrawals?.filter(w => {
+                                  try {
+                                    return w.date && new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                                  } catch(e) { return false; }
+                                }).map(w => ({ 
                                   time: new Date(w.date), 
                                   type: 'RETRAIT', 
                                   desc: w.description || 'Retrait Admin', 
@@ -465,7 +476,11 @@ const Cash = () => {
                     <div className="space-y-4 border-y-2 border-dashed border-zinc-800 py-8">
                         <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Monnaie Initiale (+)</span><span className="font-black text-white">{dailyCash.initialCash} DA</span></div>
                         <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Total Entrées (+)</span><span className="font-black text-green-400">{dailyCash.totalRentals} DA</span></div>
-                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dépenses/Retraits (-)</span><span className="font-black text-red-400">-{dailyCash.totalExpenses + (withdrawals?.filter(w => new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]).reduce((sum, w) => sum + w.amount, 0) || 0)} DA</span></div>
+                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dépenses/Retraits (-)</span><span className="font-black text-red-400">-{ (dailyCash?.totalExpenses || 0) + (withdrawals?.filter(w => {
+                          try {
+                            return w.date && new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                          } catch(e) { return false; }
+                        }).reduce((sum, w) => sum + (w.amount || 0), 0) || 0)} DA</span></div>
                     </div>
                     <div className="flex justify-between items-center pt-6">
                         <span className="text-lg font-black text-white uppercase tracking-widest font-luxury">CAISSE AUJOURD'HUI</span>
