@@ -20,6 +20,7 @@ exports.getDailyCash = async (req, res) => {
           initialCash: 0,
           totalRentals: 0,
           totalExpenses: 0,
+          totalWithdrawals: 0,
           finalBalance: 0,
           status: 'OPEN'
         }
@@ -225,6 +226,7 @@ async function updateDailyStats(dateInput) {
     where: { date: dayStart }
   });
 
+  // Strict rule: if no manual injection exists, initialCash is 0 (no carry-over)
   const initialCash = dailyCash ? dailyCash.initialCash : 0;
   const finalBalance = initialCash + totalRentals - totalExpenses - totalWithdrawals;
 
@@ -238,7 +240,7 @@ async function updateDailyStats(dateInput) {
     },
     create: {
       date: dayStart,
-      initialCash,
+      initialCash: 0, // Force 0 on creation
       totalRentals,
       totalExpenses,
       totalWithdrawals,
