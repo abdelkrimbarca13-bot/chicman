@@ -359,7 +359,7 @@ const Cash = () => {
 
             {isAdmin && (
               <div className="bg-gold p-6 rounded-2xl shadow-2xl relative overflow-hidden group shadow-gold/20">
-                  <p className="text-[10px] font-black text-rich-black/60 uppercase tracking-widest mb-1">CAISSE</p>
+                  <p className="text-[10px] font-black text-rich-black/60 uppercase tracking-widest mb-1">CASH TOTAL</p>
                   <h3 className="text-3xl font-black text-rich-black">{dailyCash.finalBalance} DA</h3>
                   <p className="mt-4 text-[10px] font-bold text-rich-black/40 uppercase tracking-tighter">Argent physique réel</p>
                   <button onClick={() => setIsInitialCashModalOpen(true)} className="mt-2 text-[10px] font-black uppercase text-rich-black/60 hover:text-rich-black hover:underline flex items-center gap-1"><Plus size={12} /> Fond de caisse</button>
@@ -456,7 +456,7 @@ const Cash = () => {
                         <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dépenses/Retraits (-)</span><span className="font-black text-red-400">-{dailyCash.totalExpenses + (withdrawals.filter(w => new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]).reduce((sum, w) => sum + w.amount, 0))} DA</span></div>
                     </div>
                     <div className="flex justify-between items-center pt-6">
-                        <span className="text-lg font-black text-white uppercase tracking-widest font-luxury">CAISSE</span>
+                        <span className="text-lg font-black text-white uppercase tracking-widest font-luxury">CASH TOTAL</span>
                         <span className={`text-4xl font-black ${dailyCash.finalBalance < 0 ? 'text-red-500' : 'text-gold'}`}>{dailyCash.finalBalance} DA</span>
                     </div>
                 </div>
@@ -641,7 +641,7 @@ const Cash = () => {
                     <p className="text-xl font-black text-red-500">-{detailModal.withdrawals?.reduce((sum, w) => sum + w.amount, 0) || 0} DA</p>
                   </div>
                   <div className="bg-gold/10 p-4 rounded-xl border border-gold/20 text-center">
-                    <p className="text-[10px] font-black text-gold uppercase mb-1">Caisse</p>
+                    <p className="text-[10px] font-black text-gold uppercase mb-1">Cash Total</p>
                     <p className="text-xl font-black text-gold">{detailModal.finalBalance} DA</p>
                   </div>
                 </div>
