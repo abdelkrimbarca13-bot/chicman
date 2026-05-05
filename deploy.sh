@@ -11,6 +11,7 @@ cd costume/backend
 npm install
 npx prisma generate
 npx prisma migrate deploy
+node scripts/fix-balances.js
 
 # Update Frontend
 echo "Updating Frontend..."
