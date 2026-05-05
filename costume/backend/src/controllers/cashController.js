@@ -225,7 +225,7 @@ async function updateDailyStats(dateInput) {
   });
 
   const initialCash = dailyCash ? dailyCash.initialCash : 0;
-  const finalBalance = Math.max(0, initialCash + totalRentals - totalExpenses);
+  const finalBalance = initialCash + totalRentals - totalExpenses - totalWithdrawals;
 
   const updatedDailyCash = await prisma.dailyCash.upsert({
     where: { date: dayStart },
@@ -261,7 +261,7 @@ async function updateDailyStats(dateInput) {
     });
     const totalWithdrawalsDay = withdrawalsForDay._sum.amount || 0;
     
-    const newFinalBalance = Math.max(0, currentInitialCash + day.totalRentals - day.totalExpenses);
+    const newFinalBalance = currentInitialCash + day.totalRentals - day.totalExpenses - totalWithdrawalsDay;
 
     await prisma.dailyCash.update({
       where: { id: day.id },
