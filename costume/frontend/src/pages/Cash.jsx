@@ -318,8 +318,8 @@ const Cash = () => {
         )}
       </div>
 
-      {activeTab === 'current' ? (
-        <>
+      {activeTab === 'current' && (
+        <div className="animate-in fade-in duration-500">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
             {isAdmin && (
               <>
@@ -462,9 +462,11 @@ const Cash = () => {
                 </div>
             )}
           </div>
-        </>
-      ) : (
-        <div className="space-y-6">
+        </div>
+      )}
+
+      {activeTab === 'history' && (
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex flex-wrap gap-6 items-end">
                 <div className="flex-1 min-w-[300px]">
                     <label className="block text-xs font-black uppercase text-zinc-500 mb-2 tracking-widest">Filtrer par Période (Caisse)</label>
@@ -523,15 +525,19 @@ const Cash = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-800 text-zinc-300">
-                                {filteredHistory.map((day) => (
-                                    <tr key={day.id} className="hover:bg-zinc-800/30 transition-all cursor-pointer" onClick={() => showDayDetails(day.date.split('T')[0])}>
-                                        <td className="px-4 py-3 font-bold text-xs text-zinc-400">{format(new Date(day.date), 'dd/MM/yyyy')}</td>
-                                        <td className="px-4 py-3 font-bold text-xs">{day.initialCash} DA</td>
-                                        <td className="px-4 py-3 font-black text-xs text-green-400">+{day.totalRentals} DA</td>
-                                        <td className="px-4 py-3 font-black text-xs text-red-400">-{day.totalExpenses} DA</td>
-                                        <td className="px-4 py-3 font-black text-sm text-gold text-right">{day.finalBalance} DA</td>
-                                    </tr>
-                                ))}
+                                {filteredHistory.length === 0 ? (
+                                    <tr><td colSpan="5" className="px-4 py-12 text-center text-zinc-600 font-bold italic text-xs">Aucun historique trouvé</td></tr>
+                                ) : (
+                                    filteredHistory.map((day) => (
+                                        <tr key={day.id} className="hover:bg-zinc-800/30 transition-all cursor-pointer" onClick={() => showDayDetails(day.date.split('T')[0])}>
+                                            <td className="px-4 py-3 font-bold text-xs text-zinc-400">{format(new Date(day.date), 'dd/MM/yyyy')}</td>
+                                            <td className="px-4 py-3 font-bold text-xs">{day.initialCash} DA</td>
+                                            <td className="px-4 py-3 font-black text-xs text-green-400">+{day.totalRentals} DA</td>
+                                            <td className="px-4 py-3 font-black text-xs text-red-400">-{day.totalExpenses} DA</td>
+                                            <td className="px-4 py-3 font-black text-sm text-gold text-right">{day.finalBalance} DA</td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
