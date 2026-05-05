@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function fixBalances() {
-  console.log('Starting balance fix...');
+  console.log('Starting balance fix (Daily Independent Logic)...');
   
   // Get all daily cash records ordered by date
   const allDays = await prisma.dailyCash.findMany({
@@ -10,8 +10,6 @@ async function fixBalances() {
   });
 
   console.log(`Found ${allDays.length} days to process.`);
-
-  let previousFinalBalance = 0;
 
   for (const day of allDays) {
     const dayStart = new Date(day.date);
@@ -28,33 +26,34 @@ async function fixBalances() {
     const expenses = await prisma.expense.findMany({
       where: { date: { gte: dayStart, lte: dayEnd } }
     });
+    const withdrawals = await prisma.withdrawal.findMany({
+      where: { date: { gte: dayStart, lte: dayEnd } }
+    });
 
-    const totalRentals = payments.reduce((sum, p) => sum + p.amount, 0) + 
-                         sales.reduce((sum, s) => sum + s.totalAmount, 0);
+    const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0);
+    const totalRentals = payments.reduce((sum, p) => sum + p.amount, 0) + totalSales;
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalWithdrawals = withdrawals.reduce((sum, w) => sum + w.amount, 0);
 
-    // Initial cash is the previous day's final balance
-    // UNLESS it's the very first day or was manually set? 
-    // Actually, the system allows setting initial cash manually for "today".
+    // Initial cash is now independent (it's what was manually added for that day)
+    // We keep day.initialCash as it is the manual input.
+    const initialCash = day.initialCash;
     
-    let initialCash = previousFinalBalance;
-    
-    // Calculate new final balance with the "no negative" rule
-    const newFinalBalance = Math.max(0, initialCash + totalRentals - totalExpenses);
+    // Calculate new final balance
+    // Caisse aujourd'hui = Monnaie initiale + Recettes - Dépenses - Retraits
+    const newFinalBalance = initialCash + totalRentals - totalExpenses - totalWithdrawals;
 
-    console.log(`Date: ${day.date.toISOString().split('T')[0]} | Prev: ${previousFinalBalance} | +Rec: ${totalRentals} | -Exp: ${totalExpenses} | New Final: ${newFinalBalance}`);
+    console.log(`Date: ${day.date.toISOString().split('T')[0]} | Initial: ${initialCash} | +Rec: ${totalRentals} | -Exp: ${totalExpenses + totalWithdrawals} | New Caisse: ${newFinalBalance}`);
 
     await prisma.dailyCash.update({
       where: { id: day.id },
       data: {
-        initialCash: initialCash,
         totalRentals: totalRentals,
         totalExpenses: totalExpenses,
+        totalWithdrawals: totalWithdrawals,
         finalBalance: newFinalBalance
       }
     });
-
-    previousFinalBalance = newFinalBalance;
   }
 
   console.log('Balance fix completed.');

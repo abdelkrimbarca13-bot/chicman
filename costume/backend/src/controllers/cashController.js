@@ -232,6 +232,7 @@ async function updateDailyStats(dateInput) {
     update: {
       totalRentals,
       totalExpenses,
+      totalWithdrawals,
       finalBalance
     },
     create: {
@@ -239,41 +240,13 @@ async function updateDailyStats(dateInput) {
       initialCash,
       totalRentals,
       totalExpenses,
+      totalWithdrawals,
       finalBalance,
       status: 'OPEN'
     }
   });
 
-  // Propagate the balance to all subsequent days
-  const futureDays = await prisma.dailyCash.findMany({
-    where: { date: { gt: dayStart } },
-    orderBy: { date: 'asc' }
-  });
-
-  let currentInitialCash = updatedDailyCash.finalBalance;
-  for (const day of futureDays) {
-    const dayEnd = new Date(day.date);
-    dayEnd.setUTCHours(23, 59, 59, 999);
-
-    const withdrawalsForDay = await prisma.withdrawal.aggregate({
-      where: { date: { gte: day.date, lte: dayEnd } },
-      _sum: { amount: true }
-    });
-    const totalWithdrawalsDay = withdrawalsForDay._sum.amount || 0;
-    
-    const newFinalBalance = currentInitialCash + day.totalRentals - day.totalExpenses - totalWithdrawalsDay;
-
-    await prisma.dailyCash.update({
-      where: { id: day.id },
-      data: {
-        initialCash: currentInitialCash,
-        finalBalance: newFinalBalance
-      }
-    });
-
-    currentInitialCash = newFinalBalance;
-  }
-
+  // Propagation removed: each day is now independent
   return updatedDailyCash;
 }
 
@@ -407,10 +380,12 @@ exports.getGlobalSummary = async (req, res) => {
     const allSales = await prisma.sale.aggregate({ _sum: { totalAmount: true } });
     const allExpenses = await prisma.expense.aggregate({ _sum: { amount: true } });
     const allWithdrawals = await prisma.withdrawal.aggregate({ _sum: { amount: true } });
+    const allInitialCash = await prisma.dailyCash.aggregate({ _sum: { initialCash: true } });
     
-    // Le cash total est la somme des revenus moins les dépenses et les retraits effectués
+    // Le cash total est la somme des revenus et injections (monnaie initiale) moins les dépenses et les retraits effectués
     const globalCash = (allRentals._sum.amount || 0) + 
-                       (allSales._sum.totalAmount || 0) -
+                       (allSales._sum.totalAmount || 0) +
+                       (allInitialCash._sum.initialCash || 0) -
                        (allExpenses._sum.amount || 0) -
                        (allWithdrawals._sum.amount || 0);
 
@@ -480,9 +455,30 @@ exports.getHistory = async (req, res) => {
     }
     const history = await prisma.dailyCash.findMany({
       where,
-      orderBy: { date: 'desc' }
+      orderBy: { date: 'asc' } // Get asc to calculate cumulative
     });
-    res.json(history);
+
+    let cumulative = 0;
+    // Calculate cumulative balance for all days up to the filtered ones
+    // Actually, to be accurate, we need ALL history up to endDate
+    const allUntilEnd = await prisma.dailyCash.findMany({
+      where: endDate ? { date: { lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999)) } } : {},
+      orderBy: { date: 'asc' }
+    });
+
+    const historyWithCumulative = allUntilEnd.map(day => {
+      cumulative += day.initialCash + day.totalRentals - day.totalExpenses - day.totalWithdrawals;
+      return { ...day, cumulativeBalance: cumulative };
+    });
+
+    // If there was a filter, we only return the requested range
+    const filteredHistory = historyWithCumulative.filter(day => {
+      if (!startDate || !endDate) return true;
+      const d = new Date(day.date);
+      return d >= new Date(startDate) && d <= new Date(new Date(endDate).setUTCHours(23, 59, 59, 999));
+    });
+
+    res.json(filteredHistory.reverse()); // Return descending
   } catch (error) {
     res.status(500).json({ message: error.message, error: error.message });
   }
