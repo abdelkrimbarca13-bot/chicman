@@ -324,18 +324,18 @@ const Cash = () => {
             {isAdmin && (
               <>
                 <div className="bg-zinc-950 p-6 rounded-2xl border-2 border-gold shadow-2xl relative overflow-hidden group shadow-gold/10">
-                    <p className="text-[10px] font-black text-gold/60 uppercase tracking-widest mb-1">CASH TOTAL (Global)</p>
+                    <p className="text-[10px] font-black text-gold/60 uppercase tracking-widest mb-1">TRÉSORERIE GLOBALE</p>
                     <h3 className="text-3xl font-black text-gold font-luxury">{globalSummary?.globalCash || 0} DA</h3>
-                    <p className="mt-4 text-[10px] font-bold text-gold/40 uppercase tracking-tighter">Solde réel (Entrées - Sorties)</p>
+                    <p className="mt-4 text-[10px] font-bold text-gold/40 uppercase tracking-tighter">Argent total (Net)</p>
                 </div>
 
                 <div 
                   onClick={() => showDayDetails(new Date().toISOString().split('T')[0])}
                   className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gold/10 relative overflow-hidden group cursor-pointer hover:border-green-500/50 transition-all"
                 >
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Recette Locations</p>
-                    <h3 className="text-2xl font-black text-green-400">+{dailyCash.totalRentals} DA</h3>
-                    <p className="mt-4 text-[10px] font-bold text-green-500/60 uppercase tracking-tighter flex items-center gap-1"><Info size={12}/> Cliquer pour détails</p>
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">BÉNÉFICE DU JOUR</p>
+                    <h3 className="text-2xl font-black text-green-400">+{dailyCash.totalRentals - dailyCash.totalExpenses} DA</h3>
+                    <p className="mt-4 text-[10px] font-bold text-green-500/60 uppercase tracking-tighter flex items-center gap-1"><Info size={12}/> Recettes - Dépenses</p>
                 </div>
               </>
             )}
@@ -351,18 +351,18 @@ const Cash = () => {
 
             {isAdmin && (
               <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gold/10 relative overflow-hidden group cursor-pointer hover:border-red-500/50 transition-all">
-                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Retrait d'argent (Admin)</p>
-                  <h3 className="text-2xl font-black text-red-500">SORTIE CASH</h3>
-                  <button onClick={() => setIsWithdrawalModalOpen(true)} className="mt-4 text-[10px] font-black uppercase text-red-500 hover:underline flex items-center gap-1"><LogOut size={12} /> Effectuer un retrait</button>
+                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Prélèvement Admin</p>
+                  <h3 className="text-2xl font-black text-red-500">RETRAIT</h3>
+                  <button onClick={() => setIsWithdrawalModalOpen(true)} className="mt-4 text-[10px] font-black uppercase text-red-500 hover:underline flex items-center gap-1"><LogOut size={12} /> Sortir du cash</button>
               </div>
             )}
 
             {isAdmin && (
               <div className="bg-gold p-6 rounded-2xl shadow-2xl relative overflow-hidden group shadow-gold/20">
-                  <p className="text-[10px] font-black text-rich-black/60 uppercase tracking-widest mb-1">Solde Final Caisse</p>
+                  <p className="text-[10px] font-black text-rich-black/60 uppercase tracking-widest mb-1">CAISSE</p>
                   <h3 className="text-3xl font-black text-rich-black">{dailyCash.finalBalance} DA</h3>
-                  <p className="mt-4 text-[10px] font-bold text-rich-black/40 uppercase tracking-tighter">Argent réel en caisse</p>
-                  <button onClick={() => setIsInitialCashModalOpen(true)} className="mt-2 text-[10px] font-black uppercase text-rich-black/60 hover:text-rich-black hover:underline flex items-center gap-1"><Plus size={12} /> Ajouter Monnaie</button>
+                  <p className="mt-4 text-[10px] font-bold text-rich-black/40 uppercase tracking-tighter">Argent physique réel</p>
+                  <button onClick={() => setIsInitialCashModalOpen(true)} className="mt-2 text-[10px] font-black uppercase text-rich-black/60 hover:text-rich-black hover:underline flex items-center gap-1"><Plus size={12} /> Fond de caisse</button>
               </div>
             )}
           </div>
@@ -370,44 +370,74 @@ const Cash = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gold/10 overflow-hidden">
                 <div className="p-6 border-b border-zinc-800 bg-zinc-100 dark:bg-zinc-800/50">
-                    <h3 className="font-black text-gold uppercase tracking-widest flex items-center gap-2 font-luxury text-sm"><ArrowUpCircle className="text-red-400" size={20} /> Dépenses du jour</h3>
+                    <h3 className="font-black text-gold uppercase tracking-widest flex items-center gap-2 font-luxury text-sm"><Receipt size={20} /> Journal des Mouvements (Aujourd'hui)</h3>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-zinc-100 dark:bg-zinc-800 uppercase text-[10px] font-black text-zinc-500">
                             <tr>
-                                <th className="px-6 py-4">Bon N°</th>
+                                <th className="px-6 py-4">Heure</th>
+                                <th className="px-6 py-4">Type</th>
                                 <th className="px-6 py-4">Description</th>
                                 <th className="px-6 py-4">Par</th>
                                 <th className="px-6 py-4 text-right">Montant</th>
-                                {isAdmin && <th className="px-6 py-4 text-right">Actions</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-800 text-zinc-300">
-                            {expenses.length === 0 ? (
-                                <tr><td colSpan="4" className="px-6 py-12 text-center text-zinc-600 font-bold italic text-sm">Aucune dépense</td></tr>
-                            ) : (
-                                expenses.map((exp, idx) => (
-                                    <tr key={idx} className="hover:bg-zinc-800/50">
-                                        <td className="px-6 py-4 font-mono text-xs font-bold text-gold">{exp.slipNumber || 'N/S'}</td>
-                                        <td className="px-6 py-4 text-sm font-medium text-zinc-900 dark:text-white">{exp.description}</td>
-                                        <td className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">{exp.performedBy || 'N/S'}</td>
-                                        <td className="px-6 py-4 text-right font-black text-red-400">-{exp.amount} DA</td>
-                                        {isAdmin && (
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <button onClick={() => { 
-                                                      setEditingExpense(exp); 
-                                                      setNewExpense({ amount: exp.amount, description: exp.description, slipNumber: exp.slipNumber || '', category: 'AUTRE' });
-                                                      setIsExpenseModalOpen(true);
-                                                    }} className="p-1.5 text-blue-400 hover:bg-blue-400/10 rounded-lg" title="Modifier"><Edit2 size={14} /></button>
-                                                    <button onClick={() => handleDeleteExpense(exp.id)} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg" title="Supprimer"><Trash2 size={14} /></button>
-                                                </div>
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))
-                            )}
+                            {(() => {
+                              const movements = [
+                                ...dailyCash.details.payments.map(p => ({ 
+                                  time: new Date(p.createdAt), 
+                                  type: 'LOCATION', 
+                                  desc: `Acompte/Solde - #${p.rentalId.toString().padStart(5, '0')}`, 
+                                  by: p.performedBy || 'Inconnu', 
+                                  amount: p.amount,
+                                  color: 'text-green-400'
+                                })),
+                                ...dailyCash.details.sales.map(s => ({ 
+                                  time: new Date(s.createdAt), 
+                                  type: 'VENTE', 
+                                  desc: `Vente Articles - #${s.id.toString().padStart(5, '0')}`, 
+                                  by: s.performedBy || 'Inconnu', 
+                                  amount: s.totalAmount,
+                                  color: 'text-green-400'
+                                })),
+                                ...dailyCash.details.expenses.map(e => ({ 
+                                  time: new Date(e.date), 
+                                  type: 'DÉPENSE', 
+                                  desc: e.description, 
+                                  by: e.performedBy || 'Inconnu', 
+                                  amount: -e.amount,
+                                  color: 'text-red-400'
+                                })),
+                                ...withdrawals.filter(w => new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]).map(w => ({ 
+                                  time: new Date(w.date), 
+                                  type: 'RETRAIT', 
+                                  desc: w.description || 'Retrait Admin', 
+                                  by: w.performedBy || 'Admin', 
+                                  amount: -w.amount,
+                                  color: 'text-red-500'
+                                }))
+                              ].sort((a, b) => b.time - a.time);
+
+                              if (movements.length === 0) {
+                                return <tr><td colSpan="5" className="px-6 py-12 text-center text-zinc-600 font-bold italic text-sm">Aucun mouvement aujourd'hui</td></tr>;
+                              }
+
+                              return movements.map((m, idx) => (
+                                <tr key={idx} className="hover:bg-zinc-800/50">
+                                    <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">{format(m.time, 'HH:mm')}</td>
+                                    <td className="px-6 py-4">
+                                      <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${m.amount > 0 ? 'border-green-500/20 text-green-500 bg-green-500/5' : 'border-red-500/20 text-red-500 bg-red-500/5'}`}>
+                                        {m.type}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-xs font-medium text-zinc-900 dark:text-white truncate max-w-[200px]">{m.desc}</td>
+                                    <td className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">{m.by}</td>
+                                    <td className={`px-6 py-4 text-right font-black ${m.color}`}>{m.amount > 0 ? '+' : ''}{m.amount} DA</td>
+                                </tr>
+                              ));
+                            })()}
                         </tbody>
                     </table>
                 </div>
@@ -417,17 +447,17 @@ const Cash = () => {
                 <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gold/10 p-8 space-y-6 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gold"></div>
                     <div className="text-center space-y-2 mb-4">
-                        <h3 className="text-2xl font-black text-gold uppercase tracking-widest font-luxury">Rapport du Jour</h3>
+                        <h3 className="text-2xl font-black text-gold uppercase tracking-widest font-luxury">État du Tiroir</h3>
                         <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{format(new Date(), 'dd/MM/yyyy')}</p>
                     </div>
                     <div className="space-y-4 border-y-2 border-dashed border-zinc-800 py-8">
-                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Départ (+)</span><span className="font-black text-white">{dailyCash.initialCash} DA</span></div>
-                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Recettes (+)</span><span className="font-black text-green-400">{dailyCash.totalRentals} DA</span></div>
-                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dépenses (-)</span><span className="font-black text-red-400">{dailyCash.totalExpenses} DA</span></div>
+                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Fond de Caisse (+)</span><span className="font-black text-white">{dailyCash.initialCash} DA</span></div>
+                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Total Entrées (+)</span><span className="font-black text-green-400">{dailyCash.totalRentals} DA</span></div>
+                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dépenses/Retraits (-)</span><span className="font-black text-red-400">-{dailyCash.totalExpenses + (withdrawals.filter(w => new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0]).reduce((sum, w) => sum + w.amount, 0))} DA</span></div>
                     </div>
                     <div className="flex justify-between items-center pt-6">
-                        <span className="text-lg font-black text-white uppercase tracking-widest font-luxury">SOLDE FINAL</span>
-                        <span className="text-4xl font-black text-gold">{dailyCash.finalBalance} DA</span>
+                        <span className="text-lg font-black text-white uppercase tracking-widest font-luxury">CAISSE</span>
+                        <span className={`text-4xl font-black ${dailyCash.finalBalance < 0 ? 'text-red-500' : 'text-gold'}`}>{dailyCash.finalBalance} DA</span>
                     </div>
                 </div>
             )}
@@ -597,107 +627,146 @@ const Cash = () => {
                   </div>
                 )}
                 {/* Summary in modal */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700 text-center">
-                    <p className="text-[10px] font-black text-zinc-500 uppercase mb-1">Total Recettes</p>
+                    <p className="text-[10px] font-black text-zinc-500 uppercase mb-1">Entrées (+)</p>
                     <p className="text-xl font-black text-green-400">+{detailModal.totalRentals} DA</p>
                   </div>
                   <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700 text-center">
-                    <p className="text-[10px] font-black text-zinc-500 uppercase mb-1">Total Dépenses</p>
+                    <p className="text-[10px] font-black text-zinc-500 uppercase mb-1">Dépenses (-)</p>
                     <p className="text-xl font-black text-red-400">-{detailModal.totalExpenses} DA</p>
                   </div>
+                  <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700 text-center">
+                    <p className="text-[10px] font-black text-zinc-500 uppercase mb-1">Retraits Admin (-)</p>
+                    <p className="text-xl font-black text-red-500">-{detailModal.withdrawals?.reduce((sum, w) => sum + w.amount, 0) || 0} DA</p>
+                  </div>
                   <div className="bg-gold/10 p-4 rounded-xl border border-gold/20 text-center">
-                    <p className="text-[10px] font-black text-gold uppercase mb-1">Solde Journée</p>
-                    <p className="text-xl font-black text-gold">{detailModal.totalRentals - detailModal.totalExpenses} DA</p>
+                    <p className="text-[10px] font-black text-gold uppercase mb-1">Caisse</p>
+                    <p className="text-xl font-black text-gold">{detailModal.finalBalance} DA</p>
                   </div>
                 </div>
 
-                {/* Payments Section */}
+                {/* Unified Chronology for Past Days */}
                 <div>
                   <h3 className="text-sm font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <ArrowDownCircle className="text-green-400" size={18} /> Recettes (Locations)
+                    <Receipt className="text-gold" size={18} /> Journal Chronologique
                   </h3>
                   <div className="bg-zinc-800/30 rounded-xl border border-zinc-800 overflow-hidden">
                     <table className="w-full text-left">
                       <thead className="bg-zinc-800 text-[10px] font-black text-zinc-500 uppercase">
                         <tr>
-                          <th className="px-4 py-3">Bon</th>
-                          <th className="px-4 py-3">Client</th>
-                          <th className="px-4 py-3">Articles</th>
+                          <th className="px-4 py-3">Type</th>
+                          <th className="px-4 py-3">Détails</th>
                           <th className="px-4 py-3">Par</th>
                           <th className="px-4 py-3 text-right">Montant</th>
                           {isAdmin && <th className="px-4 py-3 text-right">Actions</th>}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-800 text-zinc-300">
-                        {detailModal.payments.length === 0 ? (
-                          <tr><td colSpan={isAdmin ? 5 : 4} className="p-4 text-center text-zinc-600 font-bold italic text-xs">Aucun revenu</td></tr>
-                        ) : (
-                          detailModal.payments.map((p, i) => (
-                            <tr key={i} className="text-xs hover:bg-zinc-800/20 transition-all group">
-                              <td className="px-4 py-3 font-bold text-gold">#{p.rentalId.toString().padStart(5, '0')}</td>
+                        {(() => {
+                          const movements = [
+                            ...detailModal.payments.map(p => ({ 
+                              id: p.id,
+                              type: 'LOCATION', 
+                              desc: `${p.rental.customer.firstName} ${p.rental.customer.lastName} (#${p.rentalId})`, 
+                              by: p.performedBy || 'N/S', 
+                              amount: p.amount,
+                              color: 'text-green-400',
+                              original: p,
+                              category: 'payment'
+                            })),
+                            ...(detailModal.sales || []).map(s => ({ 
+                              id: s.id,
+                              type: 'VENTE', 
+                              desc: `${s.customerName} (#${s.id})`, 
+                              by: s.performedBy || 'N/S', 
+                              amount: s.totalAmount,
+                              color: 'text-green-400',
+                              original: s,
+                              category: 'sale'
+                            })),
+                            ...detailModal.expenses.map(e => ({ 
+                              id: e.id,
+                              type: 'DÉPENSE', 
+                              desc: e.description, 
+                              by: e.performedBy || 'N/S', 
+                              amount: -e.amount,
+                              color: 'text-red-400',
+                              original: e,
+                              category: 'expense'
+                            })),
+                            ...(detailModal.withdrawals || []).map(w => ({ 
+                              id: w.id,
+                              type: 'RETRAIT', 
+                              desc: w.description || 'Retrait Admin', 
+                              by: w.performedBy || 'Admin', 
+                              amount: -w.amount,
+                              color: 'text-red-500',
+                              original: w,
+                              category: 'withdrawal'
+                            }))
+                          ].sort((a, b) => {
+                            const dateA = new Date(a.original.createdAt || a.original.date);
+                            const dateB = new Date(b.original.createdAt || b.original.date);
+                            return dateB - dateA;
+                          });
+
+                          if (movements.length === 0) {
+                            return <tr><td colSpan={isAdmin ? 5 : 4} className="p-8 text-center text-zinc-600 font-bold italic text-xs">Aucun mouvement pour cette journée</td></tr>;
+                          }
+
+                          return movements.map((m, idx) => (
+                            <tr key={idx} className="text-xs hover:bg-zinc-800/20 transition-all group">
                               <td className="px-4 py-3">
-                                <p className="font-bold text-white uppercase">{p.rental.customer.firstName} {p.rental.customer.lastName}</p>
-                                <p className="text-[10px] text-zinc-500">{p.rental.customer.phone}</p>
+                                <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${m.amount > 0 ? 'border-green-500/20 text-green-500 bg-green-500/5' : 'border-red-500/20 text-red-500 bg-red-500/5'}`}>
+                                  {m.type}
+                                </span>
                               </td>
                               <td className="px-4 py-3">
-                                <div className="flex flex-wrap gap-1">
-                                  {p.rental.items.map((ri, j) => (
-                                    <span key={j} className="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-[9px]">
-                                      {ri.item.name} (T:{ri.item.size}, C:{ri.item.color})
-                                    </span>
-                                  ))}
-                                </div>
+                                <p className="font-bold text-white uppercase truncate max-w-[200px]">{m.desc}</p>
+                                <p className="text-[9px] text-zinc-500">
+                                  {format(new Date(m.original.createdAt || m.original.date), 'HH:mm')}
+                                </p>
                               </td>
-                              <td className="px-4 py-3 font-bold text-[10px] uppercase text-zinc-400">{p.performedBy || 'N/S'}</td>
-                              <td className="px-4 py-3 text-right font-black text-green-400">+{p.amount} DA</td>
+                              <td className="px-4 py-3 font-bold text-[10px] uppercase text-zinc-400">{m.by}</td>
+                              <td className={`px-4 py-3 text-right font-black ${m.color}`}>{m.amount > 0 ? '+' : ''}{m.amount} DA</td>
                               {isAdmin && (
                                 <td className="px-4 py-3 text-right">
                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => { setEditingPayment(p); setEditAmount(p.amount); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded transition-colors" title="Modifier"><Edit2 size={12} /></button>
-                                        <button onClick={() => handleDeletePayment(p.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Supprimer"><Trash2 size={12} /></button>
+                                        {m.category === 'payment' && (
+                                          <>
+                                            <button onClick={() => { setEditingPayment(m.original); setEditAmount(m.original.amount); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded" title="Modifier"><Edit2 size={12} /></button>
+                                            <button onClick={() => handleDeletePayment(m.original.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer"><Trash2 size={12} /></button>
+                                          </>
+                                        )}
+                                        {m.category === 'sale' && (
+                                          <>
+                                            <button onClick={() => { setEditingSale(m.original); setNewSale({ customerName: m.original.customerName, customerPhone: m.original.customerPhone, totalAmount: m.original.totalAmount, remarks: m.original.remarks || '' }); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded" title="Modifier"><Edit2 size={12} /></button>
+                                            <button onClick={() => handleDeleteSale(m.original.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer"><Trash2 size={12} /></button>
+                                          </>
+                                        )}
+                                        {m.category === 'expense' && (
+                                          <>
+                                            <button onClick={() => { setEditingExpense(m.original); setNewExpense({ amount: m.original.amount, description: m.original.description, slipNumber: m.original.slipNumber || '', category: 'AUTRE' }); setIsExpenseModalOpen(true); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded" title="Modifier"><Edit2 size={12} /></button>
+                                            <button onClick={() => handleDeleteExpense(m.original.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer"><Trash2 size={12} /></button>
+                                          </>
+                                        )}
+                                        {m.category === 'withdrawal' && (
+                                          <>
+                                            <button onClick={() => { setEditingWithdrawal(m.original); setWithdrawalAmount(m.original.amount); setWithdrawalDescription(m.original.description); setIsWithdrawalModalOpen(true); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded" title="Modifier"><Edit2 size={12} /></button>
+                                            <button onClick={() => handleDeleteWithdrawal(m.original.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer"><Trash2 size={12} /></button>
+                                          </>
+                                        )}
                                     </div>
                                 </td>
                               )}
                             </tr>
-                          ))
-                        )}
+                          ));
+                        })()}
                       </tbody>
                     </table>
                   </div>
                 </div>
-
-                {/* Sales Section */}
-                {detailModal.sales && (
-                  <div>
-                    <h3 className="text-sm font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2 mt-8">
-                      <ShoppingBag className="text-blue-400" size={18} /> Ventes (Produits)
-                    </h3>
-                    <div className="bg-zinc-800/30 rounded-xl border border-zinc-800 overflow-hidden">
-                      <table className="w-full text-left">
-                        <thead className="bg-zinc-800 text-[10px] font-black text-zinc-500 uppercase">
-                          <tr>
-                            <th className="px-4 py-3">Réf</th>
-                            <th className="px-4 py-3">Client</th>
-                            <th className="px-4 py-3">Articles Vendus</th>
-                            <th className="px-4 py-3">Par</th>
-                            <th className="px-4 py-3 text-right">Montant</th>
-                            {isAdmin && <th className="px-4 py-3 text-right">Actions</th>}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-800 text-zinc-300">
-                          {detailModal.sales.length === 0 ? (
-                            <tr><td colSpan="4" className="p-4 text-center text-zinc-600 font-bold italic text-xs">Aucune vente</td></tr>
-                          ) : (
-                            detailModal.sales.map((s, i) => (
-                              <tr key={i} className="text-xs hover:bg-zinc-800/20 transition-all group">
-                                <td className="px-4 py-3 font-bold text-blue-400">#{s.id.toString().padStart(5, '0')}</td>
-                                <td className="px-4 py-3">
-                                  <p className="font-bold text-white uppercase">{s.customerName}</p>
-                                  <p className="text-[10px] text-zinc-500">{s.customerPhone}</p>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <div className="flex flex-wrap gap-1">
                                     {s.items.map((si, j) => (
                                       <span key={j} className="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-[9px]">
                                         {si.name} (T:{si.size || '-'}, C:{si.color || '-'})
