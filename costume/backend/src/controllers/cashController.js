@@ -381,12 +381,10 @@ exports.getGlobalSummary = async (req, res) => {
     const allSales = await prisma.sale.aggregate({ _sum: { totalAmount: true } });
     const allExpenses = await prisma.expense.aggregate({ _sum: { amount: true } });
     const allWithdrawals = await prisma.withdrawal.aggregate({ _sum: { amount: true } });
-    const allInitialCash = await prisma.dailyCash.aggregate({ _sum: { initialCash: true } });
     
-    // Le cash total est la somme des revenus et injections (monnaie initiale) moins les dépenses et les retraits effectués
+    // Le cash total est la somme des revenus moins les dépenses et les retraits effectués (Exclut la monnaie initiale ajoutée)
     const globalCash = (allRentals._sum.amount || 0) + 
-                       (allSales._sum.totalAmount || 0) +
-                       (allInitialCash._sum.initialCash || 0) -
+                       (allSales._sum.totalAmount || 0) -
                        (allExpenses._sum.amount || 0) -
                        (allWithdrawals._sum.amount || 0);
 
@@ -468,7 +466,7 @@ exports.getHistory = async (req, res) => {
     });
 
     const historyWithCumulative = allUntilEnd.map(day => {
-      cumulative += day.initialCash + day.totalRentals - day.totalExpenses - day.totalWithdrawals;
+      cumulative += day.totalRentals - day.totalExpenses - (day.totalWithdrawals || 0);
       return { ...day, cumulativeBalance: cumulative };
     });
 
