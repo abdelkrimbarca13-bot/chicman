@@ -127,6 +127,7 @@ exports.getDayDetails = async (req, res) => {
       initialCash: dailyCash?.initialCash || 0,
       totalRentals: dailyCash?.totalRentals || 0,
       totalExpenses: dailyCash?.totalExpenses || 0,
+      totalWithdrawals: dailyCash?.totalWithdrawals || 0,
       finalBalance: dailyCash?.finalBalance || 0,
       status: dailyCash?.status || 'OPEN',
       payments,
