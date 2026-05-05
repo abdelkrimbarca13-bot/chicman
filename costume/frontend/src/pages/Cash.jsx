@@ -519,7 +519,7 @@ const Cash = () => {
                                     <th className="px-4 py-3">Départ</th>
                                     <th className="px-4 py-3 text-green-400">Recettes</th>
                                     <th className="px-4 py-3 text-red-400">Dépenses</th>
-                                    <th className="px-4 py-3 text-gold text-right">Solde Final</th>
+                                    <th className="px-4 py-3 text-gold text-right">Cash Total</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-800 text-zinc-300">
