@@ -775,31 +775,7 @@ const Cash = () => {
                     </table>
                   </div>
                 </div>
-                                    {s.items.map((si, j) => (
-                                      <span key={j} className="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700 text-[9px]">
-                                        {si.name} (T:{si.size || '-'}, C:{si.color || '-'})
-                                      </span>
-                                    ))}
-                                  </div>
-                                </td>
-                                <td className="px-4 py-3 font-bold text-[10px] uppercase text-zinc-400">{s.performedBy}</td>
-                                <td className="px-4 py-3 text-right font-black text-blue-400">+{s.totalAmount} DA</td>
-                                {isAdmin && (
-                                  <td className="px-4 py-3 text-right">
-                                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <button onClick={() => { setEditingSale(s); setEditSaleAmount(s.totalAmount); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded transition-colors" title="Modifier"><Edit2 size={12} /></button>
-                                          <button onClick={() => handleDeleteSale(s.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Supprimer"><Trash2 size={12} /></button>
-                                      </div>
-                                  </td>
-                                )}
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
+
 
                 {/* Expenses Section */}
                 <div>
