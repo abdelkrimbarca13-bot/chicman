@@ -287,6 +287,21 @@ const Cash = () => {
     }
   };
 
+  const handleFixHistory = async () => {
+    if (!window.confirm("Attention : Cela va réinitialiser toute la monnaie initiale de l'historique à 0 pour corriger les reports de solde. Continuer ?")) return;
+    
+    try {
+      setLoading(true);
+      await api.post('/cash/fix-history');
+      await fetchData();
+      alert("Historique réparé avec succès !");
+    } catch (err) {
+      alert("Erreur lors de la réparation de l'historique.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredHistory = (history || []).filter(day => {
     try {
       if (!day.date) return false;
@@ -329,12 +344,22 @@ const Cash = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-black text-gold font-luxury tracking-widest uppercase border-b-2 border-gold/30 pb-2">Gestion de la Caisse</h1>
-        {isAdmin && (
-            <div className="flex bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-800 p-1 w-full sm:w-auto">
-                <button onClick={() => setActiveTab('current')} className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'current' ? 'bg-gold text-rich-black' : 'text-zinc-500'}`}>Aujourd'hui</button>
-                <button onClick={() => setActiveTab('history')} className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-gold text-rich-black' : 'text-zinc-500'}`}>Historique</button>
-            </div>
-        )}
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            {isAdmin && (
+                <button 
+                  onClick={handleFixHistory}
+                  className="px-4 py-2 bg-red-900/30 border border-red-500/50 text-red-400 rounded-xl font-black text-[10px] uppercase hover:bg-red-500 hover:text-white transition-all flex items-center gap-2"
+                >
+                  <ShieldAlert size={14} /> Réparer Historique
+                </button>
+            )}
+            {isAdmin && (
+                <div className="flex bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-800 p-1 w-full sm:w-auto">
+                    <button onClick={() => setActiveTab('current')} className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'current' ? 'bg-gold text-rich-black' : 'text-zinc-500'}`}>Aujourd'hui</button>
+                    <button onClick={() => setActiveTab('history')} className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-gold text-rich-black' : 'text-zinc-500'}`}>Historique</button>
+                </div>
+            )}
+        </div>
       </div>
 
       {activeTab === 'current' && (

@@ -180,6 +180,32 @@ exports.setInitialCash = async (req, res) => {
   }
 };
 
+exports.fixHistory = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+        return res.status(403).json({ message: 'Accès refusé.' });
+    }
+    
+    // Reset all initialCash to 0
+    await prisma.dailyCash.updateMany({
+      data: { initialCash: 0 }
+    });
+
+    // Recalculate all days to be safe
+    const allDays = await prisma.dailyCash.findMany({
+      orderBy: { date: 'asc' }
+    });
+
+    for (const day of allDays) {
+      await updateDailyStats(day.date);
+    }
+
+    res.json({ message: 'Historique réparé avec succès.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message, error: error.message });
+  }
+};
+
 async function updateDailyStats(dateInput) {
   // Ensure we have a valid Date object and normalize to start of day in UTC
   const d = new Date(dateInput);
@@ -226,8 +252,16 @@ async function updateDailyStats(dateInput) {
     where: { date: dayStart }
   });
 
-  // Strict rule: if no manual injection exists, initialCash is 0 (no carry-over)
-  const initialCash = dailyCash ? dailyCash.initialCash : 0;
+  // Pour éviter tout report de solde, on vérifie s'il y a eu une action manuelle "SET_INITIAL_CASH" aujourd'hui
+  const manualLog = await prisma.auditLog.findFirst({
+    where: {
+      action: 'SET_INITIAL_CASH',
+      createdAt: { gte: dayStart, lte: dayEnd }
+    }
+  });
+
+  // Si pas de log manuel, la monnaie est FORCÉMENT 0 (on ignore la valeur en base qui pourrait être un vestige)
+  const initialCash = manualLog ? (dailyCash?.initialCash || 0) : 0;
   const finalBalance = initialCash + totalRentals - totalExpenses - totalWithdrawals;
 
   const updatedDailyCash = await prisma.dailyCash.upsert({

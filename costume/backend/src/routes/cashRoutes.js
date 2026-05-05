@@ -24,6 +24,7 @@ router.get('/summary', cashController.getGlobalSummary);
 router.get('/export-excel', cashController.exportHistoryExcel);
 router.get('/report', cashController.getDailyReport);
 router.get('/history', cashController.getHistory);
+router.post('/fix-history', cashController.fixHistory);
 router.get('/details/:date', cashController.getDayDetails);
 router.get('/search', cashController.searchBySlipNumber);
 
