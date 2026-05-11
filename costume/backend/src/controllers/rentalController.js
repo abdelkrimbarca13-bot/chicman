@@ -53,7 +53,7 @@ exports.createRental = async (req, res) => {
     const overlappingRentals = await prisma.rentalItem.findMany({
       where: {
         rental: {
-          status: { in: ['ONGOING', 'DELAYED'] },
+          status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'DELAYED'] },
           AND: [
             { startDate: { lt: end } },
             { expectedReturn: { gt: start } }
@@ -201,7 +201,7 @@ exports.getCashMovements = async (req, res) => {
     }
 
     where.paidAmount = { gt: 0 };
-    where.status = { not: 'ANNULÉE' };
+    where.status = { notIn: ['ANNULÉE'] }; // ANNULÉE (RETENTION) should be included
 
     const [rentals, perfumeSales] = await Promise.all([
       prisma.rental.findMany({
@@ -586,10 +586,13 @@ exports.cancelRental = async (req, res) => {
     if (rental.status === 'ANNULÉE') return res.status(400).json({ message: 'Location déjà annulée' });
 
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Change status
+      // 1. Change status (Partial cancellation if money is kept)
+      const refund = parseFloat(refundAmount) || 0;
+      const status = (refund < rental.paidAmount) ? 'ANNULÉE (RETENTION)' : 'ANNULÉE';
+      
       const updatedRental = await tx.rental.update({
         where: { id: parseInt(id) },
-        data: { status: 'ANNULÉE' }
+        data: { status: status }
       });
 
       // 2. Release items
