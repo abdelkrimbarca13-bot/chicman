@@ -197,6 +197,7 @@ model Perfume {
   id                  Int           @id @default(autoincrement())
   brand               String
   name                String
+  type                String?
   totalCapacityMl     Float
   initialQuantityMl   Float
   currentQuantityMl   Float

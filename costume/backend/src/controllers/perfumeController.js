@@ -16,7 +16,7 @@ exports.getAllPerfumes = async (req, res) => {
 
 exports.createPerfume = async (req, res) => {
   try {
-    const { brand, name, totalCapacityMl, totalPurchasePrice, salePriceMl, alertThresholdMl } = req.body;
+    const { brand, name, type, totalCapacityMl, totalPurchasePrice, salePriceMl, alertThresholdMl } = req.body;
 
     const unitCostMl = parseFloat(totalPurchasePrice) / parseFloat(totalCapacityMl);
 
@@ -24,6 +24,7 @@ exports.createPerfume = async (req, res) => {
       data: {
         brand,
         name,
+        type,
         totalCapacityMl: parseFloat(totalCapacityMl),
         initialQuantityMl: parseFloat(totalCapacityMl),
         currentQuantityMl: parseFloat(totalCapacityMl),
@@ -44,7 +45,7 @@ exports.createPerfume = async (req, res) => {
 exports.updatePerfume = async (req, res) => {
   try {
     const { id } = req.params;
-    const { brand, name, totalCapacityMl, totalPurchasePrice, salePriceMl, alertThresholdMl, currentQuantityMl } = req.body;
+    const { brand, name, type, totalCapacityMl, totalPurchasePrice, salePriceMl, alertThresholdMl, currentQuantityMl } = req.body;
 
     const unitCostMl = parseFloat(totalPurchasePrice) / parseFloat(totalCapacityMl);
 
@@ -53,6 +54,7 @@ exports.updatePerfume = async (req, res) => {
       data: {
         brand,
         name,
+        type,
         totalCapacityMl: parseFloat(totalCapacityMl),
         totalPurchasePrice: parseFloat(totalPurchasePrice),
         unitCostMl,

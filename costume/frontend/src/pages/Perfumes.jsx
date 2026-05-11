@@ -32,6 +32,7 @@ const Perfumes = () => {
   const [productForm, setProductForm] = useState({
     brand: '',
     name: '',
+    type: '',
     totalCapacityMl: '',
     totalPurchasePrice: '',
     salePriceMl: '',
@@ -133,6 +134,7 @@ const Perfumes = () => {
     setProductForm({
       brand: product.brand,
       name: product.name,
+      type: product.type || '',
       totalCapacityMl: product.totalCapacityMl,
       totalPurchasePrice: product.totalPurchasePrice,
       salePriceMl: product.salePriceMl,
@@ -214,7 +216,7 @@ const Perfumes = () => {
             </div>
             {user?.role === 'ADMIN' && (
               <button
-                onClick={() => { setEditingProduct(null); setProductForm({ brand: '', name: '', totalCapacityMl: '', totalPurchasePrice: '', salePriceMl: '', alertThresholdMl: 30 }); setIsProductModalOpen(true); }}
+                onClick={() => { setEditingProduct(null); setProductForm({ brand: '', name: '', type: '', totalCapacityMl: '', totalPurchasePrice: '', salePriceMl: '', alertThresholdMl: 30 }); setIsProductModalOpen(true); }}
                 className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-gold text-white rounded-xl shadow-lg shadow-gold/20 hover:scale-105 transition-transform"
               >
                 <Plus size={20} /> Nouveau Parfum
@@ -238,6 +240,7 @@ const Perfumes = () => {
                   <div>
                     <span className="text-[10px] uppercase tracking-widest text-gold font-bold">{perfume.brand}</span>
                     <h3 className="text-xl font-bold text-zinc-900 dark:text-white leading-tight">{perfume.name}</h3>
+                    {perfume.type && <p className="text-[10px] font-bold text-zinc-400 uppercase">{perfume.type}</p>}
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => setLabelToShow(perfume)} className="p-2 text-zinc-400 hover:text-gold transition-colors" title="Imprimer Étiquette"><Tag size={16} /></button>
@@ -435,6 +438,19 @@ const Perfumes = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-500 uppercase px-1">Type de Parfum</label>
+                  <select
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none"
+                    value={productForm.type}
+                    onChange={(e) => setProductForm({ ...productForm, type: e.target.value })}
+                  >
+                    <option value="">Sélectionner un type</option>
+                    <option value="Parfum">Parfum</option>
+                    <option value="Eau de Parfum">Eau de Parfum</option>
+                    <option value="Eau de Toilette">Eau de Toilette</option>
+                  </select>
+                </div>
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-zinc-500 uppercase px-1">Contenance (ml)</label>
                   <input
