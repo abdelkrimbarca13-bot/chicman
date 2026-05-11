@@ -451,104 +451,106 @@ const Cash = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gold/10 overflow-hidden">
-                <div className="p-6 border-b border-zinc-800 bg-zinc-100 dark:bg-zinc-800/50">
-                    <h3 className="font-black text-gold uppercase tracking-widest flex items-center gap-2 font-luxury text-sm"><Receipt size={20} /> Journal des Mouvements (Aujourd'hui)</h3>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-zinc-100 dark:bg-zinc-800 uppercase text-[10px] font-black text-zinc-500">
-                            <tr>
-                                <th className="px-6 py-4">Heure</th>
-                                <th className="px-6 py-4">Type</th>
-                                <th className="px-6 py-4">Description</th>
-                                <th className="px-6 py-4">Par</th>
-                                <th className="px-6 py-4 text-right">Montant</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-800 text-zinc-300">
-                            {(() => {
-                              const movements = [
-                                ...(dailyCash?.details?.payments || []).map(p => ({ 
-                                  time: new Date(p.createdAt), 
-                                  type: p.type === 'ENCAISSEMENT_ACOMPTE' ? 'ACOMPTE' : 
-                                        p.type === 'ENCAISSEMENT_SOLDE' ? 'SOLDE' :
-                                        p.type === 'ENCAISSEMENT_FRAIS_REPARATION' ? 'RÉPARATION' :
-                                        p.type === 'REMBOURSEMENT_ANNULATION' ? 'REMBOURSEMENT' : 'LOCATION', 
-                                  desc: p.type === 'REMBOURSEMENT_ANNULATION' ? `Remboursement - #${p.rentalId.toString().padStart(5, '0')}` :
-                                        p.type === 'ENCAISSEMENT_FRAIS_REPARATION' ? `Frais Réparation - #${p.rentalId.toString().padStart(5, '0')}` :
-                                        `Acompte/Solde - #${p.rentalId.toString().padStart(5, '0')}`, 
-                                  by: p.performedBy || 'Inconnu', 
-                                  amount: p.amount,
-                                  color: p.amount > 0 ? 'text-green-400' : 'text-red-400'
-                                })),
-                                ...(dailyCash?.details?.sales || []).map(s => ({ 
-                                  time: new Date(s.createdAt), 
-                                  type: 'VENTE', 
-                                  desc: `Vente Articles - #${s.id.toString().padStart(5, '0')}`, 
-                                  by: s.performedBy || 'Inconnu', 
-                                  amount: s.totalAmount,
-                                  color: 'text-green-400'
-                                })),
-                                ...(dailyCash?.details?.perfumeSales || []).map(s => ({ 
-                                  time: new Date(s.date), 
-                                  type: 'VENTE_PARFUM', 
-                                  desc: `Vente Parfum - ${s.perfume?.brand} ${s.perfume?.name} (${s.quantityMl}ml)`, 
-                                  by: s.performedBy || 'Inconnu', 
-                                  amount: s.totalAmount,
-                                  color: 'text-purple-400'
-                                })),
-                                ...(dailyCash?.details?.expenses || []).map(e => ({ 
-                                  time: new Date(e.date), 
-                                  type: 'DÉPENSE', 
-                                  desc: e.description, 
-                                  by: e.performedBy || 'Inconnu', 
-                                  amount: -e.amount,
-                                  color: 'text-red-400'
-                                })),
-                                ...withdrawals?.filter(w => {
-                                  try {
-                                    return w.date && new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
-                                  } catch(e) { return false; }
-                                }).map(w => ({ 
-                                  time: new Date(w.date), 
-                                  type: 'RETRAIT', 
-                                  desc: w.description || 'Retrait Admin', 
-                                  by: w.performedBy || 'Admin', 
-                                  amount: -w.amount,
-                                  color: 'text-red-500'
-                                }))
-                              ].sort((a, b) => b.time - a.time);
+            {isAdmin && (
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gold/10 overflow-hidden">
+                  <div className="p-6 border-b border-zinc-800 bg-zinc-100 dark:bg-zinc-800/50">
+                      <h3 className="font-black text-gold uppercase tracking-widest flex items-center gap-2 font-luxury text-sm"><Receipt size={20} /> Journal des Mouvements (Aujourd'hui)</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                          <thead className="bg-zinc-100 dark:bg-zinc-800 uppercase text-[10px] font-black text-zinc-500">
+                              <tr>
+                                  <th className="px-6 py-4">Heure</th>
+                                  <th className="px-6 py-4">Type</th>
+                                  <th className="px-6 py-4">Description</th>
+                                  <th className="px-6 py-4">Par</th>
+                                  <th className="px-6 py-4 text-right">Montant</th>
+                              </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-800 text-zinc-300">
+                              {(() => {
+                                const movements = [
+                                  ...(dailyCash?.details?.payments || []).map(p => ({ 
+                                    time: new Date(p.createdAt), 
+                                    type: p.type === 'ENCAISSEMENT_ACOMPTE' ? 'ACOMPTE' : 
+                                          p.type === 'ENCAISSEMENT_SOLDE' ? 'SOLDE' :
+                                          p.type === 'ENCAISSEMENT_FRAIS_REPARATION' ? 'RÉPARATION' :
+                                          p.type === 'REMBOURSEMENT_ANNULATION' ? 'REMBOURSEMENT' : 'LOCATION', 
+                                    desc: p.type === 'REMBOURSEMENT_ANNULATION' ? `Remboursement - #${p.rentalId.toString().padStart(5, '0')}` :
+                                          p.type === 'ENCAISSEMENT_FRAIS_REPARATION' ? `Frais Réparation - #${p.rentalId.toString().padStart(5, '0')}` :
+                                          `Acompte/Solde - #${p.rentalId.toString().padStart(5, '0')}`, 
+                                    by: p.performedBy || 'Inconnu', 
+                                    amount: p.amount,
+                                    color: p.amount > 0 ? 'text-green-400' : 'text-red-400'
+                                  })),
+                                  ...(dailyCash?.details?.sales || []).map(s => ({ 
+                                    time: new Date(s.createdAt), 
+                                    type: 'VENTE', 
+                                    desc: `Vente Articles - #${s.id.toString().padStart(5, '0')}`, 
+                                    by: s.performedBy || 'Inconnu', 
+                                    amount: s.totalAmount,
+                                    color: 'text-green-400'
+                                  })),
+                                  ...(dailyCash?.details?.perfumeSales || []).map(s => ({ 
+                                    time: new Date(s.date), 
+                                    type: 'VENTE_PARFUM', 
+                                    desc: `Vente Parfum - ${s.perfume?.brand} ${s.perfume?.name} (${s.quantityMl}ml)`, 
+                                    by: s.performedBy || 'Inconnu', 
+                                    amount: s.totalAmount,
+                                    color: 'text-purple-400'
+                                  })),
+                                  ...(dailyCash?.details?.expenses || []).map(e => ({ 
+                                    time: new Date(e.date), 
+                                    type: 'DÉPENSE', 
+                                    desc: e.description, 
+                                    by: e.performedBy || 'Inconnu', 
+                                    amount: -e.amount,
+                                    color: 'text-red-400'
+                                  })),
+                                  ...withdrawals?.filter(w => {
+                                    try {
+                                      return w.date && new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                                    } catch(e) { return false; }
+                                  }).map(w => ({ 
+                                    time: new Date(w.date), 
+                                    type: 'RETRAIT', 
+                                    desc: w.description || 'Retrait Admin', 
+                                    by: w.performedBy || 'Admin', 
+                                    amount: -w.amount,
+                                    color: 'text-red-500'
+                                  }))
+                                ].sort((a, b) => b.time - a.time);
 
-                              if (movements.length === 0) {
-                                return <tr><td colSpan="5" className="px-6 py-12 text-center text-zinc-600 font-bold italic text-sm">Aucun mouvement aujourd'hui</td></tr>;
-                              }
+                                if (movements.length === 0) {
+                                  return <tr><td colSpan="5" className="px-6 py-12 text-center text-zinc-600 font-bold italic text-sm">Aucun mouvement aujourd'hui</td></tr>;
+                                }
 
-                              return movements.map((m, idx) => (
-                                <tr key={idx} className="hover:bg-zinc-800/50">
-                                    <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">{format(m.time, 'HH:mm')}</td>
-                                    <td className="px-6 py-4">
-                                      <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${m.amount > 0 ? 'border-green-500/20 text-green-500 bg-green-500/5' : 'border-red-500/20 text-red-500 bg-red-500/5'}`}>
-                                        {m.type}
-                                      </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-xs font-medium text-zinc-900 dark:text-white truncate max-w-[200px]">{m.desc}</td>
-                                    <td className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">{m.by}</td>
-                                    <td className={`px-6 py-4 text-right font-black ${m.color}`}>{m.amount > 0 ? '+' : ''}{m.amount} DA</td>
-                                    <td className="px-6 py-4 text-right">
-                                      {isAdmin && m.type === 'VENTE_PARFUM' && (
-                                        <button onClick={() => handleDeletePerfumeSale(m.id.replace('p', ''))} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer">
-                                          <Trash2 size={14} />
-                                        </button>
-                                      )}
-                                    </td>
-                                </tr>
-                              ));
-                            })()}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                return movements.map((m, idx) => (
+                                  <tr key={idx} className="hover:bg-zinc-800/50">
+                                      <td className="px-6 py-4 font-mono text-[10px] text-zinc-500">{format(m.time, 'HH:mm')}</td>
+                                      <td className="px-6 py-4">
+                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${m.amount > 0 ? 'border-green-500/20 text-green-500 bg-green-500/5' : 'border-red-500/20 text-red-500 bg-red-500/5'}`}>
+                                          {m.type}
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-4 text-xs font-medium text-zinc-900 dark:text-white truncate max-w-[200px]">{m.desc}</td>
+                                      <td className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">{m.by}</td>
+                                      <td className={`px-6 py-4 text-right font-black ${m.color}`}>{m.amount > 0 ? '+' : ''}{m.amount} DA</td>
+                                      <td className="px-6 py-4 text-right">
+                                        {isAdmin && m.type === 'VENTE_PARFUM' && (
+                                          <button onClick={() => handleDeletePerfumeSale(m.id.replace('p', ''))} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer">
+                                            <Trash2 size={14} />
+                                          </button>
+                                        )}
+                                      </td>
+                                  </tr>
+                                ));
+                              })()}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+            )}
 
             {isAdmin && (
                 <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gold/10 p-8 space-y-6 relative overflow-hidden">

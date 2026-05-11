@@ -256,12 +256,14 @@ const Items = () => {
                 </button>
               </>
             )}
-            <button 
-                onClick={() => { setCurrentItem({ name: '', model: '', reference: '', type: 'Veste', size: '', color: '', quantity: 1, rentalPrice: 0 }); setIsModalOpen(true); }}
-                className="w-full sm:w-auto bg-gold text-rich-black px-4 py-2 rounded-lg flex items-center justify-center hover:bg-light-gold shadow-lg shadow-gold/10 transition-all active:scale-95 text-sm font-bold"
-            >
-                <Plus size={20} className="mr-2" /> Ajouter un article
-            </button>
+            {user?.role === 'ADMIN' && (
+              <button 
+                  onClick={() => { setCurrentItem({ name: '', model: '', reference: '', type: 'Veste', size: '', color: '', quantity: 1, rentalPrice: 0 }); setIsModalOpen(true); }}
+                  className="w-full sm:w-auto bg-gold text-rich-black px-4 py-2 rounded-lg flex items-center justify-center hover:bg-light-gold shadow-lg shadow-gold/10 transition-all active:scale-95 text-sm font-bold"
+              >
+                  <Plus size={20} className="mr-2" /> Ajouter un article
+              </button>
+            )}
         </div>
       </div>
 

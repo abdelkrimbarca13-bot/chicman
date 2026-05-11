@@ -278,10 +278,12 @@ const Perfumes = () => {
                       <p className="text-[10px] text-zinc-500 uppercase tracking-tighter">Prix Vente</p>
                       <p className="text-lg font-bold text-zinc-900 dark:text-white">{perfume.salePriceMl} <span className="text-xs text-zinc-400">DA/ml</span></p>
                     </div>
-                    <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                      <p className="text-[10px] text-zinc-500 uppercase tracking-tighter">Bénéfice/ml</p>
-                      <p className="text-lg font-bold text-green-500">{(perfume.salePriceMl - perfume.unitCostMl).toFixed(1)} <span className="text-xs">DA</span></p>
-                    </div>
+                    {user?.role === 'ADMIN' && (
+                      <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-tighter">Bénéfice/ml</p>
+                        <p className="text-lg font-bold text-green-500">{(perfume.salePriceMl - perfume.unitCostMl).toFixed(1)} <span className="text-xs">DA</span></p>
+                      </div>
+                    )}
                   </div>
 
                   <button
