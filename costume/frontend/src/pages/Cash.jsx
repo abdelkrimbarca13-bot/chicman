@@ -453,7 +453,7 @@ const Cash = () => {
                         <tbody className="divide-y divide-zinc-800 text-zinc-300">
                             {(() => {
                               const movements = [
-                                ...dailyCash.details.payments.map(p => ({ 
+                                ...(dailyCash?.details?.payments || []).map(p => ({ 
                                   time: new Date(p.createdAt), 
                                   type: 'LOCATION', 
                                   desc: `Acompte/Solde - #${p.rentalId.toString().padStart(5, '0')}`, 
@@ -461,7 +461,7 @@ const Cash = () => {
                                   amount: p.amount,
                                   color: 'text-green-400'
                                 })),
-                                ...dailyCash.details.sales.map(s => ({ 
+                                ...(dailyCash?.details?.sales || []).map(s => ({ 
                                   time: new Date(s.createdAt), 
                                   type: 'VENTE', 
                                   desc: `Vente Articles - #${s.id.toString().padStart(5, '0')}`, 
@@ -469,7 +469,7 @@ const Cash = () => {
                                   amount: s.totalAmount,
                                   color: 'text-green-400'
                                 })),
-                                ...dailyCash.details.expenses.map(e => ({ 
+                                ...(dailyCash?.details?.expenses || []).map(e => ({ 
                                   time: new Date(e.date), 
                                   type: 'DÉPENSE', 
                                   desc: e.description, 
@@ -748,7 +748,7 @@ const Cash = () => {
                       <tbody className="divide-y divide-zinc-800 text-zinc-300">
                         {(() => {
                           const movements = [
-                            ...detailModal.payments.map(p => ({ 
+                            ...(detailModal?.payments || []).map(p => ({ 
                               id: p.id,
                               type: 'LOCATION', 
                               desc: `${p.rental.customer.firstName} ${p.rental.customer.lastName} (#${p.rentalId})`, 
@@ -758,7 +758,7 @@ const Cash = () => {
                               original: p,
                               category: 'payment'
                             })),
-                            ...(detailModal.sales || []).map(s => ({ 
+                            ...(detailModal?.sales || []).map(s => ({ 
                               id: s.id,
                               type: 'VENTE', 
                               desc: `${s.customerName} (#${s.id})`, 
@@ -768,7 +768,7 @@ const Cash = () => {
                               original: s,
                               category: 'sale'
                             })),
-                            ...detailModal.expenses.map(e => ({ 
+                            ...(detailModal?.expenses || []).map(e => ({ 
                               id: e.id,
                               type: 'DÉPENSE', 
                               desc: e.description, 
