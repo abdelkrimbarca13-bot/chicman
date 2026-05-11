@@ -12,6 +12,10 @@ const Revenue = () => {
 
   const getMovementTypeLabel = (type) => {
     const labels = {
+      ENCAISSEMENT_ACOMPTE: 'Acompte',
+      ENCAISSEMENT_SOLDE: 'Solde location',
+      ENCAISSEMENT_FRAIS_REPARATION: 'Réparation',
+      REMBOURSEMENT_ANNULATION: 'Remboursement',
       DEPOSIT: 'Versement initial',
       REMAINDER: 'Solde location',
       REFUND: 'Remboursement',
@@ -22,6 +26,10 @@ const Revenue = () => {
 
   const getMovementTypeColor = (type) => {
     const colors = {
+      ENCAISSEMENT_ACOMPTE: 'bg-gold/10 text-gold border-gold/20',
+      ENCAISSEMENT_SOLDE: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+      ENCAISSEMENT_FRAIS_REPARATION: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+      REMBOURSEMENT_ANNULATION: 'bg-red-500/10 text-red-500 border-red-500/20',
       DEPOSIT: 'bg-gold/10 text-gold border-gold/20',
       REMAINDER: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
       REFUND: 'bg-red-500/10 text-red-500 border-red-500/20',

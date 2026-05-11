@@ -455,11 +455,16 @@ const Cash = () => {
                               const movements = [
                                 ...(dailyCash?.details?.payments || []).map(p => ({ 
                                   time: new Date(p.createdAt), 
-                                  type: 'LOCATION', 
-                                  desc: `Acompte/Solde - #${p.rentalId.toString().padStart(5, '0')}`, 
+                                  type: p.type === 'ENCAISSEMENT_ACOMPTE' ? 'ACOMPTE' : 
+                                        p.type === 'ENCAISSEMENT_SOLDE' ? 'SOLDE' :
+                                        p.type === 'ENCAISSEMENT_FRAIS_REPARATION' ? 'RÉPARATION' :
+                                        p.type === 'REMBOURSEMENT_ANNULATION' ? 'REMBOURSEMENT' : 'LOCATION', 
+                                  desc: p.type === 'REMBOURSEMENT_ANNULATION' ? `Remboursement - #${p.rentalId.toString().padStart(5, '0')}` :
+                                        p.type === 'ENCAISSEMENT_FRAIS_REPARATION' ? `Frais Réparation - #${p.rentalId.toString().padStart(5, '0')}` :
+                                        `Acompte/Solde - #${p.rentalId.toString().padStart(5, '0')}`, 
                                   by: p.performedBy || 'Inconnu', 
                                   amount: p.amount,
-                                  color: 'text-green-400'
+                                  color: p.amount > 0 ? 'text-green-400' : 'text-red-400'
                                 })),
                                 ...(dailyCash?.details?.sales || []).map(s => ({ 
                                   time: new Date(s.createdAt), 

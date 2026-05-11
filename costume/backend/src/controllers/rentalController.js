@@ -110,7 +110,7 @@ exports.createRental = async (req, res) => {
           addedAmount: parseFloat(addedAmount) || 0,
           remarks: remarks || null,
           guaranteeDocument: guaranteeDocument || null,
-          status: 'ONGOING',
+          status: 'CONFIRMÉE',
           isActivated: false,
           items: {
             create: selectedItems.map(item => ({ 
@@ -133,6 +133,7 @@ exports.createRental = async (req, res) => {
         await tx.payment.create({
           data: {
             amount: deposit,
+            type: 'ENCAISSEMENT_ACOMPTE',
             rentalId: newRental.id,
             performedBy: req.userData.username
           }
@@ -268,6 +269,7 @@ exports.addPayment = async (req, res) => {
     const payment = await prisma.payment.create({
       data: {
         amount: parseFloat(amount),
+        type: 'ENCAISSEMENT_SOLDE',
         rentalId: parseInt(id),
         performedBy: req.userData.username
       }
@@ -276,7 +278,10 @@ exports.addPayment = async (req, res) => {
     // Update rental paidAmount
     await prisma.rental.update({
       where: { id: parseInt(id) },
-      data: { paidAmount: currentPaid + parseFloat(amount) }
+      data: { 
+        paidAmount: { increment: parseFloat(amount) },
+        status: (rental.totalAmount + rental.repairFees - (currentPaid + parseFloat(amount)) <= 0) && rental.status === 'CONFIRMÉE' ? 'CONFIRMÉE' : rental.status 
+      }
     });
 
     // Update daily stats
@@ -313,6 +318,7 @@ exports.activateRental = async (req, res) => {
         where: { id: parseInt(id) },
         data: {
           isActivated: true,
+          status: 'LIVRÉE',
           startDate: startDate,
           expectedReturn: expectedReturn
         }
@@ -522,6 +528,117 @@ exports.updateRental = async (req, res) => {
     if (existingRental.startDate.toISOString() !== start.toISOString()) {
       await updateDailyStats(start);
     }
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message, error: error.message });
+  }
+};
+
+exports.cancelRental = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { refundAmount } = req.body;
+
+    const rental = await prisma.rental.findUnique({
+      where: { id: parseInt(id) },
+      include: { items: true, payments: true }
+    });
+
+    if (!rental) return res.status(404).json({ message: 'Location non trouvée' });
+    if (rental.status === 'ANNULÉE') return res.status(400).json({ message: 'Location déjà annulée' });
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Change status
+      const updatedRental = await tx.rental.update({
+        where: { id: parseInt(id) },
+        data: { status: 'ANNULÉE' }
+      });
+
+      // 2. Release items
+      const itemIds = rental.items.map(ri => ri.itemId);
+      await tx.item.updateMany({
+        where: { id: { in: itemIds } },
+        data: { status: 'AVAILABLE' }
+      });
+
+      // 3. Create refund payment if any
+      const refund = parseFloat(refundAmount) || 0;
+      if (refund > 0) {
+        await tx.payment.create({
+          data: {
+            amount: -refund, // Negative amount for refund
+            type: 'REMBOURSEMENT_ANNULATION',
+            rentalId: parseInt(id),
+            performedBy: req.userData.username
+          }
+        });
+
+        // Update rental paidAmount
+        await tx.rental.update({
+          where: { id: parseInt(id) },
+          data: { paidAmount: { decrement: refund } }
+        });
+      }
+
+      return updatedRental;
+    });
+
+    await updateDailyStats(new Date());
+    await logAction(req.userData.userId, 'CANCEL_RENTAL', { rentalId: id, refundAmount });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message, error: error.message });
+  }
+};
+
+exports.addRepairFees = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, isPaidNow, remarks } = req.body;
+
+    const rental = await prisma.rental.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!rental) return res.status(404).json({ message: 'Location non trouvée' });
+
+    const fees = parseFloat(amount) || 0;
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update rental status and repairFees
+      const updatedRental = await tx.rental.update({
+        where: { id: parseInt(id) },
+        data: {
+          repairFees: { increment: fees },
+          status: 'EN_RÉPARATION',
+          remarks: remarks ? `${rental.remarks || ''}\nFrais rép: ${fees} DA - ${remarks}` : rental.remarks
+        }
+      });
+
+      // 2. If paid now, create payment
+      if (isPaidNow && fees > 0) {
+        await tx.payment.create({
+          data: {
+            amount: fees,
+            type: 'ENCAISSEMENT_FRAIS_REPARATION',
+            rentalId: parseInt(id),
+            performedBy: req.userData.username
+          }
+        });
+
+        await tx.rental.update({
+          where: { id: parseInt(id) },
+          data: { paidAmount: { increment: fees } }
+        });
+      }
+
+      return updatedRental;
+    });
+
+    await updateDailyStats(new Date());
+    await logAction(req.userData.userId, 'ADD_REPAIR_FEES', { rentalId: id, amount: fees, isPaidNow });
 
     res.json(result);
   } catch (error) {

@@ -70,6 +70,7 @@ model Rental {
   status            String         @default("ONGOING")
   isActivated       Boolean        @default(false)
   guaranteeDocument String?
+  repairFees        Float          @default(0)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   cashMovements     CashMovement[]
@@ -93,6 +94,7 @@ model AuditLog {
 model Payment {
   id          Int      @id @default(autoincrement())
   amount      Float
+  type        String   @default("ENCAISSEMENT_SOLDE")
   rentalId    Int
   performedBy String?
   createdAt   DateTime @default(now())

@@ -10,5 +10,7 @@ router.post('/:id/payment', auth, rentalController.addPayment);
 router.put('/:id', auth, rentalController.updateRental);
 router.post('/:id/activate', auth, rentalController.activateRental);  
 router.post('/:id/return', auth, rentalController.returnRental);  
+router.post('/:id/cancel', auth, rentalController.cancelRental);
+router.post('/:id/repair', auth, rentalController.addRepairFees);
 router.delete('/:id', auth, rentalController.deleteRental);
 module.exports = router;  

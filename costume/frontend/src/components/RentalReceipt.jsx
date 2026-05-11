@@ -14,7 +14,7 @@ const RentalReceipt = ({ rental, onClose }) => {
     window.print();
   };
 
-  const balance = rental.totalAmount - rental.paidAmount;
+  const balance = (rental.totalAmount + (rental.repairFees || 0)) - rental.paidAmount;
   const qrValue = JSON.stringify({
     id: rental.id,
     customer: `${rental.customer.firstName} ${rental.customer.lastName}`,
@@ -74,6 +74,9 @@ const RentalReceipt = ({ rental, onClose }) => {
           <div className="text-center mb-6">
             <h1 className="text-3xl font-black tracking-tighter border-b-4 border-black inline-block px-6 pb-2 mb-1">CHIC MAN</h1>
             <p className="text-[12px] uppercase tracking-[0.3em] font-black">LUXURY RENTAL</p>
+            {rental.status === 'ANNULÉE' && (
+              <div className="mt-2 text-red-600 border-4 border-red-600 font-black px-4 py-1 text-2xl rotate-[-5deg] inline-block uppercase">ANNULÉ</div>
+            )}
           </div>
 
           <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-3">
@@ -147,6 +150,12 @@ const RentalReceipt = ({ rental, onClose }) => {
                 <div className="w-full flex justify-between text-[13px] font-black">
                   <span className="uppercase">REMISE:</span>
                   <span>-{rental.discount} DA</span>
+                </div>
+              )}
+              {rental.repairFees > 0 && (
+                <div className="w-full flex justify-between text-[13px] font-black">
+                  <span className="uppercase">FRAIS RÉPARATION:</span>
+                  <span>+{rental.repairFees} DA</span>
                 </div>
               )}
               <div className="w-full flex justify-between text-base font-black pt-2 border-t-2 border-black">

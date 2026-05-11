@@ -32,8 +32,16 @@ const Rentals = () => {
     discount: 0,
     addedAmount: 0,
     remarks: '',
-    guaranteeDocument: ''
+    guaranteeDocument: '',
+    status: 'CONFIRMÉE'
   });
+  
+  const [cancelModal, setCancelModal] = useState(null);
+  const [refundAmount, setRefundAmount] = useState('0');
+  const [repairModal, setRepairModal] = useState(null);
+  const [repairAmount, setRepairAmount] = useState('');
+  const [repairRemarks, setRepairRemarks] = useState('');
+  const [repairIsPaid, setRepairIsPaid] = useState(true);
 
   useEffect(() => {
     const rentalId = searchParams.get('rentalId');
@@ -64,7 +72,11 @@ const Rentals = () => {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    setFilterStatus(tab === 'ongoing' ? 'ONGOING' : 'RETURNED');
+    if (tab === 'ongoing') {
+      setFilterStatus('ONGOING_EXTENDED'); // Custom filter to include multiple statuses
+    } else if (tab === 'history') {
+      setFilterStatus('HISTORY_EXTENDED');
+    }
   };
 
   const fetchData = useCallback(async () => {
@@ -298,6 +310,36 @@ const Rentals = () => {
         }
     }
   };
+  const handleCancelRental = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/rentals/${cancelModal.id}/cancel`, { refundAmount: parseFloat(refundAmount) });
+      setCancelModal(null);
+      setRefundAmount('0');
+      fetchData();
+      alert('Location annulée');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur lors de l\'annulation');
+    }
+  };
+
+  const handleRepairFees = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/rentals/${repairModal.id}/repair`, { 
+        amount: parseFloat(repairAmount), 
+        isPaidNow: repairIsPaid,
+        remarks: repairRemarks 
+      });
+      setRepairModal(null);
+      setRepairAmount('');
+      setRepairRemarks('');
+      fetchData();
+      alert('Frais de réparation ajoutés');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur lors de l\'enregistrement');
+    }
+  };
 
   const handleAddPayment = async (e) => {
     e.preventDefault();
@@ -349,7 +391,14 @@ const Rentals = () => {
   };
 
   const filteredRentals = rentals.filter(rental => {
-    const matchesStatus = filterStatus === 'ALL' || rental.status === filterStatus;
+    let matchesStatus = true;
+    if (filterStatus === 'ONGOING_EXTENDED') {
+      matchesStatus = ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'ONGOING'].includes(rental.status);
+    } else if (filterStatus === 'HISTORY_EXTENDED') {
+      matchesStatus = ['RETOURNEE', 'ANNULÉE', 'RETURNED'].includes(rental.status);
+    } else if (filterStatus !== 'ALL') {
+      matchesStatus = rental.status === filterStatus;
+    }
     
     let matchesDate = true;
     if (filterStartDate || filterEndDate) {
@@ -516,11 +565,21 @@ const Rentals = () => {
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-1.5">
                     <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border text-center ${
-                      rental.status === 'ONGOING' ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30' : 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30'
+                      rental.status === 'CONFIRMÉE' || rental.status === 'ONGOING' ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30' : 
+                      rental.status === 'LIVRÉE' ? 'bg-orange-50 text-orange-700 border-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-900/30' :
+                      rental.status === 'RETOURNEE' || rental.status === 'RETURNED' ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30' :
+                      rental.status === 'EN_RÉPARATION' ? 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30' :
+                      rental.status === 'ANNULÉE' ? 'bg-zinc-50 text-zinc-700 border-zinc-100 dark:bg-zinc-900/20 dark:text-zinc-400 dark:border-zinc-900/30' :
+                      'bg-zinc-50 text-zinc-700 border-zinc-100 dark:bg-zinc-900/20 dark:text-zinc-400 dark:border-zinc-900/30'
                     }`}>
-                      {rental.status === 'ONGOING' ? 'En cours' : 'Retourné'}
+                      {rental.status === 'CONFIRMÉE' ? 'Confirmée' : 
+                       rental.status === 'ONGOING' ? 'En cours' : 
+                       rental.status === 'LIVRÉE' ? 'Livrée' : 
+                       rental.status === 'RETOURNEE' || rental.status === 'RETURNED' ? 'Retournée' : 
+                       rental.status === 'EN_RÉPARATION' ? 'En réparation' : 
+                       rental.status === 'ANNULÉE' ? 'Annulée' : rental.status}
                     </span>
-                    {rental.status === 'ONGOING' && new Date(rental.expectedReturn) < new Date() && (
+                    {(rental.status === 'CONFIRMÉE' || rental.status === 'LIVRÉE' || rental.status === 'ONGOING') && new Date(rental.expectedReturn) < new Date() && (
                       <span className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-500/50 bg-red-500/10 text-red-500 text-center animate-pulse">
                         Retard
                       </span>
@@ -545,33 +604,49 @@ const Rentals = () => {
                         <Trash2 size={16} className="mr-1"/> Supprimer
                       </button>
                     )}
-                    {rental.status === 'ONGOING' && (
+                    {['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'ONGOING'].includes(rental.status) && (
                       <>
-                        {!rental.isActivated ? (
+                        {rental.status === 'CONFIRMÉE' && (
                           <>
                             <button 
                               onClick={() => handleActivate(rental.id)}
                               className="text-orange-400 hover:text-orange-300 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
-                              title="Activer la location"
+                              title="Passer en statut Livrée"
                             >
-                              <Play size={16} className="mr-1"/> Activer
+                              <Play size={16} className="mr-1"/> Livrer
                             </button>
                             <button 
-                              onClick={() => handleEditRental(rental)}
-                              className="text-gold hover:text-light-gold flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
-                              title="Modifier la location"
+                              onClick={() => { setCancelModal(rental); setRefundAmount(rental.paidAmount.toString()); }}
+                              className="text-red-400 hover:text-red-300 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
                             >
-                              <Edit2 size={16} className="mr-1"/> Modifier
+                              <X size={16} className="mr-1"/> Annuler
                             </button>
                           </>
-                        ) : (
-                          <button 
-                            onClick={() => handleReturn(rental)}
-                            className="text-green-600 hover:text-green-900 flex items-center font-bold text-sm"
-                          >
-                            <CheckCircle size={16} className="mr-1"/> Retourner
-                          </button>
                         )}
+                        {rental.status === 'LIVRÉE' && (
+                           <button 
+                             onClick={() => handleReturn(rental)}
+                             className="text-green-600 hover:text-green-400 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                           >
+                             <CheckCircle size={16} className="mr-1"/> Retourner
+                           </button>
+                        )}
+                        {rental.status === 'EN_RÉPARATION' && (
+                           <button 
+                             onClick={() => handleReturn(rental)}
+                             className="text-green-600 hover:text-green-400 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                           >
+                             <CheckCircle size={16} className="mr-1"/> Terminer Rép.
+                           </button>
+                        )}
+                        
+                        <button 
+                          onClick={() => setRepairModal(rental)}
+                          className="text-zinc-400 hover:text-zinc-200 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                        >
+                          <Scissors size={16} className="mr-1"/> Réparation
+                        </button>
+
                         <button 
                           onClick={() => setPaymentModal(rental)}
                           className="text-blue-400 hover:text-blue-300 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
@@ -837,6 +912,81 @@ const Rentals = () => {
                 <button type="submit" className="w-full py-4 bg-gold text-rich-black rounded-xl font-black uppercase tracking-widest hover:bg-light-gold shadow-xl shadow-gold/10 transition-all transform active:scale-95">
                     CONFIRMER LE PAIEMENT
                 </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {cancelModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-red-500/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                <h2 className="text-xl font-black text-red-500 uppercase tracking-widest font-luxury">Annuler Location</h2>
+                <button onClick={() => setCancelModal(null)} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
+            </div>
+            <form onSubmit={handleCancelRental} className="p-6 space-y-6">
+                <div>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-2 tracking-widest text-center">Montant à rembourser au client (DA)</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-4 bg-red-900/10 border-2 border-red-900/30 rounded-xl outline-none focus:border-red-500 text-red-500 font-black text-3xl text-center"
+                      value={refundAmount}
+                      onChange={(e) => setRefundAmount(e.target.value)}
+                      required
+                      max={cancelModal.paidAmount}
+                    />
+                    <p className="text-[10px] text-zinc-500 mt-2 text-center uppercase font-bold">L'acompte versé était de : {cancelModal.paidAmount} DA</p>
+                </div>
+                <div className="flex gap-4">
+                    <button type="button" onClick={() => setCancelModal(null)} className="flex-1 px-4 py-3 border border-zinc-700 text-zinc-400 rounded-xl font-bold uppercase text-xs">Annuler</button>
+                    <button type="submit" className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-black uppercase text-xs hover:bg-red-600 transition-colors">Confirmer l'annulation</button>
+                </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {repairModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-zinc-500/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                <h2 className="text-xl font-black text-gold uppercase tracking-widest font-luxury">Frais de Réparation</h2>
+                <button onClick={() => setRepairModal(null)} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
+            </div>
+            <form onSubmit={handleRepairFees} className="p-6 space-y-6">
+                <div>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-2 tracking-widest text-center">Montant des frais (DA)</label>
+                    <input 
+                      type="number" 
+                      className="w-full p-4 bg-zinc-100 dark:bg-zinc-800 border-2 border-zinc-700 rounded-xl outline-none focus:border-gold text-gold font-black text-3xl text-center"
+                      value={repairAmount}
+                      onChange={(e) => setRepairAmount(e.target.value)}
+                      required
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-2 tracking-widest">Détails de la réparation</label>
+                    <textarea 
+                      className="w-full p-3 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg outline-none focus:ring-1 focus:ring-gold text-sm"
+                      placeholder="Ex: Fermeture éclair cassée, tache..."
+                      value={repairRemarks}
+                      onChange={(e) => setRepairRemarks(e.target.value)}
+                    />
+                </div>
+                <div className="flex items-center gap-3 bg-zinc-800/50 p-3 rounded-lg border border-zinc-700">
+                    <input 
+                      type="checkbox" 
+                      id="repairPaid"
+                      className="w-5 h-5 accent-gold"
+                      checked={repairIsPaid}
+                      onChange={(e) => setRepairIsPaid(e.target.checked)}
+                    />
+                    <label htmlFor="repairPaid" className="text-xs font-bold uppercase text-zinc-300 cursor-pointer">Le client paie immédiatement</label>
+                </div>
+                <div className="flex gap-4">
+                    <button type="button" onClick={() => setRepairModal(null)} className="flex-1 px-4 py-3 border border-zinc-700 text-zinc-400 rounded-xl font-bold uppercase text-xs">Annuler</button>
+                    <button type="submit" className="flex-1 px-4 py-3 bg-gold text-rich-black rounded-xl font-black uppercase text-xs hover:bg-light-gold transition-colors">Enregistrer</button>
+                </div>
             </form>
           </div>
         </div>
