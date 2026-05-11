@@ -200,6 +200,8 @@ exports.getCashMovements = async (req, res) => {
       where.createdAt = { gte: thirtyDaysAgo };
     }
 
+    where.status = { not: 'ANNULÉE' };
+
     const rentals = await prisma.rental.findMany({
       where,
       include: {
