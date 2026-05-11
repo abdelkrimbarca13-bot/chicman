@@ -346,13 +346,16 @@ exports.deleteRental = async (req, res) => {
 
     const rental = await prisma.rental.findUnique({
       where: { id: rentalId },
-      include: { items: true }
+      include: { items: true, payments: true }
     });
 
     if (!rental) return res.status(404).json({ message: 'Location non trouvée' });
 
     const itemIds = rental.items.map(ri => ri.itemId);
 
+    // Get unique dates of payments to update stats
+    const paymentDates = [...new Set(rental.payments.map(p => p.createdAt.toISOString().split('T')[0]))];
+    
     await prisma.$transaction(async (tx) => {
       // Release items if the rental was not already returned
       if (rental.status !== 'RETURNED') {
@@ -368,6 +371,13 @@ exports.deleteRental = async (req, res) => {
       await tx.rentalItem.deleteMany({ where: { rentalId } });
       await tx.rental.delete({ where: { id: rentalId } });
     });
+
+    // Update stats for all affected dates
+    for (const dateStr of paymentDates) {
+      await updateDailyStats(new Date(dateStr));
+    }
+    // Also update today just in case
+    await updateDailyStats(new Date());
 
     await logAction(req.userData.userId, 'DELETE_RENTAL', { rentalId });
 
