@@ -603,7 +603,6 @@ exports.cancelRental = async (req, res) => {
       });
 
       // 3. Create refund payment if any
-      const refund = parseFloat(refundAmount) || 0;
       if (refund > 0) {
         await tx.payment.create({
           data: {
