@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { LayoutDashboard, Shirt, Users, ClipboardList, LogOut, TrendingUp, Wallet, Menu, X, History, Settings, Sun, Moon, Scissors, Wrench, ShoppingCart, Droplet } from 'lucide-react';
+import { LayoutDashboard, Shirt, Users, ClipboardList, LogOut, TrendingUp, Wallet, Menu, X, History, Settings, Sun, Moon, Scissors, Wrench, ShoppingCart, Droplet, Package } from 'lucide-react';
 
 const Layout = ({ children }) => {
   const { logout, user } = useAuth();
