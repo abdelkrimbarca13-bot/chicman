@@ -40,20 +40,23 @@ const Perfumes = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [pRes, sRes, stRes] = await Promise.all([
-        api.get('/perfumes'),
-        api.get('/perfumes/sales'),
-        api.get('/perfumes/stats')
-      ]);
+      const pRes = await api.get('/perfumes');
       setPerfumes(pRes.data);
-      setSales(sRes.data);
-      setStats(stRes.data);
+      
+      if (user?.role === 'ADMIN') {
+        const [sRes, stRes] = await Promise.all([
+          api.get('/perfumes/sales'),
+          api.get('/perfumes/stats')
+        ]);
+        setSales(sRes.data);
+        setStats(stRes.data);
+      }
     } catch (err) {
       console.error('Error fetching perfume data:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchData();
@@ -141,9 +144,9 @@ const Perfumes = () => {
         <div className="flex bg-white dark:bg-zinc-900 p-1 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
           {[
             { id: 'inventory', label: 'Inventaire', icon: Droplet },
-            { id: 'history', label: 'Historique', icon: History },
-            { id: 'stats', label: 'Stats', icon: BarChart3 },
-          ].map((tab) => (
+            { id: 'history', label: 'Historique', icon: History, adminOnly: true },
+            { id: 'stats', label: 'Stats', icon: BarChart3, adminOnly: true },
+          ].filter(tab => !tab.adminOnly || user?.role === 'ADMIN').map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -268,7 +271,7 @@ const Perfumes = () => {
         </div>
       )}
 
-      {activeTab === 'history' && (
+      {activeTab === 'history' && user?.role === 'ADMIN' && (
         <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
           <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
             <h2 className="text-xl font-bold">Historique des Ventes</h2>
@@ -314,7 +317,7 @@ const Perfumes = () => {
         </div>
       )}
 
-      {activeTab === 'stats' && stats && (
+      {activeTab === 'stats' && stats && user?.role === 'ADMIN' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-lg">
             <div className="p-3 bg-gold/10 text-gold rounded-2xl w-fit mb-4">
