@@ -63,7 +63,7 @@ const Rentals = () => {
       window.history.replaceState({}, '', '/rentals');
     }
   }, [searchParams, rentals]);
-  const [filterStatus, setFilterStatus] = useState('ONGOING');
+  const [filterStatus, setFilterStatus] = useState('ONGOING_EXTENDED');
   const [activeTab, setActiveTab] = useState('ongoing');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
