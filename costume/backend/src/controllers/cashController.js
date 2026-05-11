@@ -39,6 +39,12 @@ exports.getDailyCash = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
+    const perfumeSales = await prisma.perfumeSale.findMany({
+      where: { date: { gte: dayStart, lte: dayEnd } },
+      include: { perfume: true },
+      orderBy: { date: 'desc' }
+    });
+
     const expenses = await prisma.expense.findMany({
       where: { date: { gte: dayStart, lte: dayEnd } },
       orderBy: { date: 'desc' }
@@ -58,6 +64,7 @@ exports.getDailyCash = async (req, res) => {
       details: {
         payments,
         sales,
+        perfumeSales,
         expenses,
         initialCashLogs
       },
@@ -134,6 +141,7 @@ exports.getDayDetails = async (req, res) => {
       status: dailyCash?.status || 'OPEN',
       payments,
       sales,
+      perfumeSales,
       expenses,
       initialCashLogs
     });

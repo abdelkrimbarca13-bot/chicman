@@ -5,6 +5,7 @@ const { logAction } = require('../utils/audit');
 exports.getAllPerfumes = async (req, res) => {
   try {
     const perfumes = await prisma.perfume.findMany({
+      where: { isActive: true },
       orderBy: { brand: 'asc' }
     });
     res.json(perfumes);
@@ -74,8 +75,15 @@ exports.deletePerfume = async (req, res) => {
     
     // Check if has sales
     const salesCount = await prisma.perfumeSale.count({ where: { perfumeId: parseInt(id) } });
+    
     if (salesCount > 0) {
-      return res.status(400).json({ message: 'Impossible de supprimer un parfum qui a déjà des ventes enregistrées.' });
+      // Archive instead of delete
+      await prisma.perfume.update({
+        where: { id: parseInt(id) },
+        data: { isActive: false }
+      });
+      await logAction(req.userData.userId, 'ARCHIVE_PERFUME', { perfumeId: id });
+      return res.status(200).json({ message: 'Le parfum a été archivé car il contient des données de vente.' });
     }
 
     await prisma.perfume.delete({ where: { id: parseInt(id) } });
@@ -157,7 +165,8 @@ exports.getPerfumeSales = async (req, res) => {
     const sales = await prisma.perfumeSale.findMany({
       where,
       include: { perfume: true },
-      orderBy: { date: 'desc' }
+      orderBy: { date: 'desc' },
+      take: startDate && endDate ? undefined : 100 // Limit to 100 if no date range
     });
     res.json(sales);
   } catch (error) {

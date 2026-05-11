@@ -474,6 +474,14 @@ const Cash = () => {
                                   amount: s.totalAmount,
                                   color: 'text-green-400'
                                 })),
+                                ...(dailyCash?.details?.perfumeSales || []).map(s => ({ 
+                                  time: new Date(s.date), 
+                                  type: 'VENTE_PARFUM', 
+                                  desc: `Vente Parfum - ${s.perfume?.brand} ${s.perfume?.name} (${s.quantityMl}ml)`, 
+                                  by: s.performedBy || 'Inconnu', 
+                                  amount: s.totalAmount,
+                                  color: 'text-purple-400'
+                                })),
                                 ...(dailyCash?.details?.expenses || []).map(e => ({ 
                                   time: new Date(e.date), 
                                   type: 'DÉPENSE', 
@@ -772,6 +780,16 @@ const Cash = () => {
                               color: 'text-green-400',
                               original: s,
                               category: 'sale'
+                            })),
+                            ...(detailModal?.perfumeSales || []).map(s => ({ 
+                              id: s.id,
+                              type: 'VENTE_PARFUM', 
+                              desc: `Parfum: ${s.perfume?.brand} ${s.perfume?.name} (${s.quantityMl}ml)`, 
+                              by: s.performedBy || 'N/S', 
+                              amount: s.totalAmount,
+                              color: 'text-purple-400',
+                              original: s,
+                              category: 'perfumeSale'
                             })),
                             ...(detailModal?.expenses || []).map(e => ({ 
                               id: e.id,
