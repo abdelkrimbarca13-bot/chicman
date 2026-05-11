@@ -590,11 +590,11 @@ const Perfumes = () => {
               <div className="p-4 bg-zinc-900 dark:bg-gold/10 text-white dark:text-gold rounded-2xl">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-xs opacity-70">Montant Total</span>
-                  <span className="text-xs opacity-70">Bénéfice estimé</span>
+                  {user?.role === 'ADMIN' && <span className="text-xs opacity-70">Bénéfice estimé</span>}
                 </div>
                 <div className="flex justify-between items-baseline">
                   <span className="text-3xl font-bold">{(saleForm.quantityMl * selectedProduct.salePriceMl).toLocaleString()} DA</span>
-                  <span className="text-lg font-bold text-green-400">+{(saleForm.quantityMl * (selectedProduct.salePriceMl - selectedProduct.unitCostMl)).toFixed(0)} DA</span>
+                  {user?.role === 'ADMIN' && <span className="text-lg font-bold text-green-400">+{(saleForm.quantityMl * (selectedProduct.salePriceMl - selectedProduct.unitCostMl)).toFixed(0)} DA</span>}
                 </div>
               </div>
 
