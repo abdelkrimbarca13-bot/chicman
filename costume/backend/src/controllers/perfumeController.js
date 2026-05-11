@@ -145,7 +145,12 @@ exports.createPerfumeSale = async (req, res) => {
       totalAmount
     });
 
-    res.status(201).json(sale);
+    const saleWithDetails = await prisma.perfumeSale.findUnique({
+      where: { id: sale.id },
+      include: { perfume: true }
+    });
+
+    res.status(201).json(saleWithDetails);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

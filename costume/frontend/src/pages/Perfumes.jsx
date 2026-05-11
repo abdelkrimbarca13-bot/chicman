@@ -4,9 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { 
   Droplet, Plus, Search, Trash2, Edit2, ShoppingCart, 
   History, BarChart3, AlertTriangle, Check, X, ArrowRight,
-  TrendingUp, Package, Calendar, Info
+  TrendingUp, Package, Calendar, Info, QrCode, Tag, Printer
 } from 'lucide-react';
 import { format } from 'date-fns';
+import PerfumeReceipt from '../components/PerfumeReceipt';
+import PerfumeLabel from '../components/PerfumeLabel';
 
 const Perfumes = () => {
   const { user } = useAuth();
@@ -22,6 +24,9 @@ const Perfumes = () => {
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [receiptToShow, setReceiptToShow] = useState(null);
+  const [labelToShow, setLabelToShow] = useState(null);
+  const [scanValue, setScanValue] = useState('');
   
   // Form states
   const [productForm, setProductForm] = useState({
@@ -82,16 +87,34 @@ const Perfumes = () => {
   const handleSaleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/perfumes/sales', {
+      const res = await api.post('/perfumes/sales', {
         perfumeId: selectedProduct.id,
         quantityMl: parseFloat(saleForm.quantityMl)
       });
       setIsSaleModalOpen(false);
       setSelectedProduct(null);
       setSaleForm({ quantityMl: 1 });
+      setReceiptToShow(res.data);
       fetchData();
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur lors de la vente');
+    }
+  };
+
+  const handleScan = (e) => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(scanValue);
+      if (data.type === 'PERFUME_REF' && data.id) {
+        const product = perfumes.find(p => p.id === data.id);
+        if (product) {
+          openSaleModal(product);
+          setScanValue('');
+        }
+      }
+    } catch (err) {
+      // Not a valid JSON or not a perfume QR
+      console.log('Invalid scan');
     }
   };
 
@@ -167,15 +190,27 @@ const Perfumes = () => {
       {activeTab === 'inventory' && (
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-              <input
-                type="text"
-                placeholder="Rechercher une marque ou un nom..."
-                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-gold outline-none"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            <div className="flex flex-1 gap-2 w-full">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Rechercher une marque ou un nom..."
+                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-gold outline-none"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <form onSubmit={handleScan} className="relative w-48">
+                <QrCode className="absolute left-3 top-1/2 -translate-y-1/2 text-gold" size={18} />
+                <input
+                  type="text"
+                  placeholder="Scanner..."
+                  className="w-full pl-10 pr-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none text-xs"
+                  value={scanValue}
+                  onChange={(e) => setScanValue(e.target.value)}
+                />
+              </form>
             </div>
             {user?.role === 'ADMIN' && (
               <button
@@ -205,6 +240,7 @@ const Perfumes = () => {
                     <h3 className="text-xl font-bold text-zinc-900 dark:text-white leading-tight">{perfume.name}</h3>
                   </div>
                   <div className="flex gap-2">
+                    <button onClick={() => setLabelToShow(perfume)} className="p-2 text-zinc-400 hover:text-gold transition-colors" title="Imprimer Étiquette"><Tag size={16} /></button>
                     {user?.role === 'ADMIN' && (
                       <>
                         <button onClick={() => openEditModal(perfume)} className="p-2 text-zinc-400 hover:text-blue-500 transition-colors"><Edit2 size={16} /></button>
@@ -308,7 +344,12 @@ const Perfumes = () => {
                     <td className="px-6 py-4 whitespace-nowrap font-medium">{sale.quantityMl} ml</td>
                     <td className="px-6 py-4 text-right font-bold text-zinc-900 dark:text-white">{sale.totalAmount.toLocaleString()} DA</td>
                     <td className="px-6 py-4 text-right font-bold text-green-500">+{sale.profit.toLocaleString()} DA</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500">{sale.performedBy}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500">
+                      <div className="flex items-center gap-2">
+                        {sale.performedBy}
+                        <button onClick={() => setReceiptToShow(sale)} className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors" title="Réimprimer"><Printer size={14} /></button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -553,6 +594,13 @@ const Perfumes = () => {
             </form>
           </div>
         </div>
+      )}
+      {/* Print Modals */}
+      {receiptToShow && (
+        <PerfumeReceipt sale={receiptToShow} onClose={() => setReceiptToShow(null)} />
+      )}
+      {labelToShow && (
+        <PerfumeLabel perfume={labelToShow} onClose={() => setLabelToShow(null)} />
       )}
     </div>
   );
