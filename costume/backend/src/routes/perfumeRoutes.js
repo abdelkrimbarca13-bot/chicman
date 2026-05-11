@@ -9,6 +9,7 @@ router.put('/:id', auth, perfumeController.updatePerfume);
 router.delete('/:id', auth, perfumeController.deletePerfume);
 
 router.post('/sales', auth, perfumeController.createPerfumeSale);
+router.delete('/sales/:id', auth, perfumeController.deletePerfumeSale);
 router.get('/sales', auth, perfumeController.getPerfumeSales);
 router.get('/stats', auth, perfumeController.getPerfumeStats);
 

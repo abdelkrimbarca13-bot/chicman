@@ -151,6 +151,40 @@ exports.createPerfumeSale = async (req, res) => {
   }
 };
 
+exports.deletePerfumeSale = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const sale = await prisma.perfumeSale.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!sale) return res.status(404).json({ message: 'Vente non trouvée' });
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Restore stock
+      await tx.perfume.update({
+        where: { id: sale.perfumeId },
+        data: { currentQuantityMl: { increment: sale.quantityMl } }
+      });
+
+      // 2. Delete sale
+      await tx.perfumeSale.delete({
+        where: { id: parseInt(id) }
+      });
+    });
+
+    // Update daily stats
+    await updateDailyStats(sale.date);
+
+    await logAction(req.userData.userId, 'DELETE_PERFUME_SALE', { saleId: id, amount: sale.totalAmount });
+
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getPerfumeSales = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;

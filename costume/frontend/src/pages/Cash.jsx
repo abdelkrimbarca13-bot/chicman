@@ -242,6 +242,22 @@ const Cash = () => {
     }
   };
 
+  const handleDeletePerfumeSale = async (id) => {
+    if (!isAdmin) return;
+    if (confirm('Supprimer cette vente de parfum ? Le stock sera restauré.')) {
+      try {
+        await api.delete(`/perfumes/sales/${id}`);
+        fetchData();
+        if (detailModal) {
+          const res = await api.get(`/cash/details/${detailModal.date}`);
+          setDetailModal(res.data);
+        }
+      } catch (err) {
+        alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la suppression');
+      }
+    }
+  };
+
   const fetchGlobalSummary = React.useCallback(async () => {
     if (!filterStartDate || !filterEndDate) {
       setGlobalSummary(null);
@@ -519,6 +535,13 @@ const Cash = () => {
                                     <td className="px-6 py-4 text-xs font-medium text-zinc-900 dark:text-white truncate max-w-[200px]">{m.desc}</td>
                                     <td className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">{m.by}</td>
                                     <td className={`px-6 py-4 text-right font-black ${m.color}`}>{m.amount > 0 ? '+' : ''}{m.amount} DA</td>
+                                    <td className="px-6 py-4 text-right">
+                                      {isAdmin && m.type === 'VENTE_PARFUM' && (
+                                        <button onClick={() => handleDeletePerfumeSale(m.id.replace('p', ''))} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer">
+                                          <Trash2 size={14} />
+                                        </button>
+                                      )}
+                                    </td>
                                 </tr>
                               ));
                             })()}
@@ -847,9 +870,12 @@ const Cash = () => {
                                         )}
                                         {m.category === 'sale' && (
                                           <>
-                                            <button onClick={() => { setEditingSale(m.original); setNewSale({ customerName: m.original.customerName, customerPhone: m.original.customerPhone, totalAmount: m.original.totalAmount, remarks: m.original.remarks || '' }); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded" title="Modifier"><Edit2 size={12} /></button>
+                                            <button onClick={() => { setEditingSale(m.original); setEditSaleAmount(m.original.totalAmount); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded" title="Modifier"><Edit2 size={12} /></button>
                                             <button onClick={() => handleDeleteSale(m.original.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer"><Trash2 size={12} /></button>
                                           </>
+                                        )}
+                                        {m.category === 'perfumeSale' && (
+                                          <button onClick={() => handleDeletePerfumeSale(m.original.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer"><Trash2 size={12} /></button>
                                         )}
                                         {m.category === 'expense' && (
                                           <>
