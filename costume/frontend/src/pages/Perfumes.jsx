@@ -141,7 +141,6 @@ const Perfumes = () => {
         <div className="flex bg-white dark:bg-zinc-900 p-1 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
           {[
             { id: 'inventory', label: 'Inventaire', icon: Droplet },
-            { id: 'sales', label: 'Ventes', icon: ShoppingCart },
             { id: 'history', label: 'Historique', icon: History },
             { id: 'stats', label: 'Stats', icon: BarChart3 },
           ].map((tab) => (
