@@ -213,6 +213,13 @@ async function updateDailyStats(dateInput) {
     console.error('Invalid date passed to updateDailyStats:', dateInput);
     return;
   }
+
+  // Empêcher les dates futures
+  const now = new Date();
+  if (d > now && d.toDateString() !== now.toDateString()) {
+    console.log('Tentative d\'analyse d\'une date future ignorée:', d.toISOString());
+    return;
+  }
   
   const todayStr = d.toISOString().split('T')[0] + 'T00:00:00.000Z';
   const dayStart = new Date(todayStr);
@@ -496,8 +503,16 @@ exports.getHistory = async (req, res) => {
     let cumulative = 0;
     // Calculate cumulative balance for all days up to the filtered ones
     // Actually, to be accurate, we need ALL history up to endDate
+    const todayEnd = new Date();
+    todayEnd.setUTCHours(23, 59, 59, 999);
+
     const allUntilEnd = await prisma.dailyCash.findMany({
-      where: endDate ? { date: { lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999)) } } : {},
+      where: {
+        AND: [
+          endDate ? { date: { lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999)) } } : {},
+          { date: { lte: todayEnd } }
+        ]
+      },
       orderBy: { date: 'asc' }
     });
 
