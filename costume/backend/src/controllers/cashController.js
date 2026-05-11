@@ -60,7 +60,8 @@ exports.getDailyCash = async (req, res) => {
         sales,
         expenses,
         initialCashLogs
-      }
+      },
+      serverTime: new Date()
     };
 
     // Filtrer les données si l'utilisateur n'est pas ADMIN

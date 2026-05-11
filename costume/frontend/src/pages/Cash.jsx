@@ -15,6 +15,7 @@ const Cash = () => {
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
   const [error, setError] = useState(null);
+  const [clockWarning, setClockWarning] = useState(null);
   
   // Modal states
   const [isInitialCashModalOpen, setIsInitialCashModalOpen] = useState(false);
@@ -60,6 +61,18 @@ const Cash = () => {
       if (isAdmin && results[2]) setHistory(results[2].data || []);
       if (isAdmin && results[3]) setGlobalSummary(results[3].data || null);
       if (isAdmin && results[4]) setWithdrawals(results[4].data || []);
+      
+      if (results[0].data.serverTime) {
+        const serverTime = new Date(results[0].data.serverTime);
+        const clientTime = new Date();
+        const diffHours = Math.abs(serverTime - clientTime) / (1000 * 60 * 60);
+        
+        if (diffHours > 1) {
+          setClockWarning(`Attention : L'horloge du serveur (${format(serverTime, 'dd/MM HH:mm')}) est décalée par rapport à votre machine. Cela peut fausser les rapports.`);
+        } else {
+          setClockWarning(null);
+        }
+      }
       
       setError(null);
     } catch (err) {
@@ -342,6 +355,16 @@ const Cash = () => {
 
   return (
     <div className="space-y-6">
+      {clockWarning && (
+        <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-400 flex items-center animate-pulse rounded-r-lg shadow-md">
+          <ShieldAlert className="mr-3 flex-shrink-0" size={24} />
+          <div>
+            <p className="font-black text-sm uppercase tracking-tight">{clockWarning}</p>
+            <p className="text-[10px] mt-1 opacity-70 uppercase font-bold italic">Vérifiez l'heure système de votre ordinateur et du serveur.</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-black text-gold font-luxury tracking-widest uppercase border-b-2 border-gold/30 pb-2">Gestion de la Caisse</h1>
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
