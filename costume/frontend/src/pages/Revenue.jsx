@@ -19,7 +19,8 @@ const Revenue = () => {
       DEPOSIT: 'Versement initial',
       REMAINDER: 'Solde location',
       REFUND: 'Remboursement',
-      RENTAL_TOTAL: 'Total du Bon'
+      RENTAL_TOTAL: 'Total du Bon',
+      PERFUME_SALE: 'Vente Parfum'
     };
     return labels[type] || type;
   };
@@ -33,7 +34,8 @@ const Revenue = () => {
       DEPOSIT: 'bg-gold/10 text-gold border-gold/20',
       REMAINDER: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
       REFUND: 'bg-red-500/10 text-red-500 border-red-500/20',
-      RENTAL_TOTAL: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+      RENTAL_TOTAL: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+      PERFUME_SALE: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
     };
     return colors[type] || 'bg-zinc-800 text-zinc-400 border-zinc-700';
   };

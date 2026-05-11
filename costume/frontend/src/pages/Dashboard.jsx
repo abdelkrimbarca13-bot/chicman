@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Shirt, ClipboardList, CheckCircle, AlertTriangle, TrendingUp, Scissors, Droplets, Printer } from 'lucide-react';
+import { Shirt, ClipboardList, CheckCircle, AlertTriangle, TrendingUp, Scissors, Droplets, Printer, Droplet } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -37,6 +37,7 @@ const Dashboard = () => {
     { title: 'Articles loués', value: stats?.rentedItems || 0, icon: <CheckCircle />, color: 'bg-orange-600', type: 'rented' },
     { title: 'Réparations Demain', value: stats?.tomorrowRepairs?.length || 0, icon: <Scissors />, color: 'bg-red-600', type: 'repairs' },
     { title: 'En Nettoyage', value: stats?.cleaningItems || 0, icon: <Droplets />, color: 'bg-cyan-600', type: 'cleaning' },
+    { title: 'Alertes Parfums', value: stats?.perfumeAlertsCount || 0, icon: <Droplet />, color: 'bg-purple-600', path: '/perfumes' },
   ];
 
   if (user?.role === 'ADMIN') {

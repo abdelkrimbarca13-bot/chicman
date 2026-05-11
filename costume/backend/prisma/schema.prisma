@@ -135,6 +135,8 @@ model DailyCash {
   totalWithdrawals Float    @default(0)
   finalBalance     Float    @default(0)
   status        String   @default("OPEN")
+  totalPerfumeSales Float    @default(0)
+  totalPerfumeProfit Float   @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -187,4 +189,35 @@ model SaleItem {
   itemColor String
   price     Float
   sale      Sale   @relation(fields: [saleId], references: [id])
+}
+
+model Perfume {
+  id                  Int           @id @default(autoincrement())
+  brand               String
+  name                String
+  totalCapacityMl     Float
+  initialQuantityMl   Float
+  currentQuantityMl   Float
+  totalPurchasePrice  Float
+  unitCostMl          Float
+  salePriceMl         Float
+  alertThresholdMl    Float         @default(30)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  sales               PerfumeSale[]
+}
+
+model PerfumeSale {
+  id              Int      @id @default(autoincrement())
+  perfumeId       Int
+  quantityMl      Float
+  unitPriceMl     Float
+  totalAmount     Float
+  totalCost       Float
+  profit          Float
+  date            DateTime @default(now())
+  performedBy     String
+  perfume         Perfume  @relation(fields: [perfumeId], references: [id])
+
+  @@index([date])
 }

@@ -203,17 +203,29 @@ exports.getCashMovements = async (req, res) => {
     where.paidAmount = { gt: 0 };
     where.status = { not: 'ANNULÉE' };
 
-    const rentals = await prisma.rental.findMany({
-      where,
-      include: {
-        customer: true,
-        items: { include: { item: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+    const [rentals, perfumeSales] = await Promise.all([
+      prisma.rental.findMany({
+        where,
+        include: {
+          customer: true,
+          items: { include: { item: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.perfumeSale.findMany({
+        where: {
+          date: startDate && endDate ? {
+            gte: new Date(new Date(startDate).setUTCHours(0, 0, 0, 0)),
+            lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999))
+          } : { gte: new Date(new Date().setDate(new Date().getDate() - 30)) }
+        },
+        include: { perfume: true },
+        orderBy: { date: 'desc' }
+      })
+    ]);
 
-    // Map rentals to the "movement" structure for the frontend
-    const movements = rentals.map(r => ({
+    // Map rentals to the "movement" structure
+    const rentalMovements = rentals.map(r => ({
       id: r.id,
       date: r.createdAt,
       amount: r.totalAmount,
@@ -224,7 +236,19 @@ exports.getCashMovements = async (req, res) => {
       }
     }));
 
-    res.json(movements);
+    // Map perfume sales
+    const perfumeMovements = perfumeSales.map(s => ({
+      id: `p${s.id}`,
+      date: s.date,
+      amount: s.totalAmount,
+      type: 'PERFUME_SALE',
+      rental: {
+        customer: { firstName: 'Vente', lastName: 'Parfum', phone: '-' },
+        items: [{ item: { name: `${s.perfume.brand} ${s.perfume.name}`, size: `${s.quantityMl}ml` } }]
+      }
+    }));
+
+    res.json([...rentalMovements, ...perfumeMovements].sort((a, b) => new Date(b.date) - new Date(a.date)));
   } catch (error) {
     res.status(500).json({ message: error.message, error: error.message });
   }

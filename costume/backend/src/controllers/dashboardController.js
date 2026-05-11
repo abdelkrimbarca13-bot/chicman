@@ -89,6 +89,12 @@ exports.getStats = async (req, res) => {
       }
     }));
 
+    const perfumeAlertsCount = await prisma.perfume.count({
+      where: {
+        currentQuantityMl: { lte: 30 }
+      }
+    });
+
     res.json({
       activeRentals,
       availableItems,
@@ -99,7 +105,8 @@ exports.getStats = async (req, res) => {
       delayedRentals,
       tomorrowRepairs: [...tomorrowRepairs, ...formattedManualRepairs],
       cleaningItemsList,
-      rentedItemsList
+      rentedItemsList,
+      perfumeAlertsCount
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

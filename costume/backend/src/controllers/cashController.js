@@ -251,8 +251,16 @@ async function updateDailyStats(dateInput) {
     }
   });
 
+  const perfumeSales = await prisma.perfumeSale.findMany({
+    where: {
+      date: { gte: dayStart, lte: dayEnd }
+    }
+  });
+
   const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0);
-  const totalRentals = payments.reduce((sum, p) => sum + p.amount, 0) + totalSales;
+  const totalPerfumeSales = perfumeSales.reduce((sum, s) => sum + s.totalAmount, 0);
+  const totalPerfumeProfit = perfumeSales.reduce((sum, s) => sum + s.profit, 0);
+  const totalRentals = payments.reduce((sum, p) => sum + p.amount, 0) + totalSales + totalPerfumeSales;
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const totalWithdrawals = withdrawals.reduce((sum, w) => sum + w.amount, 0);
 
@@ -278,6 +286,8 @@ async function updateDailyStats(dateInput) {
       totalRentals,
       totalExpenses,
       totalWithdrawals,
+      totalPerfumeSales,
+      totalPerfumeProfit,
       finalBalance
     },
     create: {
