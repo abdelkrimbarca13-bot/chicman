@@ -117,6 +117,17 @@ exports.getDayDetails = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
+    const perfumeSales = await prisma.perfumeSale.findMany({
+      where: { date: { gte: dayStart, lte: dayEnd } },
+      include: { perfume: true },
+      orderBy: { date: 'desc' }
+    });
+
+    const withdrawals = await prisma.withdrawal.findMany({
+      where: { date: { gte: dayStart, lte: dayEnd } },
+      orderBy: { date: 'desc' }
+    });
+
     const expenses = await prisma.expense.findMany({
       where: { date: { gte: dayStart, lte: dayEnd } },
       orderBy: { date: 'desc' }
@@ -143,6 +154,7 @@ exports.getDayDetails = async (req, res) => {
       sales,
       perfumeSales,
       expenses,
+      withdrawals,
       initialCashLogs
     });
   } catch (error) {
