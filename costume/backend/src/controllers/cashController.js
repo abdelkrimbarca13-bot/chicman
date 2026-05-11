@@ -327,6 +327,8 @@ async function updateDailyStats(dateInput) {
   return updatedDailyCash;
 }
 
+exports.updateDailyStats = updateDailyStats;
+
 exports.createExpense = async (req, res) => {
   try {
     const { amount, description, slipNumber } = req.body;
