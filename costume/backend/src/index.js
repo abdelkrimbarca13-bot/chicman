@@ -11,6 +11,7 @@ const cashRoutes = require('./routes/cashRoutes');
 const auditRoutes = require('./routes/auditRoutes');
 const saleRoutes = require('./routes/saleRoutes');
 const perfumeRoutes = require('./routes/perfumeRoutes');
+const productRoutes = require('./routes/productRoutes');
 require('./utils/cron');
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api/cash', cashRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/sales', saleRoutes);
 app.use('/api/perfumes', perfumeRoutes);
+app.use('/api/products', productRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

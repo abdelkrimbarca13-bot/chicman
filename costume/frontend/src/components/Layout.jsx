@@ -21,7 +21,8 @@ const Layout = ({ children }) => {
     { name: 'Articles', path: '/items', icon: <Shirt size={20} /> },
     { name: 'Clients', path: '/customers', icon: <Users size={20} /> },
     { name: 'Locations', path: '/rentals', icon: <ClipboardList size={20} /> },
-    { name: 'Ventes', path: '/sales', icon: <ShoppingCart size={20} /> },
+    { name: 'Ventes (Costumes)', path: '/sales', icon: <ShoppingCart size={20} /> },
+    { name: 'Boutique', path: '/products', icon: <Package size={20} /> },
     { name: 'Parfums', path: '/perfumes', icon: <Droplet size={20} /> },
     { name: 'Caisse', path: '/cash', icon: <Wallet size={20} /> },
   ];

@@ -17,6 +17,7 @@ const Sales = lazy(() => import('./pages/Sales'));
 const Audit = lazy(() => import('./pages/Audit'));
 const Users = lazy(() => import('./pages/Users'));
 const Perfumes = lazy(() => import('./pages/Perfumes'));
+const Products = lazy(() => import('./pages/Products'));
 
 const PrivateRoute = ({ children }) => {
   const { user } = useAuth();
@@ -43,6 +44,7 @@ function App() {
               <Route path="/audit" element={<PrivateRoute><Audit /></PrivateRoute>} />
               <Route path="/users" element={<PrivateRoute><Users /></PrivateRoute>} />
               <Route path="/perfumes" element={<PrivateRoute><Perfumes /></PrivateRoute>} />
+              <Route path="/products" element={<PrivateRoute><Products /></PrivateRoute>} />
             </Routes>
           </Suspense>
         </Router>

@@ -137,6 +137,8 @@ model DailyCash {
   status        String   @default("OPEN")
   totalPerfumeSales Float    @default(0)
   totalPerfumeProfit Float   @default(0)
+  totalProductSales  Float    @default(0)
+  totalProductProfit Float    @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -219,6 +221,41 @@ model PerfumeSale {
   date            DateTime @default(now())
   performedBy     String
   perfume         Perfume  @relation(fields: [perfumeId], references: [id])
+
+  @@index([date])
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  reference     String   @unique
+  name          String
+  type          String
+  size          String
+  color         String
+  purchasePrice Float
+  salePrice     Float
+  quantity      Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  sales         ProductSale[]
+
+  @@index([reference])
+}
+
+model ProductSale {
+  id            Int      @id @default(autoincrement())
+  productId     Int
+  product       Product  @relation(fields: [productId], references: [id])
+  quantity      Int
+  unitPrice     Float
+  totalAmount   Float
+  totalCost     Float
+  profit        Float
+  customerName  String?
+  customerPhone String?
+  performedBy   String
+  date          DateTime @default(now())
 
   @@index([date])
 }
