@@ -499,6 +499,14 @@ const Cash = () => {
                                     amount: s.totalAmount,
                                     color: 'text-purple-400'
                                   })),
+                                  ...(dailyCash?.details?.productSales || []).map(s => ({ 
+                                    time: new Date(s.date), 
+                                    type: 'VENTE_BOUTIQUE', 
+                                    desc: `Vente Boutique - ${s.product?.name} (${s.quantity})`, 
+                                    by: s.performedBy || 'Inconnu', 
+                                    amount: s.totalAmount,
+                                    color: 'text-blue-400'
+                                  })),
                                   ...(dailyCash?.details?.expenses || []).map(e => ({ 
                                     time: new Date(e.date), 
                                     type: 'DÉPENSE', 

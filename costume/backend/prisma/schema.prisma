@@ -173,6 +173,7 @@ model Sale {
   customerName  String
   customerPhone String
   totalAmount   Float      @default(0)
+  discount      Float      @default(0)
   remarks       String?
   performedBy   String
   createdAt     DateTime   @default(now())
@@ -219,6 +220,7 @@ model PerfumeSale {
   totalAmount     Float
   totalCost       Float
   profit          Float
+  discount        Float    @default(0)
   date            DateTime @default(now())
   performedBy     String
   perfume         Perfume  @relation(fields: [perfumeId], references: [id])
@@ -253,6 +255,7 @@ model ProductSale {
   totalAmount   Float
   totalCost     Float
   profit        Float
+  discount      Float    @default(0)
   customerName  String?
   customerPhone String?
   performedBy   String

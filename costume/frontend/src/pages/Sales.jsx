@@ -19,6 +19,7 @@ const Sales = () => {
     customerPhone: '',
     items: [], // [{ id, price, name, reference, type, color, size }]
     totalAmount: 0,
+    discount: 0,
     remarks: ''
   });
 
@@ -44,11 +45,12 @@ const Sales = () => {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
-    const total = newSale.items.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+    const gross = newSale.items.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+    const total = gross - (parseFloat(newSale.discount) || 0);
     if (newSale.totalAmount !== total) {
       setNewSale(prev => ({ ...prev, totalAmount: total }));
     }
-  }, [newSale.items]);
+  }, [newSale.items, newSale.discount]);
 
   const addItem = (item) => {
     if (!newSale.items.some(i => i.id === item.id)) {
@@ -112,6 +114,7 @@ const Sales = () => {
         customerPhone: '', 
         items: [], 
         totalAmount: 0,
+        discount: 0,
         remarks: ''
       });
       fetchData();
@@ -344,9 +347,21 @@ const Sales = () => {
                       )}
                     </div>
 
-                    <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl border border-zinc-700 flex justify-between items-center shadow-inner">
-                        <span className="font-black uppercase tracking-widest text-zinc-500">TOTAL A PAYER</span>
-                        <span className="text-2xl font-black text-gold">{newSale.totalAmount} DA</span>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl border border-zinc-700 space-y-1">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">REMISE (DA)</label>
+                            <input 
+                              type="number"
+                              className="w-full bg-transparent border-none outline-none font-black text-red-500 text-xl text-right p-0"
+                              placeholder="0"
+                              value={newSale.discount}
+                              onChange={e => setNewSale({...newSale, discount: e.target.value})}
+                            />
+                        </div>
+                        <div className="bg-zinc-900 dark:bg-gold/10 p-4 rounded-xl border border-zinc-700 flex flex-col justify-center items-end">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">TOTAL FINAL</span>
+                            <span className="text-2xl font-black text-gold">{newSale.totalAmount} DA</span>
+                        </div>
                     </div>
                 </div>
               </div>

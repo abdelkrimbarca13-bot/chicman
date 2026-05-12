@@ -38,7 +38,8 @@ const Products = () => {
   const [saleForm, setSaleForm] = useState({
     quantity: 1,
     customerName: '',
-    customerPhone: ''
+    customerPhone: '',
+    discount: 0
   });
 
   const fetchData = useCallback(async () => {
@@ -90,11 +91,12 @@ const Products = () => {
         productId: selectedProduct.id,
         quantity: parseInt(saleForm.quantity),
         customerName: saleForm.customerName,
-        customerPhone: saleForm.customerPhone
+        customerPhone: saleForm.customerPhone,
+        discount: parseFloat(saleForm.discount) || 0
       });
       setIsSaleModalOpen(false);
       setSelectedProduct(null);
-      setSaleForm({ quantity: 1, customerName: '', customerPhone: '' });
+      setSaleForm({ quantity: 1, customerName: '', customerPhone: '', discount: 0 });
       fetchData();
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur lors de la vente');
@@ -128,7 +130,7 @@ const Products = () => {
 
   const openSaleModal = (product) => {
     setSelectedProduct(product);
-    setSaleForm({ quantity: 1, customerName: '', customerPhone: '' });
+    setSaleForm({ quantity: 1, customerName: '', customerPhone: '', discount: 0 });
     setIsSaleModalOpen(true);
   };
 
@@ -516,10 +518,26 @@ const Products = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-500 uppercase px-1">Total</label>
-                  <div className="w-full px-4 py-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl font-bold text-gold">
-                    {(saleForm.quantity * selectedProduct.salePrice).toLocaleString()} DA
-                  </div>
+                  <label className="text-xs font-bold text-zinc-500 uppercase px-1">Remise (DA)</label>
+                  <input
+                    type="number"
+                    placeholder="ex: 200"
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none font-bold text-red-500"
+                    value={saleForm.discount}
+                    onChange={(e) => setSaleForm({ ...saleForm, discount: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-zinc-500 uppercase px-1">Total à Payer</label>
+                <div className="w-full px-4 py-3 bg-zinc-900 dark:bg-gold/10 text-white dark:text-gold rounded-xl font-bold text-2xl flex justify-between items-baseline">
+                  <span>{(saleForm.quantity * selectedProduct.salePrice - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA</span>
+                  {user?.role === 'ADMIN' && (
+                    <span className="text-xs text-green-400 font-medium">
+                      Profit: {(saleForm.quantity * (selectedProduct.salePrice - selectedProduct.purchasePrice) - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA
+                    </span>
+                  )}
                 </div>
               </div>
 

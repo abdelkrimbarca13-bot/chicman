@@ -98,8 +98,9 @@ exports.deletePerfume = async (req, res) => {
 
 exports.createPerfumeSale = async (req, res) => {
   try {
-    const { perfumeId, quantityMl } = req.body;
+    const { perfumeId, quantityMl, discount } = req.body;
     const qty = parseFloat(quantityMl);
+    const disc = parseFloat(discount) || 0;
 
     const perfume = await prisma.perfume.findUnique({
       where: { id: parseInt(perfumeId) }
@@ -110,7 +111,8 @@ exports.createPerfumeSale = async (req, res) => {
       return res.status(400).json({ message: `Stock insuffisant. Disponible: ${perfume.currentQuantityMl} ml` });
     }
 
-    const totalAmount = qty * perfume.salePriceMl;
+    const grossAmount = qty * perfume.salePriceMl;
+    const totalAmount = grossAmount - disc;
     const totalCost = qty * perfume.unitCostMl;
     const profit = totalAmount - totalCost;
 
@@ -124,6 +126,7 @@ exports.createPerfumeSale = async (req, res) => {
           totalAmount,
           totalCost,
           profit,
+          discount: disc,
           performedBy: req.userData.username
         }
       });

@@ -40,7 +40,8 @@ const Perfumes = () => {
   });
   
   const [saleForm, setSaleForm] = useState({
-    quantityMl: 1
+    quantityMl: 1,
+    discount: 0
   });
 
   const fetchData = useCallback(async () => {
@@ -145,7 +146,7 @@ const Perfumes = () => {
 
   const openSaleModal = (product) => {
     setSelectedProduct(product);
-    setSaleForm({ quantityMl: 1 });
+    setSaleForm({ quantityMl: 1, discount: 0 });
     setIsSaleModalOpen(true);
   };
 
@@ -559,31 +560,43 @@ const Perfumes = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-500 uppercase px-1">Quantité à vendre (ml)</label>
-                <div className="flex items-center gap-4">
-                    <input
-                        required
-                        type="number"
-                        step="0.5"
-                        min="0.5"
-                        max={selectedProduct.currentQuantityMl}
-                        className="flex-1 px-6 py-4 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-gold outline-none text-2xl font-bold text-center"
-                        value={saleForm.quantityMl}
-                        onChange={(e) => setSaleForm({ ...saleForm, quantityMl: e.target.value })}
-                    />
-                    <div className="flex flex-col gap-1">
-                        {[5, 10, 20].map(val => (
-                            <button 
-                                key={val}
-                                type="button" 
-                                onClick={() => setSaleForm({ ...saleForm, quantityMl: val })}
-                                className="px-3 py-1 text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 hover:bg-gold hover:text-white rounded-lg transition-colors"
-                            >
-                                {val}ml
-                            </button>
-                        ))}
-                    </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-500 uppercase px-1">Quantité (ml)</label>
+                  <div className="flex items-center gap-2">
+                      <input
+                          required
+                          type="number"
+                          step="0.5"
+                          min="0.5"
+                          max={selectedProduct.currentQuantityMl}
+                          className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none text-xl font-bold text-center"
+                          value={saleForm.quantityMl}
+                          onChange={(e) => setSaleForm({ ...saleForm, quantityMl: e.target.value })}
+                      />
+                      <div className="flex flex-col gap-1">
+                          {[5, 10, 20].map(val => (
+                              <button 
+                                  key={val}
+                                  type="button" 
+                                  onClick={() => setSaleForm({ ...saleForm, quantityMl: val })}
+                                  className="px-2 py-1 text-[9px] font-bold bg-zinc-100 dark:bg-zinc-800 hover:bg-gold hover:text-white rounded-lg transition-colors"
+                              >
+                                  {val}ml
+                              </button>
+                          ))}
+                      </div>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-500 uppercase px-1">Remise (DA)</label>
+                  <input
+                    type="number"
+                    placeholder="ex: 50"
+                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none text-xl font-bold text-center text-red-500"
+                    value={saleForm.discount}
+                    onChange={(e) => setSaleForm({ ...saleForm, discount: e.target.value })}
+                  />
                 </div>
               </div>
 
@@ -593,8 +606,8 @@ const Perfumes = () => {
                   {user?.role === 'ADMIN' && <span className="text-xs opacity-70">Bénéfice estimé</span>}
                 </div>
                 <div className="flex justify-between items-baseline">
-                  <span className="text-3xl font-bold">{(saleForm.quantityMl * selectedProduct.salePriceMl).toLocaleString()} DA</span>
-                  {user?.role === 'ADMIN' && <span className="text-lg font-bold text-green-400">+{(saleForm.quantityMl * (selectedProduct.salePriceMl - selectedProduct.unitCostMl)).toFixed(0)} DA</span>}
+                  <span className="text-3xl font-bold">{(saleForm.quantityMl * selectedProduct.salePriceMl - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA</span>
+                  {user?.role === 'ADMIN' && <span className="text-lg font-bold text-green-400">+{(saleForm.quantityMl * (selectedProduct.salePriceMl - selectedProduct.unitCostMl) - (parseFloat(saleForm.discount) || 0)).toFixed(0)} DA</span>}
                 </div>
               </div>
 

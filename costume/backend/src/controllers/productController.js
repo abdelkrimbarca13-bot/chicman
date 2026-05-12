@@ -91,8 +91,9 @@ exports.deleteProduct = async (req, res) => {
 
 exports.createProductSale = async (req, res) => {
   try {
-    const { productId, quantity, customerName, customerPhone } = req.body;
+    const { productId, quantity, customerName, customerPhone, discount } = req.body;
     const qty = parseInt(quantity);
+    const disc = parseFloat(discount) || 0;
 
     const product = await prisma.product.findUnique({
       where: { id: parseInt(productId) }
@@ -103,7 +104,8 @@ exports.createProductSale = async (req, res) => {
       return res.status(400).json({ message: `Stock insuffisant. Disponible: ${product.quantity}` });
     }
 
-    const totalAmount = qty * product.salePrice;
+    const grossAmount = qty * product.salePrice;
+    const totalAmount = grossAmount - disc;
     const totalCost = qty * product.purchasePrice;
     const profit = totalAmount - totalCost;
 
@@ -117,6 +119,7 @@ exports.createProductSale = async (req, res) => {
           totalAmount,
           totalCost,
           profit,
+          discount: disc,
           customerName,
           customerPhone,
           performedBy: req.userData.username
@@ -140,7 +143,8 @@ exports.createProductSale = async (req, res) => {
       saleId: sale.id, 
       product: `${product.reference} ${product.name}`,
       qty,
-      totalAmount
+      totalAmount,
+      discount: disc
     });
 
     res.status(201).json(sale);

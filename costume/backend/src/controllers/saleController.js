@@ -4,7 +4,8 @@ const { updateDailyStats } = require('./cashController');
 
 exports.createSale = async (req, res) => {
   try {
-    const { customerName, customerPhone, items, remarks } = req.body;
+    const { customerName, customerPhone, items, remarks, discount } = req.body;
+    const disc = parseFloat(discount) || 0;
 
     if (!customerName || !customerPhone) {
       return res.status(400).json({ message: 'Nom et téléphone du client requis.' });
@@ -38,7 +39,8 @@ exports.createSale = async (req, res) => {
       });
     }
 
-    const totalAmount = items.reduce((sum, i) => sum + parseFloat(i.price), 0);
+    const grossAmount = items.reduce((sum, i) => sum + parseFloat(i.price), 0);
+    const totalAmount = grossAmount - disc;
 
     // Transaction : créer la vente + supprimer les articles
     const sale = await prisma.$transaction(async (tx) => {
@@ -48,6 +50,7 @@ exports.createSale = async (req, res) => {
           customerName,
           customerPhone,
           totalAmount,
+          discount: disc,
           remarks: remarks || null,
           performedBy: req.userData.username || 'Inconnu',
           items: {
@@ -88,6 +91,7 @@ exports.createSale = async (req, res) => {
     await logAction(req.userData.userId, 'CREATE_SALE', {
       saleId: sale.id,
       totalAmount,
+      discount: disc,
       customerName,
       itemCount: items.length,
       items: sale.items.map(i => ({ ref: i.itemRef, name: i.itemName, price: i.price }))
