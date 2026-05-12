@@ -517,27 +517,27 @@ const Products = () => {
                     onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })}
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-500 uppercase px-1">Remise (DA)</label>
+              <div className="space-y-4">
+                <div className="w-1/2 bg-zinc-100 dark:bg-zinc-800 p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-center">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Remise (DA)</label>
                   <input
                     type="number"
-                    placeholder="ex: 200"
-                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none font-bold text-red-500"
+                    placeholder="0"
+                    className="w-full bg-transparent border-none outline-none font-black text-red-500 text-lg text-right p-0"
                     value={saleForm.discount}
                     onChange={(e) => setSaleForm({ ...saleForm, discount: e.target.value })}
                   />
                 </div>
-              </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-500 uppercase px-1">Total à Payer</label>
-                <div className="w-full px-4 py-3 bg-zinc-900 dark:bg-gold/10 text-white dark:text-gold rounded-xl font-bold text-2xl flex justify-between items-baseline">
-                  <span>{(saleForm.quantity * selectedProduct.salePrice - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA</span>
-                  {user?.role === 'ADMIN' && (
-                    <span className="text-xs text-green-400 font-medium">
-                      Profit: {(saleForm.quantity * (selectedProduct.salePrice - selectedProduct.purchasePrice) - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA
-                    </span>
-                  )}
+                <div className="p-4 bg-zinc-900 dark:bg-gold/10 text-white dark:text-gold rounded-2xl flex flex-col justify-center shadow-lg">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Total à Payer</span>
+                    {user?.role === 'ADMIN' && <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Profit</span>}
+                  </div>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-3xl font-black">{(saleForm.quantity * selectedProduct.salePrice - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA</span>
+                    {user?.role === 'ADMIN' && <span className="text-lg font-bold text-green-400">+{(saleForm.quantity * (selectedProduct.salePrice - selectedProduct.purchasePrice) - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA</span>}
+                  </div>
                 </div>
               </div>
 

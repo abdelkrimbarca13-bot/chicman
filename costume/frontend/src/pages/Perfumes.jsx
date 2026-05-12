@@ -91,11 +91,12 @@ const Perfumes = () => {
     try {
       const res = await api.post('/perfumes/sales', {
         perfumeId: selectedProduct.id,
-        quantityMl: parseFloat(saleForm.quantityMl)
+        quantityMl: parseFloat(saleForm.quantityMl),
+        discount: parseFloat(saleForm.discount) || 0
       });
       setIsSaleModalOpen(false);
       setSelectedProduct(null);
-      setSaleForm({ quantityMl: 1 });
+      setSaleForm({ quantityMl: 1, discount: 0 });
       setReceiptToShow(res.data);
       fetchData();
     } catch (err) {
@@ -588,26 +589,27 @@ const Perfumes = () => {
                       </div>
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-500 uppercase px-1">Remise (DA)</label>
+              <div className="space-y-4">
+                <div className="w-1/2 bg-zinc-100 dark:bg-zinc-800 p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-center">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Remise (DA)</label>
                   <input
                     type="number"
-                    placeholder="ex: 50"
-                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none text-xl font-bold text-center text-red-500"
+                    placeholder="0"
+                    className="w-full bg-transparent border-none outline-none font-black text-red-500 text-lg text-right p-0"
                     value={saleForm.discount}
                     onChange={(e) => setSaleForm({ ...saleForm, discount: e.target.value })}
                   />
                 </div>
-              </div>
 
-              <div className="p-4 bg-zinc-900 dark:bg-gold/10 text-white dark:text-gold rounded-2xl">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs opacity-70">Montant Total</span>
-                  {user?.role === 'ADMIN' && <span className="text-xs opacity-70">Bénéfice estimé</span>}
-                </div>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-3xl font-bold">{(saleForm.quantityMl * selectedProduct.salePriceMl - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA</span>
-                  {user?.role === 'ADMIN' && <span className="text-lg font-bold text-green-400">+{(saleForm.quantityMl * (selectedProduct.salePriceMl - selectedProduct.unitCostMl) - (parseFloat(saleForm.discount) || 0)).toFixed(0)} DA</span>}
+                <div className="p-4 bg-zinc-900 dark:bg-gold/10 text-white dark:text-gold rounded-2xl flex flex-col justify-center shadow-lg">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Montant Total</span>
+                    {user?.role === 'ADMIN' && <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Bénéfice</span>}
+                  </div>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-3xl font-black">{(saleForm.quantityMl * selectedProduct.salePriceMl - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA</span>
+                    {user?.role === 'ADMIN' && <span className="text-lg font-bold text-green-400">+{(saleForm.quantityMl * (selectedProduct.salePriceMl - selectedProduct.unitCostMl) - (parseFloat(saleForm.discount) || 0)).toFixed(0)} DA</span>}
+                  </div>
                 </div>
               </div>
 
