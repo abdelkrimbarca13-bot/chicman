@@ -507,15 +507,33 @@ const Products = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-zinc-500 uppercase px-1">Quantité</label>
-                  <input
-                    required
-                    type="number"
-                    min="1"
-                    max={selectedProduct.quantity}
-                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none font-bold"
-                    value={saleForm.quantity}
-                    onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })}
-                  />
+                  <div className="flex items-stretch gap-2">
+                    <input
+                      required
+                      type="number"
+                      min="1"
+                      max={selectedProduct.quantity}
+                      className="w-3/4 px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none font-bold text-xl text-center"
+                      value={saleForm.quantity}
+                      onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })}
+                    />
+                    <div className="w-1/4 flex flex-col gap-1">
+                      <button 
+                        type="button"
+                        onClick={() => setSaleForm({ ...saleForm, quantity: Math.min(selectedProduct.quantity, (parseInt(saleForm.quantity) || 0) + 1) })}
+                        className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-gold hover:text-white rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700 font-black text-lg"
+                      >
+                        +
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setSaleForm({ ...saleForm, quantity: Math.max(1, (parseInt(saleForm.quantity) || 0) - 1) })}
+                        className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-gold hover:text-white rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700 font-black text-lg"
+                      >
+                        -
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 

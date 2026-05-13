@@ -564,24 +564,24 @@ const Perfumes = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-zinc-500 uppercase px-1">Quantité (ml)</label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-stretch gap-2">
                       <input
                           required
                           type="number"
                           step="0.5"
                           min="0.5"
                           max={selectedProduct.currentQuantityMl}
-                          className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none text-xl font-bold text-center"
+                          className="w-3/4 px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none text-xl font-bold text-center"
                           value={saleForm.quantityMl}
                           onChange={(e) => setSaleForm({ ...saleForm, quantityMl: e.target.value })}
                       />
-                      <div className="flex flex-col gap-1">
+                      <div className="w-1/4 flex flex-col gap-1">
                           {[5, 10, 20].map(val => (
                               <button 
                                   key={val}
                                   type="button" 
                                   onClick={() => setSaleForm({ ...saleForm, quantityMl: val })}
-                                  className="px-2 py-1 text-[9px] font-bold bg-zinc-100 dark:bg-zinc-800 hover:bg-gold hover:text-white rounded-lg transition-colors"
+                                  className="flex-1 px-1 py-1 text-[9px] font-black bg-zinc-100 dark:bg-zinc-800 hover:bg-gold hover:text-white rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700 uppercase"
                               >
                                   {val}ml
                               </button>
