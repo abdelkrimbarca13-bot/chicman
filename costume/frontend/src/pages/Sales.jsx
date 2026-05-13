@@ -107,7 +107,7 @@ const Sales = () => {
         }))
       };
 
-      await api.post('/sales', payload);
+      const res = await api.post('/sales', payload);
       setIsModalOpen(false);
       setNewSale({ 
         customerName: '', 
@@ -118,7 +118,9 @@ const Sales = () => {
         remarks: ''
       });
       fetchData();
-      alert('Vente effectuée avec succès !');
+      if (res.data) {
+        setReceiptModal(res.data);
+      }
     } catch (err) {
       if (err.response?.status !== 401) {
         alert(err.response?.data?.message || 'Erreur lors de la vente');

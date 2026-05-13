@@ -220,7 +220,7 @@ const Products = () => {
         <div className="flex bg-white dark:bg-zinc-900 p-1 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
           {[
             { id: 'inventory', label: 'Stock', icon: Package },
-            { id: 'history', label: 'Historique', icon: History, adminOnly: true },
+            { id: 'history', label: 'Historique', icon: History },
             { id: 'stats', label: 'Stats', icon: BarChart3, adminOnly: true },
           ].filter(tab => !tab.adminOnly || user?.role === 'ADMIN').map((tab) => (
             <button

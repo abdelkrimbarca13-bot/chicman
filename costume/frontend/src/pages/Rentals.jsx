@@ -227,10 +227,11 @@ const Rentals = () => {
         addedAmount: parseFloat(newRental.addedAmount || 0)
       };
 
+      let res;
       if (isEditMode) {
-        await api.put(`/rentals/${editingRentalId}`, payload);
+        res = await api.put(`/rentals/${editingRentalId}`, payload);
       } else {
-        await api.post('/rentals', payload);
+        res = await api.post('/rentals', payload);
       }
       setIsModalOpen(false);
       setIsEditMode(false);
@@ -249,6 +250,9 @@ const Rentals = () => {
         guaranteeDocument: ''
       });
       fetchData();
+      if (res.data) {
+        setReceiptModal(res.data);
+      }
     } catch (err) {
       if (err.response?.status !== 401) {
         alert(err.response?.data?.message || `Erreur lors de la ${isEditMode ? 'modification' : 'création'}`);

@@ -161,7 +161,16 @@ exports.createRental = async (req, res) => {
 
     await logAction(req.userData.userId, 'CREATE_RENTAL', { rentalId: rental.id, customer: `${firstName} ${lastName}` });
 
-    res.status(201).json(rental);
+    const rentalWithDetails = await prisma.rental.findUnique({
+      where: { id: rental.id },
+      include: {
+        customer: true,
+        items: { include: { item: true } },
+        payments: true
+      }
+    });
+
+    res.status(201).json(rentalWithDetails);
   } catch (error) {
     res.status(500).json({ message: error.message, error: error.message });
   }
@@ -588,7 +597,16 @@ exports.updateRental = async (req, res) => {
       await updateDailyStats(start);
     }
 
-    res.json(result);
+    const updatedWithDetails = await prisma.rental.findUnique({
+      where: { id: rentalId },
+      include: {
+        customer: true,
+        items: { include: { item: true } },
+        payments: true
+      }
+    });
+
+    res.json(updatedWithDetails);
   } catch (error) {
     res.status(500).json({ message: error.message, error: error.message });
   }
