@@ -106,7 +106,7 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-black mb-8 font-luxury tracking-wider text-gold border-b-2 border-gold/50 w-fit pb-2 uppercase">Tableau de Bord</h1>
+      <h1 className="text-3xl font-black mb-8 font-luxury tracking-wider text-pink-500 border-b-2 border-pink-500/50 w-fit pb-2 uppercase">Tableau de Bord</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
         {cards.map((card, i) => (
