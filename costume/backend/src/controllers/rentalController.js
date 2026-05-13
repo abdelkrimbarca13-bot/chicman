@@ -203,7 +203,7 @@ exports.getCashMovements = async (req, res) => {
     where.paidAmount = { gt: 0 };
     where.status = { notIn: ['ANNULÉE'] }; // ANNULÉE (RETENTION) should be included
 
-    const [rentals, perfumeSales] = await Promise.all([
+    const [rentals, perfumeSales, productSales] = await Promise.all([
       prisma.rental.findMany({
         where,
         include: {
@@ -220,6 +220,16 @@ exports.getCashMovements = async (req, res) => {
           } : { gte: new Date(new Date().setDate(new Date().getDate() - 30)) }
         },
         include: { perfume: true },
+        orderBy: { date: 'desc' }
+      }),
+      prisma.productSale.findMany({
+        where: {
+          date: startDate && endDate ? {
+            gte: new Date(new Date(startDate).setUTCHours(0, 0, 0, 0)),
+            lte: new Date(new Date(endDate).setUTCHours(23, 59, 59, 999))
+          } : { gte: new Date(new Date().setDate(new Date().getDate() - 30)) }
+        },
+        include: { product: true },
         orderBy: { date: 'desc' }
       })
     ]);
@@ -248,7 +258,19 @@ exports.getCashMovements = async (req, res) => {
       }
     }));
 
-    res.json([...rentalMovements, ...perfumeMovements].sort((a, b) => new Date(b.date) - new Date(a.date)));
+    // Map product sales
+    const productMovements = productSales.map(s => ({
+      id: `bp${s.id}`,
+      date: s.date,
+      amount: s.totalAmount,
+      type: 'PRODUCT_SALE',
+      rental: {
+        customer: { firstName: 'Vente', lastName: 'Boutique', phone: s.customerPhone || '-' },
+        items: [{ item: { name: s.product.name, size: s.product.size } }]
+      }
+    }));
+
+    res.json([...rentalMovements, ...perfumeMovements, ...productMovements].sort((a, b) => new Date(b.date) - new Date(a.date)));
   } catch (error) {
     res.status(500).json({ message: error.message, error: error.message });
   }
