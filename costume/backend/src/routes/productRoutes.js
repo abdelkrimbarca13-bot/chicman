@@ -10,6 +10,8 @@ router.delete('/:id', auth, productController.deleteProduct);
 
 router.post('/sales', auth, productController.createProductSale);
 router.get('/sales', auth, productController.getProductSales);
+router.put('/sales/:id', auth, productController.updateProductSale);
+router.delete('/sales/:id', auth, productController.deleteProductSale);
 router.get('/stats', auth, productController.getProductStats);
 
 module.exports = router;

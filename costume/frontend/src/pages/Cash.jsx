@@ -38,6 +38,9 @@ const Cash = () => {
   const [editingSale, setEditingSale] = useState(null);
   const [editSaleAmount, setEditSaleAmount] = useState('');
   
+  const [editingProductSale, setEditingProductSale] = useState(null);
+  const [editProductSaleAmount, setEditProductSaleAmount] = useState('');
+  
   const fetchData = React.useCallback(async () => {
     setLoading(true);
     try {
@@ -255,6 +258,38 @@ const Cash = () => {
       } catch (err) {
         alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la suppression');
       }
+    }
+  };
+
+  const handleDeleteProductSale = async (id) => {
+    if (!isAdmin) return;
+    if (confirm('Supprimer cette vente boutique ? Le stock sera restauré.')) {
+      try {
+        await api.delete(`/products/sales/${id}`);
+        fetchData();
+        if (detailModal) {
+          const res = await api.get(`/cash/details/${detailModal.date}`);
+          setDetailModal(res.data);
+        }
+      } catch (err) {
+        alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la suppression');
+      }
+    }
+  };
+
+  const handleUpdateProductSale = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/products/sales/${editingProductSale.id}`, { totalAmount: parseFloat(editProductSaleAmount) });
+      setEditingProductSale(null);
+      setEditProductSaleAmount('');
+      fetchData();
+      if (detailModal) {
+        const res = await api.get(`/cash/details/${detailModal.date}`);
+        setDetailModal(res.data);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la modification');
     }
   };
 
@@ -824,6 +859,16 @@ const Cash = () => {
                               original: s,
                               category: 'perfumeSale'
                             })),
+                            ...(detailModal?.productSales || []).map(s => ({ 
+                              id: s.id,
+                              type: 'VENTE_BOUTIQUE', 
+                              desc: `Boutique: ${s.product?.name} (${s.quantity}x)`, 
+                              by: s.performedBy || 'N/S', 
+                              amount: s.totalAmount,
+                              color: 'text-gold',
+                              original: s,
+                              category: 'productSale'
+                            })),
                             ...(detailModal?.expenses || []).map(e => ({ 
                               id: e.id,
                               type: 'DÉPENSE', 
@@ -886,6 +931,12 @@ const Cash = () => {
                                         )}
                                         {m.category === 'perfumeSale' && (
                                           <button onClick={() => handleDeletePerfumeSale(m.original.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer"><Trash2 size={12} /></button>
+                                        )}
+                                        {m.category === 'productSale' && (
+                                          <>
+                                            <button onClick={() => { setEditingProductSale(m.original); setEditProductSaleAmount(m.original.totalAmount); }} className="p-1 text-blue-400 hover:bg-blue-400/10 rounded" title="Modifier"><Edit2 size={12} /></button>
+                                            <button onClick={() => handleDeleteProductSale(m.original.id)} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer"><Trash2 size={12} /></button>
+                                          </>
                                         )}
                                         {m.category === 'expense' && (
                                           <>
@@ -1106,6 +1157,25 @@ const Cash = () => {
                     <input type="number" className="w-full p-4 bg-zinc-800 border-2 border-zinc-700 rounded-xl text-blue-400 font-black text-2xl" value={editSaleAmount} onChange={(e) => setEditSaleAmount(e.target.value)} required />
                 </div>
                 <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black uppercase mt-2 transition-colors">SAUVEGARDER</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Product Sale Editing Modal */}
+      {editingProductSale && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-gold/20">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
+                <h2 className="text-xl font-black text-gold uppercase tracking-widest font-luxury">Modifier Vente Boutique</h2>
+                <button onClick={() => { setEditingProductSale(null); setEditProductSaleAmount(''); }} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 transition-colors"><X size={20}/></button>
+            </div>
+            <form onSubmit={handleUpdateProductSale} className="p-6 space-y-4">
+                <div>
+                    <label className="block text-xs font-black uppercase text-zinc-500 mb-1 tracking-widest">Montant Total</label>
+                    <input type="number" className="w-full p-4 bg-zinc-800 border-2 border-zinc-700 rounded-xl text-gold font-black text-2xl" value={editProductSaleAmount} onChange={(e) => setEditProductSaleAmount(e.target.value)} required />
+                </div>
+                <button type="submit" className="w-full py-4 bg-gold text-rich-black rounded-xl font-black uppercase mt-2 transition-all active:scale-95 shadow-lg shadow-gold/20">SAUVEGARDER</button>
             </form>
           </div>
         </div>

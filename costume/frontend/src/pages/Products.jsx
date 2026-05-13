@@ -42,6 +42,9 @@ const Products = () => {
     discount: 0
   });
 
+  const [editingSale, setEditingSale] = useState(null);
+  const [editAmount, setEditAmount] = useState('');
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -100,6 +103,30 @@ const Products = () => {
       fetchData();
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur lors de la vente');
+    }
+  };
+
+  const handleDeleteSale = async (id) => {
+    if (user?.role !== 'ADMIN') return;
+    if (confirm('Supprimer cette vente ? Le stock sera restauré.')) {
+      try {
+        await api.delete(`/products/sales/${id}`);
+        fetchData();
+      } catch (err) {
+        alert(err.response?.data?.message || 'Erreur lors de la suppression');
+      }
+    }
+  };
+
+  const handleUpdateSale = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/products/sales/${editingSale.id}`, { totalAmount: parseFloat(editAmount) });
+      setEditingSale(null);
+      setEditAmount('');
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur lors de la modification');
     }
   };
 
@@ -291,6 +318,7 @@ const Products = () => {
                   <th className="px-6 py-4 font-bold text-right">Bénéfice</th>
                   <th className="px-6 py-4 font-bold">Client</th>
                   <th className="px-6 py-4 font-bold">Vendeur</th>
+                  <th className="px-6 py-4 font-bold text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -311,6 +339,12 @@ const Products = () => {
                       <div className="text-[10px] text-zinc-400">{sale.customerPhone}</div>
                     </td>
                     <td className="px-6 py-4 text-sm text-zinc-500">{sale.performedBy}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center gap-2">
+                        <button onClick={() => { setEditingSale(sale); setEditAmount(sale.totalAmount); }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={16} /></button>
+                        <button onClick={() => handleDeleteSale(sale.id)} className="p-2 text-red-500 hover:bg-red-50/50 rounded-lg transition-colors"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -593,6 +627,32 @@ const Products = () => {
                 }`}
               >
                 Confirmer la Vente
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Edit Sale Modal */}
+      {editingSale && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl w-full max-w-md border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+            <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+              <h2 className="text-xl font-bold">Modifier Vente</h2>
+              <button onClick={() => setEditingSale(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"><X size={20}/></button>
+            </div>
+            <form onSubmit={handleUpdateSale} className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-zinc-500 uppercase px-1">Montant Total (DA)</label>
+                <input
+                  required
+                  type="number"
+                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none font-bold text-xl"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                />
+              </div>
+              <button type="submit" className="w-full py-4 bg-gold text-white font-bold rounded-2xl shadow-xl shadow-gold/20 hover:scale-105 transition-transform">
+                Sauvegarder
               </button>
             </form>
           </div>

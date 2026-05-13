@@ -201,3 +201,68 @@ exports.getProductStats = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.updateProductSale = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
+    const { id } = req.params;
+    const { totalAmount, discount } = req.body;
+
+    const sale = await prisma.productSale.findUnique({
+      where: { id: parseInt(id) }
+    });
+    if (!sale) return res.status(404).json({ message: 'Vente non trouvée' });
+
+    const newAmount = parseFloat(totalAmount);
+    const newDiscount = parseFloat(discount) || sale.discount;
+    // Recalculate profit based on the new total amount
+    const newProfit = newAmount - sale.totalCost;
+
+    const updatedSale = await prisma.productSale.update({
+      where: { id: parseInt(id) },
+      data: {
+        totalAmount: newAmount,
+        discount: newDiscount,
+        profit: newProfit
+      }
+    });
+
+    await updateDailyStats(sale.date);
+    await logAction(req.userData.userId, 'UPDATE_PRODUCT_SALE', { id, oldAmount: sale.totalAmount, newAmount: updatedSale.totalAmount });
+
+    res.json(updatedSale);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteProductSale = async (req, res) => {
+  try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
+    const { id } = req.params;
+
+    const sale = await prisma.productSale.findUnique({
+      where: { id: parseInt(id) }
+    });
+    if (!sale) return res.status(404).json({ message: 'Vente non trouvée' });
+
+    await prisma.$transaction([
+      prisma.productSale.delete({ where: { id: parseInt(id) } }),
+      prisma.product.update({
+        where: { id: sale.productId },
+        data: { quantity: { increment: sale.quantity } }
+      })
+    ]);
+
+    await updateDailyStats(sale.date);
+    await logAction(req.userData.userId, 'DELETE_PRODUCT_SALE', { id, productId: sale.productId, quantity: sale.quantity });
+
+    res.json({ message: 'Vente supprimée et stock restauré' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
