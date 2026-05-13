@@ -348,7 +348,7 @@ const Sales = () => {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="w-1/2 bg-zinc-100 dark:bg-zinc-800 p-3 rounded-xl border border-zinc-700 flex flex-col justify-center">
+                        <div className="w-full bg-zinc-100 dark:bg-zinc-800 p-3 rounded-xl border border-zinc-700 flex flex-col justify-center">
                             <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">REMISE (DA)</label>
                             <input 
                               type="number"
