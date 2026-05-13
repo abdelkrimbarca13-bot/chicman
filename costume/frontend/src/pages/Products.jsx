@@ -516,6 +516,7 @@ const Products = () => {
                     value={saleForm.quantity}
                     onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })}
                   />
+                </div>
               </div>
 
               <div className="space-y-4">

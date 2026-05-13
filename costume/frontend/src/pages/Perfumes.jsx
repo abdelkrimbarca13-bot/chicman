@@ -587,8 +587,10 @@ const Perfumes = () => {
                               </button>
                           ))}
                       </div>
-                  </div>
+                   </div>
                 </div>
+              </div>
+
               <div className="space-y-4">
                 <div className="w-full bg-zinc-100 dark:bg-zinc-800 p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-center">
                   <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Remise (DA)</label>

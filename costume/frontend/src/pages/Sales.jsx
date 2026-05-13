@@ -347,23 +347,24 @@ const Sales = () => {
                       )}
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="w-full bg-zinc-100 dark:bg-zinc-800 p-3 rounded-xl border border-zinc-700 flex flex-col justify-center">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">REMISE (DA)</label>
-                            <input 
-                              type="number"
-                              className="w-full bg-transparent border-none outline-none font-black text-red-500 text-lg text-right p-0"
-                              placeholder="0"
-                              value={newSale.discount}
-                              onChange={e => setNewSale({...newSale, discount: e.target.value})}
-                            />
-                        </div>
-                        <div className="bg-zinc-900 dark:bg-gold/10 p-4 rounded-xl border border-zinc-700 flex flex-col justify-center items-end shadow-lg">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">TOTAL FINAL</span>
-                            <span className="text-3xl font-black text-gold">{newSale.totalAmount.toLocaleString()} DA</span>
-                        </div>
-                    </div>
                 </div>
+              </div>
+
+              <div className="space-y-4">
+                  <div className="w-full bg-zinc-100 dark:bg-zinc-800 p-3 rounded-xl border border-zinc-700 flex flex-col justify-center">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">REMISE (DA)</label>
+                      <input 
+                        type="number"
+                        className="w-full bg-transparent border-none outline-none font-black text-red-500 text-lg text-right p-0"
+                        placeholder="0"
+                        value={newSale.discount}
+                        onChange={e => setNewSale({...newSale, discount: e.target.value})}
+                      />
+                  </div>
+                  <div className="bg-zinc-900 dark:bg-gold/10 p-4 rounded-xl border border-zinc-700 flex flex-col justify-center items-end shadow-lg">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">TOTAL FINAL</span>
+                      <span className="text-3xl font-black text-gold">{newSale.totalAmount.toLocaleString()} DA</span>
+                  </div>
               </div>
 
               <div className="flex gap-4 pt-4 border-t border-zinc-800">
