@@ -370,7 +370,7 @@ const Sales = () => {
               <div className="flex gap-4 pt-4 border-t border-zinc-800">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-3 border border-zinc-700 text-zinc-400 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-100 dark:bg-zinc-800 transition-colors">ANNULER</button>
                 <button type="submit" className="flex-1 px-4 py-3 bg-gold text-rich-black rounded-xl font-black uppercase tracking-widest hover:bg-light-gold shadow-xl shadow-gold/10 transition-all transform active:scale-95 flex items-center justify-center">
-                    <DollarSign size={18} className="mr-2" /> VALIDER LA VENTE
+                    <DollarSign size={18} className="mr-2" /> VALIDER LA VENTE !!!
                 </button>
               </div>
             </form>
