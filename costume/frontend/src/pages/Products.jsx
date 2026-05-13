@@ -141,8 +141,19 @@ const Products = () => {
     }
   };
 
-  const handleDownloadTemplate = () => {
-    window.open(`${api.defaults.baseURL}/products/template`, '_blank');
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await api.get('/products/template', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'template_boutique.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      alert('Erreur lors du téléchargement du template');
+    }
   };
 
   const handleImportExcel = async (e) => {

@@ -122,8 +122,19 @@ const Perfumes = () => {
     }
   };
 
-  const handleDownloadTemplate = () => {
-    window.open(`${api.defaults.baseURL}/perfumes/template`, '_blank');
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await api.get('/perfumes/template', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'template_parfums.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      alert('Erreur lors du téléchargement du template');
+    }
   };
 
   const handleImportExcel = async (e) => {
