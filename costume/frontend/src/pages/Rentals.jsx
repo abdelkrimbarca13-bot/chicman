@@ -619,12 +619,14 @@ const Rentals = () => {
                             >
                               <Play size={16} className="mr-1"/> Livrer
                             </button>
-                            <button 
-                              onClick={() => { setCancelModal(rental); setRefundAmount(rental.paidAmount.toString()); }}
-                              className="text-red-400 hover:text-red-300 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
-                            >
-                              <X size={16} className="mr-1"/> Annuler
-                            </button>
+                            {user?.role === 'ADMIN' && (
+                              <button 
+                                onClick={() => { setCancelModal(rental); setRefundAmount(rental.paidAmount.toString()); }}
+                                className="text-red-400 hover:text-red-300 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                              >
+                                <X size={16} className="mr-1"/> Annuler
+                              </button>
+                            )}
                           </>
                         )}
                         {rental.status === 'LIVRÉE' && (
