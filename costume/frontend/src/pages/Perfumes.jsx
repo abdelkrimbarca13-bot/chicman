@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { 
   Droplet, Plus, Search, Trash2, Edit2, ShoppingCart, 
   History, BarChart3, AlertTriangle, Check, X, ArrowRight,
-  TrendingUp, Package, Calendar, Info, QrCode, Tag, Printer
+  TrendingUp, Package, Calendar, Info, QrCode, Tag, Printer,
+  Download, Upload
 } from 'lucide-react';
 import { format } from 'date-fns';
 import PerfumeReceipt from '../components/PerfumeReceipt';
@@ -121,6 +122,32 @@ const Perfumes = () => {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    window.open(`${api.defaults.baseURL}/perfumes/template`, '_blank');
+  };
+
+  const handleImportExcel = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      setLoading(true);
+      const res = await api.post('/perfumes/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      alert(`Importation réussie: ${res.data.success} succès, ${res.data.errors} erreurs.`);
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur lors de l\'importation');
+    } finally {
+      setLoading(false);
+      e.target.value = '';
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Voulez-vous vraiment supprimer ce parfum ?')) return;
     try {
@@ -217,12 +244,25 @@ const Perfumes = () => {
               </form>
             </div>
             {user?.role === 'ADMIN' && (
-              <button
-                onClick={() => { setEditingProduct(null); setProductForm({ brand: '', name: '', type: '', totalCapacityMl: '', totalPurchasePrice: '', salePriceMl: '', alertThresholdMl: 30 }); setIsProductModalOpen(true); }}
-                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-gold text-white rounded-xl shadow-lg shadow-gold/20 hover:scale-105 transition-transform"
-              >
-                <Plus size={20} /> Nouveau Parfum
-              </button>
+              <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                <button
+                  onClick={handleDownloadTemplate}
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                  title="Télécharger Template Excel"
+                >
+                  <Download size={18} />
+                </button>
+                <label className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500/10 text-green-500 rounded-xl cursor-pointer hover:bg-green-500/20 transition-colors" title="Importer Excel">
+                  <Upload size={18} />
+                  <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleImportExcel} />
+                </label>
+                <button
+                  onClick={() => { setEditingProduct(null); setProductForm({ brand: '', name: '', type: '', totalCapacityMl: '', totalPurchasePrice: '', salePriceMl: '', alertThresholdMl: 30 }); setIsProductModalOpen(true); }}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 bg-gold text-white rounded-xl shadow-lg shadow-gold/20 hover:scale-105 transition-transform"
+                >
+                  <Plus size={20} /> Nouveau Parfum
+                </button>
+              </div>
             )}
           </div>
 

@@ -2,11 +2,16 @@ const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/productController');
 const auth = require('../middleware/auth');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/', auth, productController.getAllProducts);
 router.post('/', auth, productController.createProduct);
 router.put('/:id', auth, productController.updateProduct);
 router.delete('/:id', auth, productController.deleteProduct);
+
+router.get('/template', auth, productController.downloadTemplate);
+router.post('/import', [auth, upload.single('file')], productController.importProducts);
 
 router.post('/sales', auth, productController.createProductSale);
 router.get('/sales', auth, productController.getProductSales);

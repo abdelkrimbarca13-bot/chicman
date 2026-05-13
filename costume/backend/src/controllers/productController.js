@@ -1,4 +1,5 @@
 const prisma = require('../utils/prisma');
+const XLSX = require('xlsx');
 const { updateDailyStats } = require('./cashController');
 const { logAction } = require('../utils/audit');
 
@@ -262,6 +263,85 @@ exports.deleteProductSale = async (req, res) => {
     await logAction(req.userData.userId, 'DELETE_PRODUCT_SALE', { id, productId: sale.productId, quantity: sale.quantity });
 
     res.json({ message: 'Vente supprimée et stock restauré' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.downloadTemplate = async (req, res) => {
+  try {
+    const templateData = [
+      {
+        'Référence': 'CH-001',
+        'Nom': 'Chemise Slim Fit',
+        'Type': 'Chemise',
+        'Taille': 'XL',
+        'Couleur': 'Blanc',
+        'Prix Achat (DA)': 1500,
+        'Prix Vente (DA)': 2500,
+        'Quantité': 10
+      }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Template Boutique');
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Disposition', 'attachment; filename=template_boutique.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.importProducts = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Aucun fichier fourni' });
+
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    const results = { success: 0, errors: 0 };
+
+    for (const row of data) {
+      try {
+        const reference = row['Référence'];
+        const name = row['Nom'];
+        const type = row['Type'];
+        const size = row['Taille'];
+        const color = row['Couleur'];
+        const purchasePrice = parseFloat(row['Prix Achat (DA)']);
+        const salePrice = parseFloat(row['Prix Vente (DA)']);
+        const quantity = parseInt(row['Quantité']) || 0;
+
+        if (!reference || !name || isNaN(purchasePrice) || isNaN(salePrice)) {
+          results.errors++;
+          continue;
+        }
+
+        await prisma.product.upsert({
+          where: { reference },
+          update: {
+            name, type, size, color,
+            purchasePrice, salePrice,
+            quantity: { increment: quantity }
+          },
+          create: {
+            reference, name, type, size, color,
+            purchasePrice, salePrice, quantity
+          }
+        });
+        results.success++;
+      } catch (err) {
+        results.errors++;
+      }
+    }
+
+    await logAction(req.userData.userId, 'IMPORT_PRODUCTS', { success: results.success, errors: results.errors });
+    res.json({ message: 'Importation terminée', ...results });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

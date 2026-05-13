@@ -1,4 +1,5 @@
 const prisma = require('../utils/prisma');
+const XLSX = require('xlsx');
 const { updateDailyStats } = require('./cashController');
 const { logAction } = require('../utils/audit');
 
@@ -239,6 +240,87 @@ exports.getPerfumeStats = async (req, res) => {
       lowStockCount,
       outOfStockCount
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.downloadTemplate = async (req, res) => {
+  try {
+    const templateData = [
+      {
+        'Marque': 'CHANEL',
+        'Nom': 'Bleu de Chanel',
+        'Type': 'EDP',
+        'Capacité Totale (ml)': 100,
+        'Prix Achat Total (DA)': 15000,
+        'Prix Vente / ml (DA)': 300,
+        'Seuil Alerte (ml)': 20
+      }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Template Parfums');
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Disposition', 'attachment; filename=template_parfums.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.importPerfumes = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Aucun fichier fourni' });
+
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    const results = { success: 0, errors: 0 };
+
+    for (const row of data) {
+      try {
+        const brand = row['Marque'];
+        const name = row['Nom'];
+        const type = row['Type'] || 'EDP';
+        const totalCapacityMl = parseFloat(row['Capacité Totale (ml)']);
+        const totalPurchasePrice = parseFloat(row['Prix Achat Total (DA)']);
+        const salePriceMl = parseFloat(row['Prix Vente / ml (DA)']);
+        const alertThresholdMl = parseFloat(row['Seuil Alerte (ml)']) || 30;
+
+        if (!brand || !name || isNaN(totalCapacityMl) || isNaN(totalPurchasePrice) || isNaN(salePriceMl)) {
+          results.errors++;
+          continue;
+        }
+
+        const unitCostMl = totalPurchasePrice / totalCapacityMl;
+
+        await prisma.perfume.create({
+          data: {
+            brand,
+            name,
+            type,
+            totalCapacityMl,
+            initialQuantityMl: totalCapacityMl,
+            currentQuantityMl: totalCapacityMl,
+            totalPurchasePrice,
+            unitCostMl,
+            salePriceMl,
+            alertThresholdMl
+          }
+        });
+        results.success++;
+      } catch (err) {
+        results.errors++;
+      }
+    }
+
+    await logAction(req.userData.userId, 'IMPORT_PERFUMES', { success: results.success, errors: results.errors });
+    res.json({ message: 'Importation terminée', ...results });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
