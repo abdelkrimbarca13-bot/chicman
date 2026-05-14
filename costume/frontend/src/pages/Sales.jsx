@@ -268,7 +268,13 @@ const Sales = () => {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gold/20">
             <div className="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-white dark:bg-zinc-900 z-10">
-                <h2 className="text-2xl font-black text-gold font-luxury tracking-widest uppercase">Nouvelle Vente</h2> {/* Deployment trigger */}
+                <h2 className="text-2xl font-black text-gold font-luxury tracking-widest uppercase">Nouvelle Vente</h2>
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-zinc-900 dark:text-white transition-colors"
+                >
+                  <X size={24}/>
+                </button>
             </div>
             
             <form onSubmit={handleCreate} className="p-6 space-y-6">

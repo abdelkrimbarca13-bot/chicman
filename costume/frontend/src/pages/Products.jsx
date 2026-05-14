@@ -20,24 +20,9 @@ const Products = () => {
   
   // Modals
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [cart, setCart] = useState([]);
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  
-  // Form states
-  const [productForm, setProductForm] = useState({
-    reference: '',
-    name: '',
-    type: '',
-    size: '',
-    color: '',
-    purchasePrice: '',
-    salePrice: '',
-    quantity: 0
-  });
-  
   const [saleForm, setSaleForm] = useState({
-    quantity: 1,
     customerName: '',
     customerPhone: '',
     discount: 0
@@ -90,22 +75,52 @@ const Products = () => {
 
   const handleSaleSubmit = async (e) => {
     e.preventDefault();
+    if (cart.length === 0) return;
     try {
       await api.post('/products/sales', {
-        productId: selectedProduct.id,
-        quantity: parseInt(saleForm.quantity),
+        items: cart.map(item => ({
+          productId: item.id,
+          quantity: item.quantity
+        })),
         customerName: saleForm.customerName,
         customerPhone: saleForm.customerPhone,
         discount: parseFloat(saleForm.discount) || 0
       });
       setIsSaleModalOpen(false);
-      setSelectedProduct(null);
-      setSaleForm({ quantity: 1, customerName: '', customerPhone: '', discount: 0 });
+      setCart([]);
+      setSaleForm({ customerName: '', customerPhone: '', discount: 0 });
       fetchData();
+      alert('Vente réussie !');
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur lors de la vente');
     }
   };
+
+  const addToCart = (product) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        if (existing.quantity >= product.quantity) {
+          alert('Stock insuffisant');
+          return prev;
+        }
+        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const removeFromCart = (productId) => {
+    setCart(prev => prev.filter(item => item.id !== productId));
+  };
+
+  const updateCartQuantity = (productId, newQty) => {
+    const product = products.find(p => p.id === productId);
+    const qty = Math.max(1, Math.min(product?.quantity || 1, parseInt(newQty) || 1));
+    setCart(prev => prev.map(item => item.id === productId ? { ...item, quantity: qty } : item));
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
 
   const handleDeleteSale = async (id) => {
     if (user?.role !== 'ADMIN') return;
@@ -193,9 +208,8 @@ const Products = () => {
     setIsProductModalOpen(true);
   };
 
-  const openSaleModal = (product) => {
-    setSelectedProduct(product);
-    setSaleForm({ quantity: 1, customerName: '', customerPhone: '', discount: 0 });
+  const openSaleModal = () => {
+    setSaleForm({ customerName: '', customerPhone: '', discount: 0 });
     setIsSaleModalOpen(true);
   };
 
@@ -217,25 +231,37 @@ const Products = () => {
           <p className="text-zinc-500 dark:text-zinc-400 mt-1">Vente d'articles (chemises, accessoires, etc.)</p>
         </div>
         
-        <div className="flex bg-white dark:bg-zinc-900 p-1 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
-          {[
-            { id: 'inventory', label: 'Stock', icon: Package },
-            { id: 'history', label: 'Historique', icon: History },
-            { id: 'stats', label: 'Stats', icon: BarChart3, adminOnly: true },
-          ].filter(tab => !tab.adminOnly || user?.role === 'ADMIN').map((tab) => (
+        <div className="flex items-center gap-4">
+          {cart.length > 0 && (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab.id 
-                  ? 'bg-gold text-white shadow-md' 
-                  : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-              }`}
+              onClick={openSaleModal}
+              className="flex items-center gap-2 px-6 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl shadow-lg hover:bg-gold transition-colors font-bold"
             >
-              <tab.icon size={16} />
-              {tab.label}
+              <ShoppingCart size={18} />
+              Panier ({cart.length}) - {cartTotal.toLocaleString()} DA
             </button>
-          ))}
+          )}
+
+          <div className="flex bg-white dark:bg-zinc-900 p-1 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
+            {[
+              { id: 'inventory', label: 'Stock', icon: Package },
+              { id: 'history', label: 'Historique', icon: History, adminOnly: true },
+              { id: 'stats', label: 'Stats', icon: BarChart3, adminOnly: true },
+            ].filter(tab => !tab.adminOnly || user?.role === 'ADMIN').map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === tab.id 
+                    ? 'bg-gold text-white shadow-md' 
+                    : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                }`}
+              >
+                <tab.icon size={16} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -323,28 +349,35 @@ const Products = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className={`grid ${user?.role === 'ADMIN' ? 'grid-cols-2' : 'grid-cols-1'} gap-4 pt-2`}>
                     <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
                       <p className="text-[10px] text-zinc-500 uppercase tracking-tighter">Prix Vente</p>
                       <p className="text-lg font-bold text-zinc-900 dark:text-white">{product.salePrice.toLocaleString()} <span className="text-xs text-zinc-400">DA</span></p>
                     </div>
-                    <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 text-right">
-                      <p className="text-[10px] text-zinc-500 uppercase tracking-tighter">Bénéfice</p>
-                      <p className="text-lg font-bold text-green-500">+{(product.salePrice - product.purchasePrice).toLocaleString()} <span className="text-xs">DA</span></p>
-                    </div>
+                    {user?.role === 'ADMIN' && (
+                      <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 text-right">
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-tighter">Bénéfice</p>
+                        <p className="text-lg font-bold text-green-500">+{(product.salePrice - product.purchasePrice).toLocaleString()} <span className="text-xs">DA</span></p>
+                      </div>
+                    )}
                   </div>
 
                   <button
                     disabled={product.quantity <= 0}
-                    onClick={() => openSaleModal(product)}
+                    onClick={() => addToCart(product)}
                     className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
                       product.quantity <= 0 
                         ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed'
-                        : 'bg-zinc-900 dark:bg-white dark:text-zinc-900 text-white hover:bg-gold dark:hover:bg-gold dark:hover:text-white shadow-lg'
+                        : cart.some(item => item.id === product.id)
+                          ? 'bg-green-500 text-white shadow-lg'
+                          : 'bg-zinc-900 dark:bg-white dark:text-zinc-900 text-white hover:bg-gold dark:hover:bg-gold dark:hover:text-white shadow-lg'
                     }`}
                   >
-                    <ShoppingCart size={18} />
-                    {product.quantity <= 0 ? 'Rupture' : 'Vendre Produit'}
+                    {cart.some(item => item.id === product.id) ? (
+                      <><Check size={18} /> Ajouté au panier</>
+                    ) : (
+                      <><ShoppingCart size={18} /> {product.quantity <= 0 ? 'Rupture' : 'Ajouter au panier'}</>
+                    )}
                   </button>
                 </div>
               </div>
@@ -569,116 +602,124 @@ const Products = () => {
       )}
 
       {/* Sale Modal */}
-      {isSaleModalOpen && selectedProduct && (
+      {isSaleModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl w-full max-w-md border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-            <div className="p-6 bg-gold text-white">
-              <h2 className="text-2xl font-bold">Vente Boutique</h2>
-              <p className="opacity-80 text-sm">{selectedProduct.reference} - {selectedProduct.name}</p>
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl w-full max-w-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="p-6 bg-gold text-white flex justify-between items-center sticky top-0 z-10">
+              <div>
+                <h2 className="text-2xl font-bold">Valider la Vente</h2>
+                <p className="opacity-80 text-sm">{cart.length} articles dans le panier</p>
+              </div>
+              <button onClick={() => setIsSaleModalOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><X size={24}/></button>
             </div>
             
-            <form onSubmit={handleSaleSubmit} className="p-6 space-y-4">
-              <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl">
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Disponible</p>
-                  <p className="text-xl font-bold">{selectedProduct.quantity} unités</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Prix Unitaire</p>
-                  <p className="text-xl font-bold text-gold">{selectedProduct.salePrice.toLocaleString()} DA</p>
+            <form onSubmit={handleSaleSubmit} className="p-6 space-y-6">
+              {/* Cart Items Summary */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest px-1">Articles sélectionnés</h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                  {cart.map(item => (
+                    <div key={item.id} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                      <div className="flex-1">
+                        <div className="font-bold">{item.name}</div>
+                        <div className="text-[10px] text-zinc-500 uppercase">{item.reference} | {item.size}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                          <button 
+                            type="button" 
+                            onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
+                            className="p-1 px-3 hover:text-gold font-bold text-lg"
+                          >-</button>
+                          <span className="px-2 font-bold min-w-[30px] text-center">{item.quantity}</span>
+                          <button 
+                            type="button" 
+                            onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
+                            className="p-1 px-3 hover:text-gold font-bold text-lg"
+                          >+</button>
+                        </div>
+                        <div className="text-right min-w-[100px]">
+                          <div className="font-bold text-gold">{(item.salePrice * item.quantity).toLocaleString()} DA</div>
+                          <div className="text-[10px] text-zinc-400">{item.salePrice.toLocaleString()} / u</div>
+                        </div>
+                        <button type="button" onClick={() => removeFromCart(item.id)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-500 uppercase px-1">Quantité</label>
-                  <div className="flex items-stretch gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-500 uppercase px-1">Nom du Client (Optionnel)</label>
                     <input
-                      required
-                      type="number"
-                      min="1"
-                      max={selectedProduct.quantity}
-                      className="w-3/4 px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none font-bold text-xl text-center"
-                      value={saleForm.quantity}
-                      onChange={(e) => setSaleForm({ ...saleForm, quantity: e.target.value })}
+                      type="text"
+                      placeholder="ex: Ahmed"
+                      className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none"
+                      value={saleForm.customerName}
+                      onChange={(e) => setSaleForm({ ...saleForm, customerName: e.target.value })}
                     />
-                    <div className="w-1/4 flex flex-col gap-1">
-                      <button 
-                        type="button"
-                        onClick={() => setSaleForm({ ...saleForm, quantity: Math.min(selectedProduct.quantity, (parseInt(saleForm.quantity) || 0) + 1) })}
-                        className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-gold hover:text-white rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700 font-black text-lg"
-                      >
-                        +
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={() => setSaleForm({ ...saleForm, quantity: Math.max(1, (parseInt(saleForm.quantity) || 0) - 1) })}
-                        className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-gold hover:text-white rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700 font-black text-lg"
-                      >
-                        -
-                      </button>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-500 uppercase px-1">Téléphone</label>
+                    <input
+                      type="text"
+                      placeholder="ex: 0550..."
+                      className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none"
+                      value={saleForm.customerPhone}
+                      onChange={(e) => setSaleForm({ ...saleForm, customerPhone: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="w-full bg-zinc-100 dark:bg-zinc-800 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-700 flex flex-col justify-center">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Remise Totale (DA)</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      className="w-full bg-transparent border-none outline-none font-black text-red-500 text-2xl text-right p-0"
+                      value={saleForm.discount}
+                      onChange={(e) => setSaleForm({ ...saleForm, discount: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="p-4 bg-zinc-900 dark:bg-gold/10 text-white dark:text-gold rounded-2xl flex flex-col justify-center shadow-lg border border-gold/20">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Total Final</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Sous-total: {cartTotal.toLocaleString()} DA</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-4xl font-black">{(cartTotal - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="w-full bg-zinc-100 dark:bg-zinc-800 p-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col justify-center">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Remise (DA)</label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    className="w-full bg-transparent border-none outline-none font-black text-red-500 text-lg text-right p-0"
-                    value={saleForm.discount}
-                    onChange={(e) => setSaleForm({ ...saleForm, discount: e.target.value })}
-                  />
-                </div>
-
-                <div className="p-4 bg-zinc-900 dark:bg-gold/10 text-white dark:text-gold rounded-2xl flex flex-col justify-center shadow-lg">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Total à Payer</span>
-                    {user?.role === 'ADMIN' && <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Profit</span>}
-                  </div>
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-3xl font-black">{(saleForm.quantity * selectedProduct.salePrice - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA</span>
-                    {user?.role === 'ADMIN' && <span className="text-lg font-bold text-green-400">+{(saleForm.quantity * (selectedProduct.salePrice - selectedProduct.purchasePrice) - (parseFloat(saleForm.discount) || 0)).toLocaleString()} DA</span>}
-                  </div>
-                </div>
+              <div className="flex gap-4 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSaleModalOpen(false)}
+                  className="flex-1 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-bold rounded-2xl hover:bg-zinc-200 transition-colors"
+                >
+                  Continuer les achats
+                </button>
+                <button
+                  type="submit"
+                  disabled={cart.length === 0}
+                  className={`flex-[2] py-4 rounded-2xl font-bold text-xl shadow-xl transition-all ${
+                    cart.length === 0
+                      ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed shadow-none'
+                      : 'bg-gold text-white hover:scale-[1.02] shadow-gold/20'
+                  }`}
+                >
+                  Confirmer la Vente
+                </button>
               </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-500 uppercase px-1">Nom du Client (Optionnel)</label>
-                <input
-                  type="text"
-                  placeholder="ex: Ahmed"
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none"
-                  value={saleForm.customerName}
-                  onChange={(e) => setSaleForm({ ...saleForm, customerName: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-500 uppercase px-1">Téléphone</label>
-                <input
-                  type="text"
-                  placeholder="ex: 0550..."
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none"
-                  value={saleForm.customerPhone}
-                  onChange={(e) => setSaleForm({ ...saleForm, customerPhone: e.target.value })}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={!saleForm.quantity || saleForm.quantity > selectedProduct.quantity}
-                className={`w-full py-4 rounded-2xl font-bold text-xl shadow-xl transition-all mt-4 ${
-                  !saleForm.quantity || saleForm.quantity > selectedProduct.quantity
-                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed shadow-none'
-                    : 'bg-gold text-white hover:scale-[1.02] shadow-gold/20'
-                }`}
-              >
-                Confirmer la Vente
-              </button>
             </form>
           </div>
         </div>

@@ -92,63 +92,83 @@ exports.deleteProduct = async (req, res) => {
 
 exports.createProductSale = async (req, res) => {
   try {
-    const { productId, quantity, customerName, customerPhone, discount } = req.body;
-    const qty = parseInt(quantity);
+    const { items, customerName, customerPhone, discount } = req.body;
     const disc = parseFloat(discount) || 0;
 
-    const product = await prisma.product.findUnique({
-      where: { id: parseInt(productId) }
-    });
-
-    if (!product) return res.status(404).json({ message: 'Produit non trouvé' });
-    if (product.quantity < qty) {
-      return res.status(400).json({ message: `Stock insuffisant. Disponible: ${product.quantity}` });
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Au moins un produit est requis.' });
     }
 
-    const grossAmount = qty * product.salePrice;
-    const totalAmount = grossAmount - disc;
-    const totalCost = qty * product.purchasePrice;
-    const profit = totalAmount - totalCost;
-
-    const sale = await prisma.$transaction(async (tx) => {
-      // 1. Create sale record
-      const newSale = await tx.productSale.create({
-        data: {
-          productId: parseInt(productId),
-          quantity: qty,
-          unitPrice: product.salePrice,
-          totalAmount,
-          totalCost,
-          profit,
-          discount: disc,
-          customerName,
-          customerPhone,
-          performedBy: req.userData.username
-        },
-        include: { product: true }
-      });
-
-      // 2. Update stock
-      await tx.product.update({
-        where: { id: parseInt(productId) },
-        data: { quantity: { decrement: qty } }
-      });
-
-      return newSale;
+    // 1. Récupérer tous les produits concernés
+    const productIds = items.map(i => parseInt(i.productId));
+    const dbProducts = await prisma.product.findMany({
+      where: { id: { in: productIds } }
     });
 
-    // Update daily stats
+    // 2. Valider l'existence et le stock
+    for (const item of items) {
+      const product = dbProducts.find(p => p.id === parseInt(item.productId));
+      if (!product) return res.status(404).json({ message: `Produit ID ${item.productId} non trouvé` });
+      if (product.quantity < parseInt(item.quantity)) {
+        return res.status(400).json({ message: `Stock insuffisant pour ${product.name}. Disponible: ${product.quantity}` });
+      }
+    }
+
+    // 3. Transaction pour créer les ventes et mettre à jour les stocks
+    const results = await prisma.$transaction(async (tx) => {
+      const sales = [];
+      const itemDisc = disc / items.length;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const product = dbProducts.find(p => p.id === parseInt(item.productId));
+        const qty = parseInt(item.quantity);
+        
+        // Répartir la remise sur les articles
+        const currentItemDiscount = i === items.length - 1 
+          ? disc - (Math.floor(itemDisc) * (items.length - 1)) 
+          : Math.floor(itemDisc);
+
+        const grossAmount = qty * product.salePrice;
+        const totalAmount = grossAmount - currentItemDiscount;
+        const totalCost = qty * product.purchasePrice;
+        const profit = totalAmount - totalCost;
+
+        const newSale = await tx.productSale.create({
+          data: {
+            productId: product.id,
+            quantity: qty,
+            unitPrice: product.salePrice,
+            totalAmount,
+            totalCost,
+            profit,
+            discount: currentItemDiscount,
+            customerName,
+            customerPhone,
+            performedBy: req.userData.username
+          }
+        });
+
+        await tx.product.update({
+          where: { id: product.id },
+          data: { quantity: { decrement: qty } }
+        });
+
+        sales.push(newSale);
+      }
+      return sales;
+    });
+
+    // Mettre à jour les stats journalières
     await updateDailyStats(new Date());
 
-    await logAction(req.userData.userId, 'PRODUCT_SALE', { 
-      saleId: sale.id, 
-      product: `${product.reference} ${product.name}`,
-      qty,
-      totalAmount,
-      discount: disc
+    await logAction(req.userData.userId, 'PRODUCT_SALE_MULTI', { 
+      count: items.length, 
+      customerName,
+      totalItems: items.length
     });
 
-    res.status(201).json(sale);
+    res.status(201).json(results);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

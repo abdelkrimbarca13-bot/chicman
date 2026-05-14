@@ -371,7 +371,13 @@ const Items = () => {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 w-full max-w-md border border-gold/20 shadow-2xl">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 w-full max-w-md border border-gold/20 shadow-2xl relative">
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-zinc-900 dark:text-white transition-colors"
+            >
+              <X size={20}/>
+            </button>
             <h2 className="text-2xl font-bold mb-6 text-gold font-luxury tracking-widest uppercase border-b border-gold/10 pb-2">{currentItem.id ? 'Modifier' : 'Ajouter'} l'article</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
