@@ -2,7 +2,7 @@ import React from 'react';
 import { X, Printer } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
-const PerfumeLabel = ({ perfume, onClose }) => {
+const PerfumeLabel = ({ perfume, quantity, onClose }) => {
   const handlePrint = () => {
     window.print();
   };
@@ -64,18 +64,27 @@ const PerfumeLabel = ({ perfume, onClose }) => {
           <div className="flex flex-row items-center gap-4 border-2 border-black p-2 rounded-lg w-full h-full max-w-[50mm] max-h-[30mm]">
             <div className="flex-1 flex flex-col justify-center overflow-hidden">
               <p className="text-[6px] font-black uppercase tracking-widest text-gold leading-none mb-0.5">CHIC MAN</p>
-              <p className="text-[10px] font-black uppercase leading-tight truncate">{perfume.brand}</p>
-              <p className="text-[8px] font-bold uppercase leading-tight truncate">{perfume.name}</p>
-              <p className="text-[6px] font-bold uppercase text-zinc-500 leading-none mt-0.5">{perfume.type}</p>
-              <div className="mt-1 pt-1 border-t border-black/20 flex justify-between">
-                <span className="text-[7px] font-black uppercase">{perfume.salePriceMl} DA/ml</span>
-              </div>
+              <p className="text-[12px] font-black uppercase leading-tight truncate">{perfume.brand}</p>
+              <p className="text-[10px] font-bold uppercase leading-tight truncate">{perfume.name}</p>
+              <p className="text-[7px] font-bold uppercase text-zinc-500 leading-none mt-0.5">{perfume.type}</p>
+              
+              {quantity ? (
+                <div className="mt-1 pt-1 border-t border-black flex justify-between items-center">
+                  <span className="text-[12px] font-black uppercase">{quantity} ML</span>
+                </div>
+              ) : (
+                <div className="mt-1 pt-1 border-t border-black/20 flex justify-between">
+                  <span className="text-[7px] font-black uppercase">{perfume.salePriceMl} DA/ml</span>
+                </div>
+              )}
             </div>
             
-            <div className="flex flex-col items-center shrink-0">
-                <QRCodeSVG value={qrValue} size={45} level="M" />
-                <p className="text-[5px] font-black mt-1 uppercase">SCAN TO SELL</p>
-            </div>
+            {!quantity && (
+              <div className="flex flex-col items-center shrink-0">
+                  <QRCodeSVG value={qrValue} size={45} level="M" />
+                  <p className="text-[5px] font-black mt-1 uppercase">SCAN TO SELL</p>
+              </div>
+            )}
           </div>
         </div>
 

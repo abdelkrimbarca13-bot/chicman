@@ -684,11 +684,15 @@ const Perfumes = () => {
         <PerfumeReceipt 
           sale={receiptToShow} 
           onClose={() => setReceiptToShow(null)} 
-          onPrintLabel={(perfume) => setLabelToShow(perfume)}
+          onPrintLabel={(perfume) => setLabelToShow({ perfume, quantity: receiptToShow.quantityMl })}
         />
       )}
       {labelToShow && (
-        <PerfumeLabel perfume={labelToShow} onClose={() => setLabelToShow(null)} />
+        <PerfumeLabel 
+          perfume={labelToShow.perfume || labelToShow} 
+          quantity={labelToShow.quantity}
+          onClose={() => setLabelToShow(null)} 
+        />
       )}
     </div>
   );
