@@ -681,7 +681,11 @@ const Perfumes = () => {
       )}
       {/* Print Modals */}
       {receiptToShow && (
-        <PerfumeReceipt sale={receiptToShow} onClose={() => setReceiptToShow(null)} />
+        <PerfumeReceipt 
+          sale={receiptToShow} 
+          onClose={() => setReceiptToShow(null)} 
+          onPrintLabel={(perfume) => setLabelToShow(perfume)}
+        />
       )}
       {labelToShow && (
         <PerfumeLabel perfume={labelToShow} onClose={() => setLabelToShow(null)} />

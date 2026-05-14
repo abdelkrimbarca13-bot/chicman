@@ -1,9 +1,9 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { X, Printer } from 'lucide-react';
+import { X, Printer, Tag } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
-const PerfumeReceipt = ({ sale, onClose }) => {
+const PerfumeReceipt = ({ sale, onClose, onPrintLabel }) => {
   const handlePrint = () => {
     window.print();
   };
@@ -116,18 +116,26 @@ const PerfumeReceipt = ({ sale, onClose }) => {
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-200 no-print flex justify-center gap-4">
+        <div className="p-6 border-t border-gray-200 no-print flex flex-col gap-4">
+          <div className="flex gap-4">
+            <button 
+                onClick={handlePrint}
+                className="flex-[2] px-4 py-3 bg-black text-white rounded-xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg flex items-center justify-center gap-2"
+            >
+                <Printer size={18} /> IMPRIMER TICKET
+            </button>
+            <button 
+                onClick={() => onClose()}
+                className="flex-1 px-4 py-3 bg-zinc-100 text-zinc-600 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-200 transition-all border border-zinc-200"
+            >
+                FERMER
+            </button>
+          </div>
           <button 
-              onClick={handlePrint}
-              className="flex-1 px-4 py-3 bg-black text-white rounded-xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg"
+              onClick={() => onPrintLabel(sale.perfume)}
+              className="w-full px-4 py-3 bg-gold text-white rounded-xl font-black uppercase tracking-widest hover:bg-light-gold transition-all shadow-lg flex items-center justify-center gap-2"
           >
-              IMPRIMER
-          </button>
-          <button 
-              onClick={onClose}
-              className="flex-1 px-4 py-3 bg-zinc-100 text-zinc-600 rounded-xl font-black uppercase tracking-widest hover:bg-zinc-200 transition-all border border-zinc-200"
-          >
-              FERMER
+              <Tag size={18} /> IMPRIMER ÉTIQUETTE FLACON
           </button>
         </div>
       </div>

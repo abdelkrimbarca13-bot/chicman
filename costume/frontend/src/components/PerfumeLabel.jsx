@@ -66,6 +66,7 @@ const PerfumeLabel = ({ perfume, onClose }) => {
               <p className="text-[6px] font-black uppercase tracking-widest text-gold leading-none mb-0.5">CHIC MAN</p>
               <p className="text-[10px] font-black uppercase leading-tight truncate">{perfume.brand}</p>
               <p className="text-[8px] font-bold uppercase leading-tight truncate">{perfume.name}</p>
+              <p className="text-[6px] font-bold uppercase text-zinc-500 leading-none mt-0.5">{perfume.type}</p>
               <div className="mt-1 pt-1 border-t border-black/20 flex justify-between">
                 <span className="text-[7px] font-black uppercase">{perfume.salePriceMl} DA/ml</span>
               </div>
