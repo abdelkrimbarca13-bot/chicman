@@ -146,7 +146,8 @@ exports.createProductSale = async (req, res) => {
             customerName,
             customerPhone,
             performedBy: req.userData.username
-          }
+          },
+          include: { product: true }
         });
 
         await tx.product.update({

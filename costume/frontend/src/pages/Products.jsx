@@ -8,6 +8,7 @@ import {
   Download, Upload
 } from 'lucide-react';
 import { format } from 'date-fns';
+import SaleReceipt from '../components/SaleReceipt';
 
 const Products = () => {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ const Products = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [receiptToShow, setReceiptToShow] = useState(null);
   
   // Modals
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -77,7 +79,7 @@ const Products = () => {
     e.preventDefault();
     if (cart.length === 0) return;
     try {
-      await api.post('/products/sales', {
+      const res = await api.post('/products/sales', {
         items: cart.map(item => ({
           productId: item.id,
           quantity: item.quantity
@@ -90,7 +92,26 @@ const Products = () => {
       setCart([]);
       setSaleForm({ customerName: '', customerPhone: '', discount: 0 });
       fetchData();
-      alert('Vente réussie !');
+      
+      // Prepare receipt data
+      const firstSale = res.data.sales[0];
+      const receiptData = {
+        id: firstSale.id,
+        customerName: firstSale.customerName || 'Client Comptant',
+        customerPhone: firstSale.customerPhone || '-',
+        totalAmount: res.data.sales.reduce((sum, s) => sum + s.totalAmount, 0),
+        createdAt: firstSale.date,
+        items: res.data.sales.map(s => ({
+          itemName: s.product.name,
+          itemRef: s.product.reference,
+          itemType: s.product.type,
+          itemColor: s.product.color,
+          itemSize: s.product.size,
+          price: s.unitPrice,
+          quantity: s.quantity
+        }))
+      };
+      setReceiptToShow(receiptData);
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur lors de la vente');
     }
@@ -425,6 +446,31 @@ const Products = () => {
                     <td className="px-6 py-4 text-sm text-zinc-500">{sale.performedBy}</td>
                     <td className="px-6 py-4">
                       <div className="flex justify-center gap-2">
+                        <button 
+                          onClick={() => {
+                            const receiptData = {
+                              id: sale.id,
+                              customerName: sale.customerName || 'Client Comptant',
+                              customerPhone: sale.customerPhone || '-',
+                              totalAmount: sale.totalAmount,
+                              createdAt: sale.date,
+                              items: [{
+                                itemName: sale.product.name,
+                                itemRef: sale.product.reference,
+                                itemType: sale.product.type,
+                                itemColor: sale.product.color,
+                                itemSize: sale.product.size,
+                                price: sale.unitPrice,
+                                quantity: sale.quantity
+                              }]
+                            };
+                            setReceiptToShow(receiptData);
+                          }} 
+                          className="p-2 text-zinc-400 hover:text-gold rounded-lg transition-colors" 
+                          title="Imprimer le bon"
+                        >
+                          <Printer size={16} />
+                        </button>
                         <button onClick={() => { setEditingSale(sale); setEditAmount(sale.totalAmount); }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={16} /></button>
                         <button onClick={() => handleDeleteSale(sale.id)} className="p-2 text-red-500 hover:bg-red-50/50 rounded-lg transition-colors"><Trash2 size={16} /></button>
                       </div>
@@ -749,6 +795,10 @@ const Products = () => {
             </form>
           </div>
         </div>
+      )}
+      {/* Receipt Modal */}
+      {receiptToShow && (
+        <SaleReceipt sale={receiptToShow} onClose={() => setReceiptToShow(null)} />
       )}
     </div>
   );
