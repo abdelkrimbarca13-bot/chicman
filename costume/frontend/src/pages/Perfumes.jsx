@@ -626,7 +626,7 @@ const Perfumes = () => {
                         onChange={(e) => setSaleForm({ ...saleForm, quantityMl: e.target.value })}
                     />
                     <div className="w-1/4 flex flex-col gap-1">
-                        {[30, 50, 100].map(val => (
+                        {[5, 10, 20].map(val => (
                             <button 
                                 key={val}
                                 type="button" 
