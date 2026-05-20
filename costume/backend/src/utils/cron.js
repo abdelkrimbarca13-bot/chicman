@@ -6,7 +6,7 @@ cron.schedule('0 11 * * *', async () => {
   console.log('Exécution du rappel automatique de 11h00...');
   const delayedRentals = await prisma.rental.findMany({
     where: {
-      status: 'ONGOING',
+      status: 'LIVRÉE',
       expectedReturn: { lt: new Date() }
     },
     include: { customer: true, items: { include: { item: true } } }

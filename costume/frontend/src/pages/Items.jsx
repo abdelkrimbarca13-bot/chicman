@@ -95,7 +95,9 @@ const Items = () => {
     setSearchTerm(val);
     const match = items.find(i => i.reference === val);
     if (match) {
-        showHistory(match.id);
+        if (user?.role === 'ADMIN') {
+            showHistory(match.id);
+        }
     }
   };
 
@@ -311,11 +313,13 @@ const Items = () => {
             {filteredItems.map(item => (
               <tr 
                 key={item.id} 
-                className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+                className={`hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group ${user?.role === 'ADMIN' ? 'cursor-pointer' : 'cursor-default'}`}
                 onClick={(e) => {
                   // Empêcher l'ouverture si on clique sur un bouton ou un select
                   if (e.target.closest('button') || e.target.closest('select')) return;
-                  showHistory(item.id);
+                  if (user?.role === 'ADMIN') {
+                    showHistory(item.id);
+                  }
                 }}
               >
                 <td className="px-6 py-4 font-mono text-sm font-bold text-gold group-hover:text-light-gold transition-colors">{item.reference}</td>
@@ -347,7 +351,9 @@ const Items = () => {
                 </td>
                 <td className="px-6 py-4 flex space-x-3">
                   <button onClick={() => setQrModal(item)} className="text-zinc-400 hover:text-gold" title="Générer QR"><QrCode size={18}/></button>
-                  <button onClick={() => showHistory(item.id)} className="text-blue-400 hover:text-blue-300" title="Historique"><History size={18}/></button>
+                  {user?.role === 'ADMIN' && (
+                    <button onClick={() => showHistory(item.id)} className="text-blue-400 hover:text-blue-300" title="Historique"><History size={18}/></button>
+                  )}
                   <button onClick={() => { setCurrentItem(item); setIsModalOpen(true); }} className="text-gold hover:text-light-gold" title="Modifier"><Edit2 size={18}/></button>
                   {user?.role === 'ADMIN' && (
                     <button onClick={async () => { 

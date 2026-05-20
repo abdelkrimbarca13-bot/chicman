@@ -173,12 +173,14 @@ const Customers = () => {
                 <span className="text-xs">{customer.address}</span>
               </div>
               <div className="flex justify-between items-center pt-2 gap-2">
-                <button 
-                  onClick={() => handleShowHistory(customer)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all border border-zinc-200 dark:border-zinc-700"
-                >
-                  <History size={14} /> Historique
-                </button>
+                {user?.role === 'ADMIN' && (
+                  <button 
+                    onClick={() => handleShowHistory(customer)}
+                    className="flex-1 flex items-center justify-center gap-2 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all border border-zinc-200 dark:border-zinc-700"
+                  >
+                    <History size={14} /> Historique
+                  </button>
+                )}
                 {!customer.isBlacklisted && (
                   <button 
                     onClick={() => handleNewRental(customer)}

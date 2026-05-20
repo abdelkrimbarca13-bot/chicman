@@ -439,20 +439,22 @@ const Rentals = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold font-luxury tracking-widest text-gold uppercase border-b-2 border-gold/30 pb-2">Gestion des Locations</h1>
         <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center w-full lg:w-auto">
-            <div className="flex bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-800 p-1 w-full sm:w-auto">
-                <button 
-                    onClick={() => handleTabChange('ongoing')}
-                    className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'ongoing' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-800'}`}
-                >
-                    En Cours
-                </button>
-                <button 
-                    onClick={() => handleTabChange('history')}
-                    className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-800'}`}
-                >
-                    Historique
-                </button>
-            </div>
+            {user?.role === 'ADMIN' && (
+              <div className="flex bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-800 p-1 w-full sm:w-auto">
+                  <button 
+                      onClick={() => handleTabChange('ongoing')}
+                      className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'ongoing' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-800'}`}
+                  >
+                      En Cours
+                  </button>
+                  <button 
+                      onClick={() => handleTabChange('history')}
+                      className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-black text-[10px] sm:text-xs uppercase transition-all ${activeTab === 'history' ? 'bg-gold text-rich-black shadow-md' : 'text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-800'}`}
+                  >
+                      Historique
+                  </button>
+              </div>
+            )}
             <button 
                 onClick={() => setIsModalOpen(true)}
                 className="bg-gold text-rich-black px-6 py-2 rounded-lg flex items-center justify-center hover:bg-light-gold shadow-lg shadow-gold/10 w-full sm:w-auto text-sm font-bold transition-all active:scale-95"

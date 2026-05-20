@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Search, Trash2, Smartphone, DollarSign, FileText, ShoppingCart } from 'lucide-react';
+import { Plus, Search, Trash2, Smartphone, DollarSign, FileText, ShoppingCart, X } from 'lucide-react';
 import { format } from 'date-fns';
 import SaleReceipt from '../components/SaleReceipt';
 

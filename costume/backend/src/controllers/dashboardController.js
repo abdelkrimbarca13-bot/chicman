@@ -2,7 +2,7 @@ const prisma = require('../utils/prisma');
 
 exports.getStats = async (req, res) => {
   try {
-    const activeRentals = await prisma.rental.count({ where: { status: 'ONGOING' } });
+    const activeRentals = await prisma.rental.count({ where: { status: 'LIVRÉE' } });
     const availableItems = await prisma.item.count({ where: { status: 'AVAILABLE' } });
     const rentedItems = await prisma.item.count({ where: { status: 'RENTED' } });
     const repairingItems = await prisma.item.count({ where: { status: 'REPAIRING' } });
@@ -21,10 +21,9 @@ exports.getStats = async (req, res) => {
       dailyRevenue = dailyPayments.reduce((sum, p) => sum + p.amount, 0);
     }
     
-    // Delays
     const delayedRentals = await prisma.rental.findMany({
       where: {
-        status: 'ONGOING',
+        status: 'LIVRÉE',
         expectedReturn: { lt: new Date() }
       },
       include: { 

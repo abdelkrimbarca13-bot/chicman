@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import SaleReceipt from '../components/SaleReceipt';
+import ProductLabel from '../components/ProductLabel';
 
 const Products = () => {
   const { user } = useAuth();
@@ -19,9 +20,22 @@ const Products = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [receiptToShow, setReceiptToShow] = useState(null);
+  const [labelToShow, setLabelToShow] = useState(null);
   
   // Modals
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [productForm, setProductForm] = useState({
+    reference: '',
+    name: '',
+    type: '',
+    size: '',
+    color: '',
+    purchasePrice: '',
+    salePrice: '',
+    quantity: 0
+  });
+
   const [cart, setCart] = useState([]);
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
   const [saleForm, setSaleForm] = useState({
@@ -342,6 +356,7 @@ const Products = () => {
                     <p className="text-xs text-zinc-500 uppercase">{product.type} | {product.size} | {product.color}</p>
                   </div>
                   <div className="flex gap-2">
+                    <button onClick={() => setLabelToShow(product)} className="p-2 text-zinc-400 hover:text-gold transition-colors" title="Imprimer Étiquette"><Tag size={16} /></button>
                     {user?.role === 'ADMIN' && (
                       <>
                         <button onClick={() => openEditModal(product)} className="p-2 text-zinc-400 hover:text-blue-500 transition-colors"><Edit2 size={16} /></button>
@@ -799,6 +814,10 @@ const Products = () => {
       {/* Receipt Modal */}
       {receiptToShow && (
         <SaleReceipt sale={receiptToShow} onClose={() => setReceiptToShow(null)} />
+      )}
+      {/* Label Modal */}
+      {labelToShow && (
+        <ProductLabel product={labelToShow} onClose={() => setLabelToShow(null)} />
       )}
     </div>
   );
