@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../api';
+import logoLight from '../assets/logo.png';
+import logoDark from '../assets/logo-blanc.png';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login } = useAuth();
+  const { theme } = useTheme();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -24,10 +28,12 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-zinc-50 dark:bg-rich-black transition-colors duration-300">
       <div className="w-full max-w-md p-10 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-gold/20">
-        <div className="mb-10 flex flex-col items-center">
-            <span className="text-7xl font-normal text-zinc-900 dark:text-white font-nathalyn">Chic</span>
-            <div className="h-px w-32 bg-gold my-1"></div>
-            <span className="text-xl font-light tracking-[0.7em] text-gold font-elegant italic">MAN</span>
+        <div className="mb-10 flex justify-center items-center">
+          <img 
+            src={theme === 'dark' ? logoDark : logoLight} 
+            alt="Chic Man Logo" 
+            className="h-20 w-auto object-contain"
+          />
         </div>
         {error && <div className="p-3 mb-4 text-sm text-red-500 dark:text-red-400 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-900/50 rounded">{error}</div>}
         <form onSubmit={handleSubmit}>

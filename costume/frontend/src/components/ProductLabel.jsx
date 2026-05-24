@@ -7,14 +7,8 @@ const ProductLabel = ({ product, onClose }) => {
     window.print();
   };
 
-  // The QR code contains the product reference and ID for quick scanning
-  const qrValue = JSON.stringify({
-    type: 'PRODUCT_REF',
-    id: product.id,
-    reference: product.reference,
-    name: product.name,
-    price: product.salePrice
-  });
+  // The QR code contains the product reference for quick scanning
+  const qrValue = product.reference;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print-bg">
@@ -51,10 +45,10 @@ const ProductLabel = ({ product, onClose }) => {
                 padding: 2mm !important;
                 margin: 0 !important;
                 display: flex !important;
-                flex-direction: row !important;
+                flex-direction: column !important;
                 align-items: center !important;
                 justify-content: center !important;
-                gap: 2mm !important;
+                gap: 1.5mm !important;
               }
               .no-print {
                 display: none !important;
@@ -62,22 +56,10 @@ const ProductLabel = ({ product, onClose }) => {
             }
           `}} />
           
-          <div className="flex flex-row items-center justify-center gap-1 border-2 border-black p-1.5 rounded-lg w-full h-full max-w-[50mm] max-h-[30mm] overflow-hidden">
-            <div className="flex-1 flex flex-col justify-center overflow-hidden w-full">
-              <p className="text-[8px] font-black uppercase tracking-widest text-gold leading-none mb-1">CHIC MAN</p>
-              <p className="text-[11px] font-black uppercase leading-[1.1] truncate w-full">{product.name}</p>
-              <p className="text-[7px] font-bold uppercase text-zinc-500 leading-none mt-0.5">REF: {product.reference}</p>
-              <p className="text-[7px] font-semibold text-zinc-500 leading-none mt-0.5">{product.type} | T: {product.size}</p>
-              
-              <div className="mt-1 pt-1 border-t border-black/20 w-full flex justify-between">
-                <span className="text-[10px] font-black uppercase">{product.salePrice.toLocaleString()} DA</span>
-              </div>
-            </div>
-            
-            <div className="flex flex-col items-center shrink-0 ml-1">
-                <QRCodeSVG value={qrValue} size={42} level="M" />
-                <p className="text-[6px] font-black mt-1 uppercase">BOUTIQUE</p>
-            </div>
+          <div className="flex flex-col items-center justify-center gap-1.5 border-2 border-black p-2 rounded-lg w-full h-full max-w-[50mm] max-h-[30mm] overflow-hidden">
+            <p className="text-[9px] font-black uppercase tracking-widest text-gold leading-none">CHIC MAN</p>
+            <QRCodeSVG value={qrValue} size={48} level="M" />
+            <p className="text-[11px] font-mono font-black uppercase text-black leading-none tracking-wider">REF: {product.reference}</p>
           </div>
         </div>
 
