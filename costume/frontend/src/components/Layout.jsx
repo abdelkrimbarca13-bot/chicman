@@ -41,12 +41,17 @@ const Layout = ({ children }) => {
     <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950 overflow-hidden text-zinc-900 dark:text-zinc-100">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-rich-black text-zinc-900 dark:text-white flex items-center justify-between px-4 z-40 border-b border-gold/30">
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <img 
             src={theme === 'dark' ? logoDark : logoLight} 
             alt="Chic Man Logo" 
             className="h-10 w-auto object-contain"
           />
+          <div className="flex flex-col">
+            <span className="text-xl font-normal text-zinc-900 dark:text-white font-nathalyn leading-none">Chic</span>
+            <div className="h-px w-10 bg-gold my-0.5"></div>
+            <span className="text-[8px] font-light tracking-[0.4em] text-gold font-elegant italic leading-none">MAN</span>
+          </div>
         </div>
         <button onClick={toggleSidebar} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-md">
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
@@ -66,20 +71,30 @@ const Layout = ({ children }) => {
         fixed lg:static inset-y-0 left-0 w-64 bg-white dark:bg-rich-black text-zinc-900 dark:text-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out border-r border-gold/20
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-6 hidden lg:flex justify-center items-center border-b border-gold/20">
+        <div className="p-6 hidden lg:flex justify-center items-center gap-4 border-b border-gold/20">
           <img 
             src={theme === 'dark' ? logoDark : logoLight} 
             alt="Chic Man Logo" 
-            className="h-16 w-auto object-contain"
+            className="h-14 w-auto object-contain"
           />
+          <div className="flex flex-col">
+            <span className="text-3xl font-normal text-zinc-900 dark:text-white font-nathalyn leading-none">Chic</span>
+            <div className="h-px w-14 bg-gold my-0.5"></div>
+            <span className="text-[10px] font-light tracking-[0.5em] text-gold font-elegant italic leading-none">MAN</span>
+          </div>
         </div>
         
-        <div className="lg:hidden p-4 flex justify-center items-center border-b border-gold/20">
+        <div className="lg:hidden p-4 flex justify-center items-center gap-3 border-b border-gold/20">
           <img 
             src={theme === 'dark' ? logoDark : logoLight} 
             alt="Chic Man Logo" 
-            className="h-12 w-auto object-contain"
+            className="h-10 w-auto object-contain"
           />
+          <div className="flex flex-col">
+            <span className="text-xl font-normal text-zinc-900 dark:text-white font-nathalyn leading-none">Chic</span>
+            <div className="h-px w-10 bg-gold my-0.5"></div>
+            <span className="text-[8px] font-light tracking-[0.4em] text-gold font-elegant italic leading-none">MAN</span>
+          </div>
         </div>
 
         <nav className="flex-1 mt-6 overflow-y-auto">

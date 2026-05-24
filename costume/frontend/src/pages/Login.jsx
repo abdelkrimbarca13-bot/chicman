@@ -28,12 +28,17 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-zinc-50 dark:bg-rich-black transition-colors duration-300">
       <div className="w-full max-w-md p-10 bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-gold/20">
-        <div className="mb-10 flex justify-center items-center">
+        <div className="mb-10 flex justify-center items-center gap-4">
           <img 
             src={theme === 'dark' ? logoDark : logoLight} 
             alt="Chic Man Logo" 
-            className="h-20 w-auto object-contain"
+            className="h-16 w-auto object-contain"
           />
+          <div className="flex flex-col">
+            <span className="text-4xl font-normal text-zinc-900 dark:text-white font-nathalyn leading-none">Chic</span>
+            <div className="h-px w-20 bg-gold my-1"></div>
+            <span className="text-sm font-light tracking-[0.6em] text-gold font-elegant italic leading-none">MAN</span>
+          </div>
         </div>
         {error && <div className="p-3 mb-4 text-sm text-red-500 dark:text-red-400 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-900/50 rounded">{error}</div>}
         <form onSubmit={handleSubmit}>
