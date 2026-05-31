@@ -579,13 +579,6 @@ const Cash = () => {
                                       <td className="px-6 py-4 text-xs font-medium text-zinc-900 dark:text-white truncate max-w-[200px]">{m.desc}</td>
                                       <td className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">{m.by}</td>
                                       <td className={`px-6 py-4 text-right font-black ${m.color}`}>{m.amount > 0 ? '+' : ''}{m.amount} DA</td>
-                                      <td className="px-6 py-4 text-right">
-                                        {isAdmin && m.type === 'VENTE_PARFUM' && (
-                                          <button onClick={() => handleDeletePerfumeSale(m.id.replace('p', ''))} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Supprimer">
-                                            <Trash2 size={14} />
-                                          </button>
-                                        )}
-                                      </td>
                                   </tr>
                                 ));
                               })()}
