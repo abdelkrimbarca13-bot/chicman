@@ -42,13 +42,13 @@ const ProductLabel = ({ product, onClose }) => {
                 top: 0;
                 width: 50mm !important;
                 height: 30mm !important;
-                padding: 2mm !important;
+                padding: 1mm !important;
                 margin: 0 !important;
                 display: flex !important;
                 flex-direction: column !important;
                 align-items: center !important;
                 justify-content: center !important;
-                gap: 1.5mm !important;
+                gap: 1mm !important;
               }
               .no-print {
                 display: none !important;
@@ -56,10 +56,10 @@ const ProductLabel = ({ product, onClose }) => {
             }
           `}} />
           
-          <div className="flex flex-col items-center justify-center gap-1.5 border-2 border-black p-2 rounded-lg w-full h-full max-w-[50mm] max-h-[30mm] overflow-hidden">
+          <div className="flex flex-col items-center justify-center gap-1 border-2 border-black p-1 rounded-lg w-full h-full max-w-[50mm] max-h-[30mm] overflow-hidden">
             <p className="text-[9px] font-black uppercase tracking-widest text-gold leading-none">CHIC MAN</p>
-            <QRCodeSVG value={qrValue} size={48} level="M" />
-            <p className="text-[11px] font-mono font-black uppercase text-black leading-none tracking-wider">REF: {product.reference}</p>
+            <QRCodeSVG value={qrValue} size={65} level="M" />
+            <p className="text-[12px] font-mono font-black uppercase text-black leading-none tracking-wider">{product.salePrice.toLocaleString()} DA</p>
           </div>
         </div>
 
