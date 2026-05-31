@@ -47,13 +47,13 @@ const PerfumeLabel = ({ perfume, quantity, onClose }) => {
                 top: 0;
                 width: 50mm !important;
                 height: 30mm !important;
-                padding: 2mm !important;
+                padding: 1mm !important;
                 margin: 0 !important;
                 display: flex !important;
                 flex-direction: row !important;
                 align-items: center !important;
                 justify-content: center !important;
-                gap: 2mm !important;
+                gap: 1mm !important;
               }
               .no-print {
                 display: none !important;
@@ -61,7 +61,7 @@ const PerfumeLabel = ({ perfume, quantity, onClose }) => {
             }
           `}} />
           
-          <div className={`flex ${quantity ? 'flex-col text-center' : 'flex-row'} items-center justify-center gap-1 border-2 border-black p-1.5 rounded-lg w-full h-full max-w-[50mm] max-h-[30mm] overflow-hidden`}>
+          <div className={`flex ${quantity ? 'flex-col text-center' : 'flex-row'} items-center justify-center gap-1 border-2 border-black p-1 rounded-lg w-full h-full max-w-[50mm] max-h-[30mm] overflow-hidden`}>
             <div className={`flex-1 flex flex-col justify-center ${quantity ? 'items-center' : ''} overflow-hidden w-full`}>
               <p className="text-[8px] font-black uppercase tracking-widest text-gold leading-none mb-1">CHIC MAN</p>
               <p className={`${quantity ? 'text-[16px]' : 'text-[12px]'} font-black uppercase leading-[1.1] truncate w-full`}>{perfume.brand}</p>
@@ -82,9 +82,8 @@ const PerfumeLabel = ({ perfume, quantity, onClose }) => {
             </div>
             
             {!quantity && (
-              <div className="flex flex-col items-center shrink-0 ml-2">
-                  <QRCodeSVG value={qrValue} size={42} level="M" />
-                  <p className="text-[6px] font-black mt-1 uppercase">SCAN TO SELL</p>
+              <div className="flex flex-col items-center justify-center shrink-0 ml-1">
+                  <QRCodeSVG value={qrValue} size={60} level="M" />
               </div>
             )}
           </div>
