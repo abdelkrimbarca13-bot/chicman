@@ -58,7 +58,19 @@ jobs:
             cd costume/backend || { echo "❌ Backend folder not found"; exit 1; }
             npm install
             npx prisma generate
-            npx prisma migrate deploy
+            
+            echo "Performing Database Backup (preserving Users/Items/Products/Perfumes)..."
+            node scripts/backup-db.js || { echo "❌ Backup failed"; exit 1; }
+            
+            echo "Resetting VPS Database file..."
+            rm -f prisma/dev.db prisma/dev.db-journal
+            
+            echo "Running fresh Prisma migrations..."
+            npx prisma migrate deploy || { echo "❌ Migration failed"; exit 1; }
+            
+            echo "Restoring critical data..."
+            node scripts/restore-db.js || { echo "❌ Restore failed"; exit 1; }
+            
             node scripts/fix-balances.js
             
             echo "Updating Frontend..."
