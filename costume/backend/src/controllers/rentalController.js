@@ -519,10 +519,10 @@ exports.updateRental = async (req, res) => {
 
     const rentalId = parseInt(id);
 
-    // Find existing rental
+    // Find existing rental with payments and cash movements
     const existingRental = await prisma.rental.findUnique({
       where: { id: rentalId },
-      include: { items: true }
+      include: { items: true, payments: true, cashMovements: true }
     });
 
     if (!existingRental) return res.status(404).json({ message: 'Location non trouvée' });
@@ -540,11 +540,17 @@ exports.updateRental = async (req, res) => {
     end.setHours(11, 0, 0, 0);
 
     const total = parseFloat(totalAmount) || 0;
-    const paid = parseFloat(paidAmount) || 0;
+    const paid = parseFloat(paidAmount) || 0; // This is the updated initial deposit from the frontend
 
-    if (paid > total) {
+    const subsequentPayments = existingRental.payments.filter(p => p.type !== 'ENCAISSEMENT_ACOMPTE');
+    const subsequentPaymentsSum = subsequentPayments.reduce((sum, p) => sum + p.amount, 0);
+
+    if (paid + subsequentPaymentsSum > total) {
       return res.status(400).json({ message: 'Le montant payé ne peut pas dépasser le montant total.' });
     }
+
+    const initialPayment = existingRental.payments.find(p => p.type === 'ENCAISSEMENT_ACOMPTE');
+    const initialCashMovement = existingRental.cashMovements.find(cm => cm.type === 'DEPOSIT');
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Release old items
@@ -557,14 +563,66 @@ exports.updateRental = async (req, res) => {
       // 2. Delete old rental items
       await tx.rentalItem.deleteMany({ where: { rentalId } });
 
+      // Sync payment and cashMovement of initial deposit
+      if (paid > 0) {
+        if (initialPayment) {
+          await tx.payment.update({
+            where: { id: initialPayment.id },
+            data: { amount: paid }
+          });
+        } else {
+          await tx.payment.create({
+            data: {
+              amount: paid,
+              type: 'ENCAISSEMENT_ACOMPTE',
+              rentalId: rentalId,
+              performedBy: req.userData.username
+            }
+          });
+        }
+
+        if (initialCashMovement) {
+          await tx.cashMovement.update({
+            where: { id: initialCashMovement.id },
+            data: { 
+              amount: paid,
+              description: `Versement initial - Client: ${firstName} ${lastName}`
+            }
+          });
+        } else {
+          await tx.cashMovement.create({
+            data: {
+              rentalId: rentalId,
+              amount: paid,
+              type: 'DEPOSIT',
+              description: `Versement initial - Client: ${firstName} ${lastName}`,
+              date: new Date()
+            }
+          });
+        }
+      } else {
+        // If deposit is changed to 0, delete the initial payment and cash movement
+        if (initialPayment) {
+          await tx.payment.delete({
+            where: { id: initialPayment.id }
+          });
+        }
+        if (initialCashMovement) {
+          await tx.cashMovement.delete({
+            where: { id: initialCashMovement.id }
+          });
+        }
+      }
+
       // 3. Update rental details
       const updatedRental = await tx.rental.update({
         where: { id: rentalId },
         data: {
           startDate: start,
           expectedReturn: end,
-          totalAmount: parseFloat(totalAmount),
-          paidAmount: parseFloat(paidAmount),
+          totalAmount: total,
+          depositAmount: paid,
+          paidAmount: paid + subsequentPaymentsSum,
           discount: parseFloat(discount),
           addedAmount: parseFloat(addedAmount) || 0,
           remarks: remarks || null,
@@ -591,10 +649,20 @@ exports.updateRental = async (req, res) => {
 
     await logAction(req.userData.userId, 'UPDATE_RENTAL', { rentalId: id });
     
-    // Update daily stats for both the original start date and potentially the new start date
-    await updateDailyStats(existingRental.startDate);
-    if (existingRental.startDate.toISOString() !== start.toISOString()) {
-      await updateDailyStats(start);
+    // Collect all unique affected dates for recalculating daily stats
+    const affectedDates = new Set();
+    if (existingRental.startDate) {
+      affectedDates.add(existingRental.startDate.toISOString().split('T')[0]);
+    }
+    affectedDates.add(start.toISOString().split('T')[0]);
+    affectedDates.add(new Date().toISOString().split('T')[0]);
+    existingRental.payments.forEach(p => {
+      affectedDates.add(p.createdAt.toISOString().split('T')[0]);
+    });
+
+    // Update daily stats for all affected dates
+    for (const dateStr of affectedDates) {
+      await updateDailyStats(new Date(dateStr));
     }
 
     const updatedWithDetails = await prisma.rental.findUnique({

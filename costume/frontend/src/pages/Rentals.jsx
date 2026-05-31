@@ -195,7 +195,7 @@ const Rentals = () => {
       startDate: new Date(rental.startDate).toISOString().split('T')[0],
       expectedReturn: new Date(rental.expectedReturn).toISOString().split('T')[0],
       totalAmount: rental.totalAmount,
-      paidAmount: rental.paidAmount,
+      paidAmount: rental.depositAmount || 0,
       discount: rental.discount,
       addedAmount: rental.addedAmount || 0,
       remarks: rental.remarks || '',
