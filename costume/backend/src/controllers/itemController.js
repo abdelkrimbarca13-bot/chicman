@@ -108,6 +108,32 @@ exports.updateItemStatus = async (req, res) => {
   }
 };
 
+exports.bulkUpdateItemStatus = async (req, res) => {
+  try {
+    const { ids, status } = req.body;
+    
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Les identifiants doivent être fournis sous forme de tableau non vide.' });
+    }
+    
+    if (!['AVAILABLE', 'RENTED', 'CLEANING', 'REPAIRING', 'TAILOR', 'PENDING_REPAIR'].includes(status)) {
+      return res.status(400).json({ error: 'Statut invalide' });
+    }
+    
+    const parsedIds = ids.map(id => parseInt(id));
+    
+    await prisma.item.updateMany({
+      where: { id: { in: parsedIds } },
+      data: { status }
+    });
+    
+    await logAction(req.userData.userId, 'BULK_UPDATE_ITEM_STATUS', { count: parsedIds.length, status });
+    res.json({ message: `${parsedIds.length} articles mis à jour avec le statut ${status}` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getItemDetails = async (req, res) => {
   try {
     const { id } = req.params;
