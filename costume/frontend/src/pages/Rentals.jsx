@@ -186,7 +186,7 @@ const Rentals = () => {
         id: ri.item.id,
         remarks: ri.remarks || '',
         tailorModification: ri.tailorModification || '',
-        price: ri.price,
+        price: ri.item.rentalPrice,
         name: ri.item.name,
         type: ri.item.type,
         color: ri.item.color,
