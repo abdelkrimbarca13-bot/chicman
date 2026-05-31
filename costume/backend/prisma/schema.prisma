@@ -80,6 +80,7 @@ model Rental {
 
   @@index([startDate, expectedReturn])
   @@index([status])
+  @@index([customerId])
 }
 
 model AuditLog {
@@ -89,6 +90,9 @@ model AuditLog {
   action    String
   details   String?
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Payment {
@@ -101,6 +105,7 @@ model Payment {
   rental      Rental   @relation(fields: [rentalId], references: [id])
 
   @@index([createdAt])
+  @@index([rentalId])
 }
 
 model CashMovement {
@@ -114,6 +119,7 @@ model CashMovement {
   rental      Rental   @relation(fields: [rentalId], references: [id])
 
   @@index([date])
+  @@index([rentalId])
 }
 
 model RentalItem {
@@ -124,6 +130,9 @@ model RentalItem {
   tailorModification String?
   item               Item    @relation(fields: [itemId], references: [id])
   rental             Rental  @relation(fields: [rentalId], references: [id])
+
+  @@index([rentalId])
+  @@index([itemId])
 }
 
 model DailyCash {
@@ -192,6 +201,8 @@ model SaleItem {
   itemColor String
   price     Float
   sale      Sale   @relation(fields: [saleId], references: [id])
+
+  @@index([saleId])
 }
 
 model Perfume {
@@ -226,6 +237,7 @@ model PerfumeSale {
   perfume         Perfume  @relation(fields: [perfumeId], references: [id])
 
   @@index([date])
+  @@index([perfumeId])
 }
 
 model Product {
@@ -262,4 +274,5 @@ model ProductSale {
   date          DateTime @default(now())
 
   @@index([date])
+  @@index([productId])
 }
