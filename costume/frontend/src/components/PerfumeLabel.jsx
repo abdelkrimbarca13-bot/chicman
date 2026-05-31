@@ -64,15 +64,9 @@ const PerfumeLabel = ({ perfume, quantity, onClose }) => {
           <div className={`flex ${quantity ? 'flex-col text-center' : 'flex-row'} items-center justify-center gap-1 border-2 border-black p-1 rounded-lg w-full h-full max-w-[50mm] max-h-[30mm] overflow-hidden`}>
             <div className={`flex-1 flex flex-col justify-center ${quantity ? 'items-center' : ''} overflow-hidden w-full`}>
               <p className="text-[8px] font-black uppercase tracking-widest text-gold leading-none mb-1">CHIC MAN</p>
-              <p className={`${quantity ? 'text-[16px]' : 'text-[12px]'} font-black uppercase leading-[1.1] truncate w-full`}>{perfume.brand}</p>
-              <p className={`${quantity ? 'text-[13px]' : 'text-[10px]'} font-bold uppercase leading-[1.1] truncate w-full`}>{perfume.name}</p>
+              <p className={`${quantity ? 'text-[16px]' : 'text-[12px]'} font-black uppercase leading-[1.1] w-full`}>{perfume.brand}</p>
+              <p className={`${quantity ? 'text-[13px]' : 'text-[10px]'} font-bold uppercase leading-[1.1] w-full`}>{perfume.name}</p>
               <p className={`${quantity ? 'text-[10px]' : 'text-[7px]'} font-bold uppercase text-zinc-500 leading-none mt-1`}>{perfume.type}</p>
-              
-              {quantity && (
-                <div className="mt-2 pt-1 border-t-2 border-black w-3/4 flex justify-center items-center">
-                  <span className="text-[16px] font-black uppercase">{quantity} ML</span>
-                </div>
-              )}
               
               {!quantity && (
                 <div className="mt-1 pt-1 border-t border-black/20 w-full flex justify-between">
