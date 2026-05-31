@@ -714,13 +714,23 @@ const Rentals = () => {
                         <Smartphone className="absolute left-3 top-3 text-gold" size={18} />
                         <input 
                             type="text" 
-                            placeholder="Scannez l'article ici..." 
-                            className="w-full pl-10 pr-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-zinc-900 dark:text-white font-bold"
+                            placeholder={newRental.expectedReturn ? "Scannez l'article ici..." : "Sélectionnez d'abord les dates..."}
+                            disabled={!newRental.expectedReturn}
+                            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg outline-none font-bold ${
+                              newRental.expectedReturn 
+                                ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-gold' 
+                                : 'bg-zinc-200 dark:bg-zinc-900 border-zinc-800 text-zinc-500 cursor-not-allowed'
+                            }`}
                             value={scanTerm}
                             onChange={(e) => handleScan(e.target.value)}
-                            autoFocus
+                            autoFocus={!!newRental.expectedReturn}
                         />
-                        {scanTerm.length >= 2 && (
+                        {!newRental.expectedReturn && (
+                          <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wide mt-2">
+                            ⚠️ Veuillez sélectionner la date de fin de location pour activer la recherche d'articles.
+                          </p>
+                        )}
+                        {scanTerm.length >= 2 && newRental.expectedReturn && (
                           <div className="absolute top-full left-0 w-full mt-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-50 overflow-y-auto max-h-[300px] scrollbar-thin scrollbar-thumb-gold">
                             {allItems.filter(item => 
                                 item.name.toLowerCase().includes(scanTerm.toLowerCase()) || 
@@ -731,15 +741,20 @@ const Rentals = () => {
                                     <button
                                         key={item.id}
                                         type="button"
+                                        disabled={!isAvailable}
                                         onClick={() => addItem(item)}
-                                        className={`w-full p-3 text-left flex justify-between items-center border-b border-zinc-700 last:border-0 hover:bg-zinc-700 transition-colors ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`w-full p-3 text-left flex justify-between items-center border-b border-zinc-700 last:border-0 transition-colors ${
+                                          isAvailable 
+                                            ? 'hover:bg-zinc-700 cursor-pointer text-zinc-900 dark:text-white' 
+                                            : 'opacity-60 bg-zinc-100/5 dark:bg-zinc-800/10 cursor-not-allowed text-zinc-400 dark:text-zinc-500'
+                                        }`}
                                     >
                                         <div>
-                                            <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                            <div className="font-bold flex items-center gap-2">
                                                 {item.name}
                                                 <span className="text-[10px] bg-gold/10 text-gold px-1.5 py-0.5 rounded border border-gold/20 uppercase font-black">Ref: {item.reference}</span>
                                             </div>
-                                            <div className="text-[10px] text-zinc-400 font-bold uppercase mt-1 flex gap-3">
+                                            <div className="text-[10px] font-bold uppercase mt-1 flex gap-3">
                                                 <span className="flex items-center gap-1"><span className="text-gold/50">Taille:</span> {item.size}</span>
                                                 <span className="flex items-center gap-1"><span className="text-gold/50">Couleur:</span> {item.color}</span>
                                                 <span className="flex items-center gap-1"><span className="text-gold/50">Type:</span> {item.type}</span>
@@ -747,7 +762,11 @@ const Rentals = () => {
                                         </div>
                                         <div className="text-right">
                                             <div className="text-sm font-black text-gold">{item.rentalPrice} DA</div>
-                                            {!isAvailable && <span className="text-[8px] font-black text-red-400 uppercase bg-red-900/30 px-1 rounded border border-red-900/50">Occupé</span>}
+                                            {!isAvailable && (
+                                              <span className="text-[9px] font-black text-red-500 dark:text-red-400 bg-red-500/10 dark:bg-red-500/20 px-2 py-0.5 rounded border border-red-500/30 uppercase mt-1 inline-block">
+                                                Déjà loué pour ces dates
+                                              </span>
+                                            )}
                                         </div>
                                     </button>
                                 );
