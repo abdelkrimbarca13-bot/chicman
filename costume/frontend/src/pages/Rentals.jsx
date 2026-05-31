@@ -601,6 +601,15 @@ const Rentals = () => {
                     >
                       <FileText size={16} className="mr-1"/> Bon
                     </button>
+                    {['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'ONGOING'].includes(rental.status) && (
+                      <button 
+                        onClick={() => handleEditRental(rental)}
+                        className="text-amber-500 hover:text-amber-400 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                        title="Modifier la location"
+                      >
+                        <Edit2 size={16} className="mr-1"/> Modifier
+                      </button>
+                    )}
                     {user?.role === 'ADMIN' && (
                       <button 
                         onClick={() => handleDeleteRental(rental.id)}
