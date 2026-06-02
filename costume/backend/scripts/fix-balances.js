@@ -23,6 +23,12 @@ async function fixBalances() {
     const sales = await prisma.sale.findMany({
       where: { createdAt: { gte: dayStart, lte: dayEnd } }
     });
+    const perfumeSales = await prisma.perfumeSale.findMany({
+      where: { date: { gte: dayStart, lte: dayEnd } }
+    });
+    const productSales = await prisma.productSale.findMany({
+      where: { date: { gte: dayStart, lte: dayEnd } }
+    });
     const expenses = await prisma.expense.findMany({
       where: { date: { gte: dayStart, lte: dayEnd } }
     });
@@ -31,7 +37,9 @@ async function fixBalances() {
     });
 
     const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0);
-    const totalRentals = payments.reduce((sum, p) => sum + p.amount, 0) + totalSales;
+    const totalPerfumeSales = perfumeSales.reduce((sum, s) => sum + s.totalAmount, 0);
+    const totalProductSales = productSales.reduce((sum, s) => sum + s.totalAmount, 0);
+    const totalRentals = payments.reduce((sum, p) => sum + p.amount, 0) + totalSales + totalPerfumeSales + totalProductSales;
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
     const totalWithdrawals = withdrawals.reduce((sum, w) => sum + w.amount, 0);
 

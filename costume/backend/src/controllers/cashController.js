@@ -484,13 +484,15 @@ exports.getGlobalSummary = async (req, res) => {
     const allRentals = await prisma.payment.aggregate({ _sum: { amount: true } });
     const allSales = await prisma.sale.aggregate({ _sum: { totalAmount: true } });
     const allPerfumeSales = await prisma.perfumeSale.aggregate({ _sum: { totalAmount: true } });
+    const allProductSales = await prisma.productSale.aggregate({ _sum: { totalAmount: true } });
     const allExpenses = await prisma.expense.aggregate({ _sum: { amount: true } });
     const allWithdrawals = await prisma.withdrawal.aggregate({ _sum: { amount: true } });
     
     // Le cash total est la somme des revenus moins les dépenses et les retraits effectués (Exclut la monnaie initiale ajoutée)
     const globalCash = (allRentals._sum.amount || 0) + 
                        (allSales._sum.totalAmount || 0) +
-                       (allPerfumeSales._sum.totalAmount || 0) -
+                       (allPerfumeSales._sum.totalAmount || 0) +
+                       (allProductSales._sum.totalAmount || 0) -
                        (allExpenses._sum.amount || 0) -
                        (allWithdrawals._sum.amount || 0);
 
