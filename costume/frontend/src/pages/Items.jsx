@@ -572,13 +572,17 @@ const Items = () => {
             <div className="flex justify-between items-center mb-6 border-b border-gold/10 pb-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gold font-luxury tracking-widest uppercase">{historyModal.name}</h2>
-                    <p className="text-zinc-500 font-mono text-xs">{historyModal.reference} - {historyModal.model}</p>
+                    <p className="text-zinc-500 font-mono text-xs">
+                      {historyModal.reference} - {historyModal.model}
+                      {historyModal.size && ` | Taille: ${historyModal.size}`}
+                      {historyModal.color && ` | Couleur: ${historyModal.color}`}
+                    </p>
                 </div>
                 <button onClick={() => setHistoryModal(null)} className="p-2 hover:bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-400 hover:text-zinc-900 dark:text-white transition-colors"><X size={24}/></button>
             </div>
             
             <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
-                <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                     <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-lg text-center border border-zinc-700">
                         <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">Total Locations</p>
                         <p className="text-3xl font-bold text-gold">{historyModal.rentals.length}</p>
@@ -596,6 +600,35 @@ const Items = () => {
                         }`}>
                             {historyModal.rentals.some(r => r.rental.status === 'ONGOING') ? 'OCCUPÉ' : 'DISPONIBLE'}
                         </p>
+                    </div>
+                    <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-lg text-center border border-zinc-700 flex flex-col justify-center items-center">
+                        <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider mb-2">Statut Physique</p>
+                        <select
+                            value={historyModal.status}
+                            onChange={async (e) => {
+                                const newStatus = e.target.value;
+                                try {
+                                    await api.put(`/items/${historyModal.id}/status`, { status: newStatus });
+                                    setHistoryModal(prev => ({ ...prev, status: newStatus }));
+                                    fetchItems();
+                                } catch (err) {
+                                    alert('Erreur lors de la mise à jour du statut : ' + (err.response?.data?.error || err.message));
+                                }
+                            }}
+                            className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border cursor-pointer transition-all ${
+                              historyModal.status === 'AVAILABLE' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900/50' :
+                              historyModal.status === 'RENTED' ? 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-900/50' :
+                              historyModal.status === 'CLEANING' ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50' :
+                              historyModal.status === 'PENDING_REPAIR' ? 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900/50' :
+                              'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-900/50'
+                            }`}
+                        >
+                            <option value="AVAILABLE" className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 font-bold">Disponible</option>
+                            <option value="RENTED" className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 font-bold">Loué</option>
+                            <option value="CLEANING" className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 font-bold">Nettoyage</option>
+                            <option value="REPAIRING" className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 font-bold">Réparation</option>
+                            <option value="PENDING_REPAIR" className="bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 font-bold">Attente Réparation</option>
+                        </select>
                     </div>
                 </div>
 
