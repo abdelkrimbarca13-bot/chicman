@@ -124,13 +124,23 @@ const Items = () => {
     }
   };
 
-  const handleBulkMakeAvailable = async () => {
-    if (!confirm(`Voulez-vous rendre disponibles les ${selectedItemIds.length} articles sélectionnés ?`)) {
+  const handleBulkStatusChange = async (newStatus) => {
+    const statusLabels = {
+      AVAILABLE: 'Disponible',
+      RENTED: 'Loué',
+      CLEANING: 'Nettoyage',
+      REPAIRING: 'Réparation',
+      PENDING_REPAIR: 'Attente Réparation',
+      TAILOR: 'Tailleur'
+    };
+    const label = statusLabels[newStatus] || newStatus;
+
+    if (!confirm(`Voulez-vous changer le statut des ${selectedItemIds.length} articles sélectionnés en "${label}" ?`)) {
       return;
     }
     try {
-      await api.put('/items/bulk-status', { ids: selectedItemIds, status: 'AVAILABLE' });
-      alert('Les articles sélectionnés sont désormais disponibles !');
+      await api.put('/items/bulk-status', { ids: selectedItemIds, status: newStatus });
+      alert(`Les articles sélectionnés sont désormais en statut "${label}" !`);
       setSelectedItemIds([]);
       fetchItems();
     } catch (err) {
@@ -322,19 +332,33 @@ const Items = () => {
               {selectedItemIds.length} {selectedItemIds.length > 1 ? 'articles sélectionnés' : 'article sélectionné'}
             </span>
           </div>
-          <div className="flex gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             <button 
               onClick={() => setSelectedItemIds([])}
               className="flex-1 sm:flex-initial px-4 py-2 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 rounded-lg text-zinc-600 dark:text-zinc-400 text-sm font-bold uppercase transition-colors"
             >
               Annuler
             </button>
-            <button 
-              onClick={handleBulkMakeAvailable}
-              className="flex-1 sm:flex-initial px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center justify-center gap-2 text-sm font-black uppercase tracking-wider transition-all shadow-lg active:scale-95"
-            >
-              <CheckCircle2 size={16} /> Rendre Disponible(s)
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest hidden md:inline">Changer statut :</span>
+              <select
+                onChange={(e) => {
+                  if (e.target.value) {
+                    handleBulkStatusChange(e.target.value);
+                    e.target.value = ''; // Reset selection
+                  }
+                }}
+                className="flex-1 sm:flex-initial px-4 py-2 bg-gold text-rich-black font-black uppercase text-xs rounded-lg shadow-lg border-2 border-gold/50 cursor-pointer hover:bg-light-gold transition-all active:scale-95 outline-none font-bold"
+                defaultValue=""
+              >
+                <option value="" disabled>Choisir statut...</option>
+                <option value="AVAILABLE" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white font-bold">Disponible</option>
+                <option value="RENTED" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white font-bold">Loué</option>
+                <option value="CLEANING" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white font-bold">Nettoyage</option>
+                <option value="REPAIRING" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white font-bold">Réparation</option>
+                <option value="PENDING_REPAIR" className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white font-bold">Attente Réparation</option>
+              </select>
+            </div>
           </div>
         </div>
       )}
@@ -344,22 +368,20 @@ const Items = () => {
           <table className="w-full text-left min-w-[800px]">
             <thead className="bg-zinc-100 dark:bg-zinc-800 uppercase text-[10px] font-bold text-zinc-500 dark:text-zinc-400 tracking-wider">
               <tr>
-                {filterStatus === 'RENTED' && (
-                  <th className="px-6 py-4 w-12 text-center">
-                    <input 
-                      type="checkbox" 
-                      className="rounded border-zinc-700 bg-zinc-900 text-gold focus:ring-gold cursor-pointer"
-                      checked={filteredItems.length > 0 && selectedItemIds.length === filteredItems.length}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedItemIds(filteredItems.map(i => i.id));
-                        } else {
-                          setSelectedItemIds([]);
-                        }
-                      }}
-                    />
-                  </th>
-                )}
+                <th className="px-6 py-4 w-12 text-center">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-zinc-700 bg-zinc-900 text-gold focus:ring-gold cursor-pointer"
+                    checked={filteredItems.length > 0 && selectedItemIds.length === filteredItems.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedItemIds(filteredItems.map(i => i.id));
+                      } else {
+                        setSelectedItemIds([]);
+                      }
+                    }}
+                  />
+                </th>
                 <th className="px-6 py-4 whitespace-nowrap">Code / Réf</th>
                 <th className="px-6 py-4 whitespace-nowrap">Article / Modèle</th>
                 <th className="px-6 py-4 whitespace-nowrap">Type</th>
@@ -382,22 +404,20 @@ const Items = () => {
                   }
                 }}
               >
-                {filterStatus === 'RENTED' && (
-                  <td className="px-6 py-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
-                    <input 
-                      type="checkbox" 
-                      className="rounded border-zinc-700 bg-zinc-900 text-gold focus:ring-gold cursor-pointer"
-                      checked={selectedItemIds.includes(item.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedItemIds(prev => [...prev, item.id]);
-                        } else {
-                          setSelectedItemIds(prev => prev.filter(id => id !== item.id));
-                        }
-                      }}
-                    />
-                  </td>
-                )}
+                <td className="px-6 py-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-zinc-700 bg-zinc-900 text-gold focus:ring-gold cursor-pointer"
+                    checked={selectedItemIds.includes(item.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedItemIds(prev => [...prev, item.id]);
+                      } else {
+                        setSelectedItemIds(prev => prev.filter(id => id !== item.id));
+                      }
+                    }}
+                  />
+                </td>
                 <td className="px-6 py-4 font-mono text-sm font-bold text-gold group-hover:text-light-gold transition-colors">{item.reference}</td>
                 <td className="px-6 py-4">
                   <div className="font-bold text-zinc-900 dark:text-white group-hover:text-gold transition-colors">{item.name}</div>
