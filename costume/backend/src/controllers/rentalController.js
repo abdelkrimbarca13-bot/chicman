@@ -457,6 +457,14 @@ exports.returnRental = async (req, res) => {
 
     if (!rental) return res.status(404).json({ message: 'Rental not found' });
 
+    // Bloquer le retour si la location est activée et non totalement payée
+    const totalDue = rental.totalAmount + (rental.repairFees || 0);
+    if (rental.isActivated && rental.paidAmount < totalDue) {
+      return res.status(400).json({ 
+        message: `Le retour ne peut pas être effectué car le paiement n'est pas réglé en totalité. Reste à payer : ${totalDue - rental.paidAmount} DA.` 
+      });
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.rental.update({
         where: { id: parseInt(id) },

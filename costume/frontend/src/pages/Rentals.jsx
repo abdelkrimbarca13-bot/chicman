@@ -273,6 +273,12 @@ const Rentals = () => {
   };
 
   const handleReturn = (rental) => {
+    const totalDue = rental.totalAmount + (rental.repairFees || 0);
+    if (rental.isActivated && rental.paidAmount < totalDue) {
+      alert(`Impossible de retourner cette location : Le paiement n'a pas été entièrement réglé. Reste à payer : ${totalDue - rental.paidAmount} DA. Veuillez d'abord encaisser le solde restant.`);
+      return;
+    }
+
     const immediateAvailableTypes = ['Chaussures', 'Cravate', 'Ceinture', 'Gilet accessoire'];
     setReturnModal({
       id: rental.id,
