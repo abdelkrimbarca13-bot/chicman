@@ -15,12 +15,7 @@ const RentalReceipt = ({ rental, onClose }) => {
   };
 
   const balance = (rental.totalAmount + (rental.repairFees || 0)) - rental.paidAmount;
-  const qrValue = JSON.stringify({
-    id: rental.id,
-    customer: `${rental.customer.firstName} ${rental.customer.lastName}`,
-    total: rental.totalAmount,
-    date: format(new Date(rental.createdAt), 'dd/MM/yyyy')
-  });
+  const qrValue = rental.id.toString();
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print-bg">
@@ -47,7 +42,7 @@ const RentalReceipt = ({ rental, onClose }) => {
         <div id="receipt-content" className="p-8 bg-white text-black font-mono print:p-0">
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
-              @page {
+              @media print {
                 size: A5;
                 margin: 5mm;
               }
@@ -71,7 +66,10 @@ const RentalReceipt = ({ rental, onClose }) => {
             }
           `}} />
           
-          <div className="text-center mb-6">
+          <div className="relative text-center mb-6 pb-2">
+            <div className="absolute top-0 left-0">
+              <QRCodeSVG value={qrValue} size={65} level="H" />
+            </div>
             <h1 className="text-3xl font-black tracking-tighter border-b-4 border-black inline-block px-6 pb-2 mb-1">CHIC MAN</h1>
             <p className="text-[12px] uppercase tracking-[0.3em] font-black">LUXURY RENTAL</p>
             {rental.status === 'ANNULÉE' && (
@@ -172,23 +170,16 @@ const RentalReceipt = ({ rental, onClose }) => {
               </div>
           </div>
 
-          <div className="flex justify-center items-center mb-10 px-4">
-              <div className="flex flex-col items-center">
-                  <QRCodeSVG value={qrValue} size={65} level="H" />
-                  <p className="text-[8px] font-black mt-2 uppercase tracking-widest">AUTHENTIFIER LE BON</p>
-              </div>
-          </div>
-
           <div className="text-center border-t-2 border-dashed border-black pt-4">
-            <p className="text-[11px] uppercase font-black mb-2">MERCI DE VOTRE CONFIANCE</p>
+            <p className="text-[14px] uppercase font-black mb-2">MERCI DE VOTRE CONFIANCE</p>
             <div className="space-y-2">
-              <div className="text-[9px] font-black uppercase leading-tight">
+              <div className="text-[12px] font-black uppercase leading-tight">
                 <p>L’avance n’est pas remboursable.</p>
                 <p>Merci de retourner le costume avant 12h00 le jour du retour.</p>
                 <p>Tout retard peut entraîner des frais supplémentaires.</p>
                 <p>Le magasin n’est pas responsable en cas de perte du bon.</p>
               </div>
-              <div className="text-[10px] font-bold leading-tight" dir="rtl">
+              <div className="text-[13px] font-bold leading-tight" dir="rtl">
                 <p>المبلغ المدفوع مسبقاً (العربون) لا يُسترجع.</p>
                 <p>يرجى إرجاع البدلة قبل الساعة 12:00 يوم الإرجاع.</p>
                 <p>في حالة التأخير قد يتم فرض رسوم إضافية.</p>
