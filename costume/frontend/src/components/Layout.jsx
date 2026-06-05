@@ -40,7 +40,7 @@ const Layout = ({ children }) => {
   return (
     <div className="flex h-screen bg-zinc-50 dark:bg-zinc-950 overflow-hidden text-zinc-900 dark:text-zinc-100">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-rich-black text-zinc-900 dark:text-white flex items-center justify-between px-4 z-40 border-b border-gold/30">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-rich-black text-zinc-900 dark:text-white flex items-center justify-between px-4 z-40 border-b border-gold/30 no-print">
         <div className="flex items-center gap-2">
           <img 
             src={theme === 'dark' ? logoDark : logoLight} 
@@ -61,14 +61,14 @@ const Layout = ({ children }) => {
       {/* Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 no-print"
           onClick={toggleSidebar}
         />
       )}
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 w-64 bg-white dark:bg-rich-black text-zinc-900 dark:text-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out border-r border-gold/20
+        fixed lg:static inset-y-0 left-0 w-64 bg-white dark:bg-rich-black text-zinc-900 dark:text-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out border-r border-gold/20 no-print
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="p-6 hidden lg:flex justify-center items-center gap-4 border-b border-gold/20">
@@ -134,8 +134,8 @@ const Layout = ({ children }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-4 md:p-8 pt-20 lg:pt-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="flex-1 overflow-auto p-4 md:p-8 pt-20 lg:pt-8 print:p-0 print:overflow-visible">
+        <div className="max-w-7xl mx-auto print:max-w-none">
           {children}
         </div>
       </div>

@@ -77,6 +77,11 @@ exports.createItem = async (req, res) => {
 exports.updateItem = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Seul l\'administrateur peut modifier un article.' });
+    }
+
     const item = await prisma.item.update({
       where: { id: parseInt(id) },
       data: req.body

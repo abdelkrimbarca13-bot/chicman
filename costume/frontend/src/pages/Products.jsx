@@ -5,8 +5,9 @@ import {
   Package, Plus, Search, Trash2, Edit2, ShoppingCart, 
   History, BarChart3, AlertTriangle, Check, X, ArrowRight,
   TrendingUp, Calendar, Info, QrCode, Tag, Printer,
-  Download, Upload
+  Download, Upload, Camera
 } from 'lucide-react';
+import CameraScanner from '../components/CameraScanner';
 import { format } from 'date-fns';
 import SaleReceipt from '../components/SaleReceipt';
 import ProductLabel from '../components/ProductLabel';
@@ -21,6 +22,7 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [receiptToShow, setReceiptToShow] = useState(null);
   const [labelToShow, setLabelToShow] = useState(null);
+  const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
   
   // Modals
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -248,6 +250,40 @@ const Products = () => {
     setIsSaleModalOpen(true);
   };
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const term = searchTerm.trim();
+    if (!term) return;
+
+    // Search for exact product reference match
+    const product = products.find(p => p.reference.toLowerCase() === term.toLowerCase());
+    if (product) {
+      if (product.quantity <= 0) {
+        alert('Stock insuffisant');
+      } else {
+        addToCart(product);
+        setSearchTerm(''); // Clear the search bar
+      }
+    }
+  };
+
+  const handleScanSuccess = (ref) => {
+    const term = ref.trim();
+    if (!term) return;
+
+    const product = products.find(p => p.reference.toLowerCase() === term.toLowerCase());
+    if (product) {
+      if (product.quantity <= 0) {
+        alert('Stock insuffisant');
+      } else {
+        addToCart(product);
+        setSearchTerm(''); // Clear the search bar
+      }
+    } else {
+      alert(`Produit avec la référence "${term}" non trouvé`);
+    }
+  };
+
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -304,16 +340,26 @@ const Products = () => {
       {activeTab === 'inventory' && (
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-              <input
-                type="text"
-                placeholder="Rechercher un produit..."
-                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-gold outline-none"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+            <form onSubmit={handleSearchSubmit} className="w-full md:w-96">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Rechercher ou scanner code barre/QR..."
+                  className="w-full pl-10 pr-12 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-gold outline-none"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsCameraScannerOpen(true)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-gold transition-colors"
+                  title="Scanner avec la caméra"
+                >
+                  <Camera size={20} />
+                </button>
+              </div>
+            </form>
             {user?.role === 'ADMIN' && (
               <div className="flex flex-wrap gap-2 w-full md:w-auto">
                 <button
@@ -812,13 +858,18 @@ const Products = () => {
         </div>
       )}
       {/* Receipt Modal */}
-      {receiptToShow && (
+      {receiptToShow && !labelToShow && (
         <SaleReceipt sale={receiptToShow} onClose={() => setReceiptToShow(null)} />
       )}
       {/* Label Modal */}
       {labelToShow && (
         <ProductLabel product={labelToShow} onClose={() => setLabelToShow(null)} />
       )}
+      <CameraScanner 
+        isOpen={isCameraScannerOpen} 
+        onClose={() => setIsCameraScannerOpen(false)} 
+        onScanSuccess={handleScanSuccess}
+      />
     </div>
   );
 };

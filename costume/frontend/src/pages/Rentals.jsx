@@ -2,9 +2,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Calendar, CheckCircle, Search, Trash2, Smartphone, DollarSign, X, FileText, Play, Info, Scissors, PlusCircle, Edit2, History, CheckCircle2 } from 'lucide-react';
+import { Plus, Calendar, CheckCircle, Search, Trash2, Smartphone, DollarSign, X, FileText, Play, Info, Scissors, PlusCircle, Edit2, History, CheckCircle2, Camera } from 'lucide-react';
 import { format } from 'date-fns';
 import RentalReceipt from '../components/RentalReceipt';
+import CameraScanner from '../components/CameraScanner';
 
 const Rentals = () => {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ const Rentals = () => {
   const [receiptModal, setReceiptModal] = useState(null);
   const [returnModal, setReturnModal] = useState(null);
   const [scanTerm, setScanTerm] = useState('');
+  const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
   const [newRental, setNewRental] = useState({
     firstName: '',
     lastName: '',
@@ -722,7 +724,7 @@ const Rentals = () => {
                             type="text" 
                             placeholder={newRental.expectedReturn ? "Scannez l'article ici..." : "Sélectionnez d'abord les dates..."}
                             disabled={!newRental.expectedReturn}
-                            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg outline-none font-bold ${
+                            className={`w-full pl-10 pr-12 py-2.5 border rounded-lg outline-none font-bold ${
                               newRental.expectedReturn 
                                 ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-700 text-zinc-900 dark:text-white focus:ring-2 focus:ring-gold' 
                                 : 'bg-zinc-200 dark:bg-zinc-900 border-zinc-800 text-zinc-500 cursor-not-allowed'
@@ -731,6 +733,16 @@ const Rentals = () => {
                             onChange={(e) => handleScan(e.target.value)}
                             autoFocus={!!newRental.expectedReturn}
                         />
+                        {newRental.expectedReturn && (
+                          <button
+                            type="button"
+                            onClick={() => setIsCameraScannerOpen(true)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-gold transition-colors"
+                            title="Scanner avec la caméra"
+                          >
+                            <Camera size={20} />
+                          </button>
+                        )}
                         {!newRental.expectedReturn && (
                           <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wide mt-2">
                             ⚠️ Veuillez sélectionner la date de fin de location pour activer la recherche d'articles.
@@ -1130,6 +1142,11 @@ const Rentals = () => {
       )}
 
       {receiptModal && <RentalReceipt rental={receiptModal} onClose={() => setReceiptModal(null)} />}
+      <CameraScanner 
+        isOpen={isCameraScannerOpen} 
+        onClose={() => setIsCameraScannerOpen(false)} 
+        onScanSuccess={(text) => handleScan(text)}
+      />
     </div>
   );
 };

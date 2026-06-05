@@ -5,11 +5,12 @@ import {
   Droplet, Plus, Search, Trash2, Edit2, ShoppingCart, 
   History, BarChart3, AlertTriangle, Check, X, ArrowRight,
   TrendingUp, Package, Calendar, Info, QrCode, Tag, Printer,
-  Download, Upload
+  Download, Upload, Camera
 } from 'lucide-react';
 import { format } from 'date-fns';
 import PerfumeReceipt from '../components/PerfumeReceipt';
 import PerfumeLabel from '../components/PerfumeLabel';
+import CameraScanner from '../components/CameraScanner';
 
 const Perfumes = () => {
   const { user } = useAuth();
@@ -27,7 +28,7 @@ const Perfumes = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [receiptToShow, setReceiptToShow] = useState(null);
   const [labelToShow, setLabelToShow] = useState(null);
-  const [scanValue, setScanValue] = useState('');
+  const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
   
   // Form states
   const [productForm, setProductForm] = useState({
@@ -105,20 +106,40 @@ const Perfumes = () => {
     }
   };
 
-  const handleScan = (e) => {
-    e.preventDefault();
-    try {
-      const data = JSON.parse(scanValue);
-      if (data.type === 'PERFUME_REF' && data.id) {
-        const product = perfumes.find(p => p.id === data.id);
-        if (product) {
-          openSaleModal(product);
-          setScanValue('');
+  const handleSearchChange = (val) => {
+    setSearchTerm(val);
+    if (val.trim().startsWith('{') && val.trim().endsWith('}')) {
+      try {
+        const data = JSON.parse(val);
+        if (data.type === 'PERFUME_REF' && data.id) {
+          const product = perfumes.find(p => p.id === data.id);
+          if (product) {
+            openSaleModal(product);
+            setSearchTerm('');
+          }
         }
+      } catch (err) {
+        // Not a complete or valid JSON yet
       }
-    } catch (err) {
-      // Not a valid JSON or not a perfume QR
-      console.log('Invalid scan');
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const val = searchTerm.trim();
+    if (val.startsWith('{') && val.endsWith('}')) {
+      try {
+        const data = JSON.parse(val);
+        if (data.type === 'PERFUME_REF' && data.id) {
+          const product = perfumes.find(p => p.id === data.id);
+          if (product) {
+            openSaleModal(product);
+            setSearchTerm('');
+          }
+        }
+      } catch (err) {
+        console.log('Invalid scan');
+      }
     }
   };
 
@@ -232,28 +253,26 @@ const Perfumes = () => {
       {activeTab === 'inventory' && (
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-1 gap-2 w-full">
-              <div className="relative flex-1">
+            <form onSubmit={handleSearchSubmit} className="flex-1 w-full">
+              <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                 <input
                   type="text"
-                  placeholder="Rechercher une marque ou un nom..."
-                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-gold outline-none"
+                  placeholder="Rechercher une marque, un nom ou scanner QR code..."
+                  className="w-full pl-10 pr-12 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-gold outline-none"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setIsCameraScannerOpen(true)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-gold transition-colors"
+                  title="Scanner avec la caméra"
+                >
+                  <Camera size={20} />
+                </button>
               </div>
-              <form onSubmit={handleScan} className="relative w-48">
-                <QrCode className="absolute left-3 top-1/2 -translate-y-1/2 text-gold" size={18} />
-                <input
-                  type="text"
-                  placeholder="Scanner..."
-                  className="w-full pl-10 pr-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl focus:ring-2 focus:ring-gold outline-none text-xs"
-                  value={scanValue}
-                  onChange={(e) => setScanValue(e.target.value)}
-                />
-              </form>
-            </div>
+            </form>
             {user?.role === 'ADMIN' && (
               <div className="flex flex-wrap gap-2 w-full md:w-auto">
                 <button
@@ -680,7 +699,7 @@ const Perfumes = () => {
         </div>
       )}
       {/* Print Modals */}
-      {receiptToShow && (
+      {receiptToShow && !labelToShow && (
         <PerfumeReceipt 
           sale={receiptToShow} 
           onClose={() => setReceiptToShow(null)} 
@@ -694,6 +713,11 @@ const Perfumes = () => {
           onClose={() => setLabelToShow(null)} 
         />
       )}
+      <CameraScanner 
+        isOpen={isCameraScannerOpen} 
+        onClose={() => setIsCameraScannerOpen(false)} 
+        onScanSuccess={(text) => handleSearchChange(text)}
+      />
     </div>
   );
 };
