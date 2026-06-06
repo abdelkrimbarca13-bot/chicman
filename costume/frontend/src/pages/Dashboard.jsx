@@ -35,7 +35,7 @@ const Dashboard = () => {
     { title: 'Retards de Retour', value: stats?.delayedRentals?.length || 0, icon: <AlertTriangle />, color: 'bg-red-600', type: 'delays' },
     { title: 'Locations en cours', value: stats?.activeRentals || 0, icon: <ClipboardList />, color: 'bg-blue-600', path: '/rentals' },
     { title: 'Articles disponibles', value: stats?.availableItems || 0, icon: <Shirt />, color: 'bg-green-600', path: '/items' },
-    { title: 'Articles loués', value: stats?.rentedItems || 0, icon: <CheckCircle />, color: 'bg-orange-600', type: 'rented' },
+    { title: 'Total des locations', value: stats?.totalRentalsCount || 0, icon: <CheckCircle />, color: 'bg-orange-600', path: '/rentals' },
     { title: 'Réparations Demain', value: stats?.tomorrowRepairs?.length || 0, icon: <Scissors />, color: 'bg-amber-600', type: 'repairs' },
     { title: 'En Nettoyage', value: stats?.cleaningItems || 0, icon: <Droplets />, color: 'bg-cyan-600', type: 'cleaning' },
     { title: 'Alertes Parfums', value: stats?.perfumeAlertsCount || 0, icon: <Droplet />, color: 'bg-purple-600', path: '/perfumes' },

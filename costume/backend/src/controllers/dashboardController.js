@@ -5,6 +5,7 @@ exports.getStats = async (req, res) => {
     const activeRentals = await prisma.rental.count({ where: { status: 'LIVRÉE' } });
     const availableItems = await prisma.item.count({ where: { status: 'AVAILABLE' } });
     const rentedItems = await prisma.item.count({ where: { status: 'RENTED' } });
+    const totalRentalsCount = await prisma.rental.count();
     const repairingItems = await prisma.item.count({ where: { status: 'REPAIRING' } });
     const cleaningItems = await prisma.item.count({ where: { status: 'CLEANING' } });
 
@@ -98,6 +99,7 @@ exports.getStats = async (req, res) => {
       activeRentals,
       availableItems,
       rentedItems,
+      totalRentalsCount,
       repairingItems: repairingItems + manualRepairs.length,
       cleaningItems,
       dailyRevenue: req.userData.role === 'ADMIN' ? dailyRevenue : null,
