@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { format } from 'date-fns';
 import { X, Printer } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -17,7 +18,7 @@ const RentalReceipt = ({ rental, onClose }) => {
   const balance = (rental.totalAmount + (rental.repairFees || 0)) - rental.paidAmount;
   const qrValue = rental.id.toString();
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print-bg">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto print:shadow-none print:max-h-none print:overflow-visible print:w-full print:max-w-none">
         <div className="p-6 border-b border-gray-300 flex justify-between items-center sticky top-0 bg-white z-10 no-print">
@@ -42,26 +43,15 @@ const RentalReceipt = ({ rental, onClose }) => {
         <div id="receipt-content" className="p-8 bg-white text-black font-mono print:p-0">
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
-              @media print {
+              @page {
                 size: A5;
                 margin: 5mm;
               }
-              body * {
-                visibility: hidden;
-              }
-              #receipt-content, #receipt-content * {
-                visibility: visible;
-              }
               #receipt-content {
-                position: absolute;
-                left: 0;
-                top: 0;
                 width: 100% !important;
                 padding: 0 !important;
                 margin: 0 !important;
-              }
-              .no-print {
-                display: none !important;
+                box-sizing: border-box !important;
               }
             }
           `}} />
@@ -177,7 +167,7 @@ const RentalReceipt = ({ rental, onClose }) => {
                 <p>L’avance n’est pas remboursable.</p>
                 <p>Merci de retourner le costume avant 12h00 le jour du retour.</p>
                 <p>Tout retard peut entraîner des frais supplémentaires.</p>
-                <p>Le magasin n’est pas responsable en cas de perte du bon.</p>
+                <p>Le magasin n’est pas responsible en cas de perte du bon.</p>
               </div>
               <div className="text-[13px] font-bold leading-tight" dir="rtl">
                 <p>المبلغ المدفوع مسبقاً (العربون) لا يُسترجع.</p>
@@ -204,7 +194,8 @@ const RentalReceipt = ({ rental, onClose }) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

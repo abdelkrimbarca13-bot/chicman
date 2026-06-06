@@ -36,27 +36,43 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-nathalyn);
 }
 
-/* Print styles to clean up layouts and hide interactive elements */
 @media print {
-  /* Hide the sidebar, mobile header, background overlays, buttons and other non-print elements */
+  /* Hide the main react app root completely so it doesn't take layout space */
+  #root {
+    display: none !important;
+  }
+
+  /* Reset body and html for clean printing */
+  html, body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  /* Hide overlays and interactive elements */
   .no-print,
-  aside,
-  nav,
-  header,
   button,
+  .no-print-bg::before,
+  .no-print-bg::after {
+    display: none !important;
+  }
+
+  /* Make the print container portal flow naturally */
   .no-print-bg {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     box-shadow: none !important;
-  }
-
-  /* Reset the backdrop element layout */
-  .no-print-bg {
-    padding: 0 !important;
-    margin: 0 !important;
-    position: static !important;
-    display: block !important;
   }
 
   /* Reset the modal container element layout */
@@ -66,24 +82,10 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    width: auto !important;
+    width: 100% !important;
     max-width: none !important;
     max-height: none !important;
     overflow: visible !important;
-  }
-
-  /* Disable sidebar width allocation and main page constraints */
-  .flex.h-screen {
-    display: block !important;
-    height: auto !important;
-    overflow: visible !important;
-    background: transparent !important;
-  }
-
-  /* Force display: none on elements meant to be hidden */
-  .no-print,
-  button {
-    display: none !important;
   }
 }
 

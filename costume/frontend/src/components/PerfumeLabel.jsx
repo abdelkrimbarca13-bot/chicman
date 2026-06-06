@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Printer } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -15,7 +16,7 @@ const PerfumeLabel = ({ perfume, quantity, onClose }) => {
     name: perfume.name
   });
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print-bg">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden print:shadow-none print:w-full print:max-w-none">
         <div className="p-6 border-b border-gray-300 flex justify-between items-center no-print">
@@ -35,16 +36,7 @@ const PerfumeLabel = ({ perfume, quantity, onClose }) => {
                 size: 50mm 30mm;
                 margin: 0;
               }
-              body * {
-                visibility: hidden;
-              }
-              #label-content, #label-content * {
-                visibility: visible;
-              }
               #label-content {
-                position: absolute;
-                left: 0;
-                top: 0;
                 width: 50mm !important;
                 height: 30mm !important;
                 padding: 1mm !important;
@@ -54,9 +46,7 @@ const PerfumeLabel = ({ perfume, quantity, onClose }) => {
                 align-items: center !important;
                 justify-content: center !important;
                 gap: 1mm !important;
-              }
-              .no-print {
-                display: none !important;
+                box-sizing: border-box !important;
               }
             }
           `}} />
@@ -95,7 +85,8 @@ const PerfumeLabel = ({ perfume, quantity, onClose }) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
