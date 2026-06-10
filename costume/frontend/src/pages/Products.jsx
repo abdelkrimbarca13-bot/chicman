@@ -18,7 +18,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [receiptToShow, setReceiptToShow] = useState(null);
   const [labelToShow, setLabelToShow] = useState(null);
@@ -110,24 +110,27 @@ const Products = () => {
       fetchData();
       
       // Prepare receipt data
-      const firstSale = res.data.sales[0];
-      const receiptData = {
-        id: firstSale.id,
-        customerName: firstSale.customerName || 'Client Comptant',
-        customerPhone: firstSale.customerPhone || '-',
-        totalAmount: res.data.sales.reduce((sum, s) => sum + s.totalAmount, 0),
-        createdAt: firstSale.date,
-        items: res.data.sales.map(s => ({
-          itemName: s.product.name,
-          itemRef: s.product.reference,
-          itemType: s.product.type,
-          itemColor: s.product.color,
-          itemSize: s.product.size,
-          price: s.unitPrice,
-          quantity: s.quantity
-        }))
-      };
-      setReceiptToShow(receiptData);
+      const salesArray = res.data;
+      if (salesArray && salesArray.length > 0) {
+        const firstSale = salesArray[0];
+        const receiptData = {
+          id: firstSale.id,
+          customerName: firstSale.customerName || 'Client Comptant',
+          customerPhone: firstSale.customerPhone || '-',
+          totalAmount: salesArray.reduce((sum, s) => sum + s.totalAmount, 0),
+          createdAt: firstSale.date,
+          items: salesArray.map(s => ({
+            itemName: s.product?.name || '',
+            itemRef: s.product?.reference || '',
+            itemType: s.product?.type || '',
+            itemColor: s.product?.color || '',
+            itemSize: s.product?.size || '',
+            price: s.unitPrice,
+            quantity: s.quantity
+          }))
+        };
+        setReceiptToShow(receiptData);
+      }
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur lors de la vente');
     }
@@ -203,7 +206,7 @@ const Products = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (err) {
+    } catch {
       alert('Erreur lors du téléchargement du template');
     }
   };
@@ -772,7 +775,7 @@ const Products = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-500 uppercase px-1">Téléphone</label>
+                    <label className="text-xs font-bold text-zinc-500 uppercase px-1">Téléphone (Optionnel)</label>
                     <input
                       type="text"
                       placeholder="ex: 0550..."
