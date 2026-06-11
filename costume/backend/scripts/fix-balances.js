@@ -79,6 +79,36 @@ async function fixBalances() {
     });
   }
 
+  console.log('Starting item status correction...');
+  // Get all items that are currently marked as RENTED
+  const rentedItems = await prisma.item.findMany({
+    where: { status: 'RENTED' },
+    include: {
+      rentals: {
+        where: {
+          rental: {
+            status: { in: ['LIVRÉE', 'DELAYED'] }
+          }
+        }
+      }
+    }
+  });
+
+  console.log(`Checking ${rentedItems.length} items currently marked as RENTED...`);
+  
+  let fixedCount = 0;
+  for (const item of rentedItems) {
+    if (item.rentals.length === 0) {
+      console.log(`Fixing item ${item.reference} (${item.name}): RENTED -> AVAILABLE`);
+      await prisma.item.update({
+        where: { id: item.id },
+        data: { status: 'AVAILABLE' }
+      });
+      fixedCount++;
+    }
+  }
+  console.log(`Fixed status for ${fixedCount} items.`);
+
   console.log('Balance fix completed.');
 }
 
