@@ -192,15 +192,17 @@ model Sale {
 }
 
 model SaleItem {
-  id        Int    @id @default(autoincrement())
-  saleId    Int
-  itemRef   String
-  itemName  String
-  itemType  String
-  itemSize  String
-  itemColor String
-  price     Float
-  sale      Sale   @relation(fields: [saleId], references: [id])
+  id          Int    @id @default(autoincrement())
+  saleId      Int
+  itemRef     String
+  itemName    String
+  itemType    String
+  itemSize    String
+  itemColor   String
+  price       Float
+  rentalPrice Float  @default(0)
+  ensembleId  Int?
+  sale        Sale   @relation(fields: [saleId], references: [id])
 
   @@index([saleId])
 }

@@ -17,6 +17,9 @@ exports.getAllProducts = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { reference, name, type, size, color, purchasePrice, salePrice, quantity } = req.body;
 
     const product = await prisma.product.create({
@@ -41,6 +44,9 @@ exports.createProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { id } = req.params;
     const { reference, name, type, size, color, purchasePrice, salePrice, quantity } = req.body;
 
@@ -67,6 +73,9 @@ exports.updateProduct = async (req, res) => {
 
 exports.deleteProduct = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { id } = req.params;
     
     // Check if has sales

@@ -17,6 +17,9 @@ exports.getAllPerfumes = async (req, res) => {
 
 exports.createPerfume = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { brand, name, type, totalCapacityMl, totalPurchasePrice, salePriceMl, alertThresholdMl } = req.body;
 
     const unitCostMl = parseFloat(totalPurchasePrice) / parseFloat(totalCapacityMl);
@@ -45,6 +48,9 @@ exports.createPerfume = async (req, res) => {
 
 exports.updatePerfume = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { id } = req.params;
     const { brand, name, type, totalCapacityMl, totalPurchasePrice, salePriceMl, alertThresholdMl, currentQuantityMl } = req.body;
 
@@ -74,6 +80,9 @@ exports.updatePerfume = async (req, res) => {
 
 exports.deletePerfume = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { id } = req.params;
     
     // Check if has sales
@@ -164,6 +173,9 @@ exports.createPerfumeSale = async (req, res) => {
 
 exports.deletePerfumeSale = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { id } = req.params;
 
     const sale = await prisma.perfumeSale.findUnique({

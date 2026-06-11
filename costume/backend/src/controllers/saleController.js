@@ -62,7 +62,9 @@ exports.createSale = async (req, res) => {
                 itemType: dbItem.type,
                 itemSize: dbItem.size,
                 itemColor: dbItem.color,
-                price: parseFloat(i.price)
+                price: parseFloat(i.price),
+                rentalPrice: dbItem.rentalPrice || 0,
+                ensembleId: dbItem.ensembleId || null
               };
             })
           }
@@ -195,7 +197,8 @@ exports.deleteSale = async (req, res) => {
               size: item.itemSize,
               color: item.itemColor,
               status: 'AVAILABLE',
-              rentalPrice: 0,
+              rentalPrice: item.rentalPrice || 0,
+              ensembleId: item.ensembleId || null,
               quantity: 1
             }
           });

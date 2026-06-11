@@ -535,6 +535,10 @@ exports.updateRental = async (req, res) => {
 
     if (!existingRental) return res.status(404).json({ message: 'Location non trouvée' });
 
+    if (existingRental.status === 'RETURNED' || existingRental.status === 'ANNULÉE' || existingRental.status === 'ANNULÉE (RETENTION)') {
+      return res.status(400).json({ message: 'Impossible de modifier une location terminée ou annulée.' });
+    }
+
     // Update customer if info changed
     await prisma.customer.update({
       where: { id: existingRental.customerId },
