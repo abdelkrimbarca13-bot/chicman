@@ -157,6 +157,13 @@ exports.getItemDetails = async (req, res) => {
         }
       }
     });
+
+    if (item && item.rentals) {
+      item.rentals = item.rentals.filter(
+        r => r.rental && !['ANNULÉE', 'ANNULÉE (RETENTION)'].includes(r.rental.status)
+      );
+    }
+
     res.json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -111,7 +111,11 @@ const Items = () => {
   const showHistory = async (id) => {
     try {
         const res = await api.get(`/items/${id}`);
-        setHistoryModal(res.data);
+        const data = res.data;
+        if (data && data.rentals) {
+            data.rentals = data.rentals.filter(r => r.rental && !['ANNULÉE', 'ANNULÉE (RETENTION)'].includes(r.rental.status));
+        }
+        setHistoryModal(data);
     } catch (err) {
         alert('Erreur lors du chargement de l\'historique : ' + (err.response?.data?.error || err.message));
     }
