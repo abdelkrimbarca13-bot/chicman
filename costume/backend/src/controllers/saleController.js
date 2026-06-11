@@ -236,3 +236,55 @@ exports.deleteSale = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.inspectDatabase = async (req, res) => {
+  try {
+    const saleCount = await prisma.sale.count();
+    const rentalCount = await prisma.rental.count();
+    const auditLogCount = await prisma.auditLog.count();
+
+    const recentSales = await prisma.sale.findMany({
+      take: 10,
+      include: { items: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const rentalsWithVente = await prisma.rental.findMany({
+      where: {
+        OR: [
+          { remarks: { contains: 'vente' } },
+          { remarks: { contains: 'vendu' } },
+          { remarks: { contains: 'achat' } },
+          { remarks: { contains: 'Vente' } },
+          { remarks: { contains: 'Vendu' } }
+        ]
+      },
+      include: { customer: true, items: { include: { item: true } } },
+      take: 10
+    });
+
+    const auditLogsWithSale = await prisma.auditLog.findMany({
+      where: {
+        OR: [
+          { action: { contains: 'SALE' } },
+          { action: { contains: 'Vente' } },
+          { details: { contains: 'vente' } },
+          { details: { contains: 'vendu' } }
+        ]
+      },
+      take: 20,
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({
+      saleCount,
+      rentalCount,
+      auditLogCount,
+      recentSales,
+      rentalsWithVente,
+      auditLogsWithSale
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

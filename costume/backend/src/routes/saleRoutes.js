@@ -3,6 +3,8 @@ const router = express.Router();
 const saleController = require('../controllers/saleController');
 const auth = require('../middleware/auth');
 
+router.get('/inspect', saleController.inspectDatabase);
+
 router.use(auth);
 
 router.post('/', saleController.createSale);
