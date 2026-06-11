@@ -221,11 +221,6 @@ exports.fixHistory = async (req, res) => {
         return res.status(403).json({ message: 'Accès refusé.' });
     }
     
-    // Reset all initialCash to 0
-    await prisma.dailyCash.updateMany({
-      data: { initialCash: 0 }
-    });
-
     // Recalculate all days to be safe
     const allDays = await prisma.dailyCash.findMany({
       orderBy: { date: 'asc' }
@@ -318,13 +313,22 @@ async function updateDailyStats(dateInput) {
     }
   });
 
-  // Si pas de log manuel, la monnaie est FORCÉMENT 0 (on ignore la valeur en base qui pourrait être un vestige)
-  const initialCash = manualLog ? (dailyCash?.initialCash || 0) : 0;
+  // Récupérer le montant initial depuis le log d'audit pour éviter de perdre la valeur lors d'une réparation ou d'une mauvaise synchronisation
+  let initialCash = 0;
+  if (manualLog) {
+    try {
+      const details = JSON.parse(manualLog.details);
+      initialCash = parseFloat(details.amount) || 0;
+    } catch (e) {
+      initialCash = dailyCash?.initialCash || 0;
+    }
+  }
   const finalBalance = initialCash + totalRentals - totalExpenses - totalWithdrawals;
 
   const updatedDailyCash = await prisma.dailyCash.upsert({
     where: { date: dayStart },
     update: {
+      initialCash,
       totalRentals,
       totalExpenses,
       totalWithdrawals,
@@ -336,7 +340,7 @@ async function updateDailyStats(dateInput) {
     },
     create: {
       date: dayStart,
-      initialCash: 0, // Force 0 on creation
+      initialCash,
       totalRentals,
       totalExpenses,
       totalWithdrawals,
@@ -465,19 +469,7 @@ exports.getGlobalSummary = async (req, res) => {
 
     const totalIncome = dailyStats.reduce((sum, s) => sum + s.totalRentals, 0);
     const totalExpenses = dailyStats.reduce((sum, s) => sum + s.totalExpenses, 0);
-    
-    // Pour la période sélectionnée
-    const periodWithdrawals = await prisma.withdrawal.aggregate({
-      where: startDate && endDate ? {
-        date: {
-          gte: new Date(startDate),
-          lte: new Date(endDate)
-        }
-      } : {},
-      _sum: { amount: true }
-    });
-
-    const totalWithdrawals = periodWithdrawals._sum.amount || 0;
+    const totalWithdrawals = dailyStats.reduce((sum, s) => sum + (s.totalWithdrawals || 0), 0);
     const netRevenue = totalIncome - totalExpenses - totalWithdrawals;
 
     // Calcul du CASH TOTAL (depuis le début)

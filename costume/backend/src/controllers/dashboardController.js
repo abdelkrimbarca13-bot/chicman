@@ -12,14 +12,12 @@ exports.getStats = async (req, res) => {
     // Today's revenue - Seul l'admin voit ça
     let dailyRevenue = 0;
     if (req.userData.role === 'ADMIN') {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const dailyPayments = await prisma.payment.findMany({
-        where: {
-          createdAt: { gte: today }
-        }
+      const todayStr = new Date().toISOString().split('T')[0] + 'T00:00:00.000Z';
+      const todayDate = new Date(todayStr);
+      const dailyCash = await prisma.dailyCash.findUnique({
+        where: { date: todayDate }
       });
-      dailyRevenue = dailyPayments.reduce((sum, p) => sum + p.amount, 0);
+      dailyRevenue = dailyCash ? dailyCash.totalRentals : 0;
     }
     
     const delayedRentals = await prisma.rental.findMany({

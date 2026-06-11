@@ -43,9 +43,23 @@ async function fixBalances() {
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
     const totalWithdrawals = withdrawals.reduce((sum, w) => sum + w.amount, 0);
 
-    // Initial cash is now independent (it's what was manually added for that day)
-    // We keep day.initialCash as it is the manual input.
-    const initialCash = day.initialCash;
+    // Pour éviter tout report de solde, on vérifie s'il y a eu une action manuelle "SET_INITIAL_CASH" aujourd'hui
+    const manualLog = await prisma.auditLog.findFirst({
+      where: {
+        action: 'SET_INITIAL_CASH',
+        createdAt: { gte: dayStart, lte: dayEnd }
+      }
+    });
+
+    let initialCash = 0;
+    if (manualLog) {
+      try {
+        const details = JSON.parse(manualLog.details);
+        initialCash = parseFloat(details.amount) || 0;
+      } catch (e) {
+        initialCash = day.initialCash || 0;
+      }
+    }
     
     // Calculate new final balance
     // Caisse aujourd'hui = Monnaie initiale + Recettes - Dépenses - Retraits
@@ -56,6 +70,7 @@ async function fixBalances() {
     await prisma.dailyCash.update({
       where: { id: day.id },
       data: {
+        initialCash: initialCash,
         totalRentals: totalRentals,
         totalExpenses: totalExpenses,
         totalWithdrawals: totalWithdrawals,
