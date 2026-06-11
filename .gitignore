@@ -7,3 +7,6 @@ dist/
 .zencoder/
 costume/backend/prisma/*.db
 costume/backend/prisma/*.db-journal
+costume/backend/prisma/*.db-shm
+costume/backend/prisma/*.db-wal
+
