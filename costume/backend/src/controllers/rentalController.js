@@ -122,11 +122,9 @@ exports.createRental = async (req, res) => {
         }
       });
 
-      // Update item statuses to RENTED
-      await tx.item.updateMany({
-        where: { id: { in: itemIds } },
-        data: { status: 'RENTED' }
-      });
+      // We no longer set item status to RENTED upon creation.
+      // Confirmed bookings remain AVAILABLE until they are delivered (LIVRÉE).
+      // Future date overlaps are protected by date-overlap checks alone.
 
       // Create initial payment if any
       if (deposit > 0) {
@@ -356,7 +354,7 @@ exports.activateRental = async (req, res) => {
     const { id } = req.params;
     const rental = await prisma.rental.findUnique({
       where: { id: parseInt(id) },
-      include: { payments: true }
+      include: { payments: true, items: true }
     });
 
     if (!rental) {
@@ -380,6 +378,13 @@ exports.activateRental = async (req, res) => {
           startDate: startDate,
           expectedReturn: expectedReturn
         }
+      });
+
+      // Update item statuses to RENTED since the rental is now active/delivered
+      const itemIds = rental.items.map(ri => ri.itemId);
+      await tx.item.updateMany({
+        where: { id: { in: itemIds } },
+        data: { status: 'RENTED' }
       });
 
       return updatedRental;
@@ -649,12 +654,14 @@ exports.updateRental = async (req, res) => {
         }
       });
 
-      // 4. Update new items status
-      const newItemIds = selectedItems.map(item => parseInt(item.id));
-      await tx.item.updateMany({
-        where: { id: { in: newItemIds } },
-        data: { status: 'RENTED' }
-      });
+      // 4. Update new items status only if the rental is already delivered (LIVRÉE)
+      if (existingRental.status === 'LIVRÉE') {
+        const newItemIds = selectedItems.map(item => parseInt(item.id));
+        await tx.item.updateMany({
+          where: { id: { in: newItemIds } },
+          data: { status: 'RENTED' }
+        });
+      }
 
       return updatedRental;
     });
