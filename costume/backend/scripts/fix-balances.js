@@ -4,31 +4,6 @@ const prisma = new PrismaClient();
 async function fixBalances() {
   console.log('Starting balance fix (Daily Independent Logic)...');
 
-  console.log('=== DIAGNOSTIC: ALL RENTALS FOR ITEMS ENDING IN 48 ===');
-  try {
-    const rentals = await prisma.rentalItem.findMany({
-      where: {
-        item: {
-          reference: { endsWith: '48' }
-        }
-      },
-      include: {
-        item: true,
-        rental: {
-          include: { customer: true }
-        }
-      }
-    });
-    console.log(`Found ${rentals.length} rental-item connections for B*48 items:`);
-    rentals.forEach(ri => {
-      console.log(`Rental ID: ${ri.rental.id} | Status: ${ri.rental.status} | Item: ${ri.item.reference} (${ri.item.name})`);
-      console.log(`  Dates: ${ri.rental.startDate.toISOString()} -> ${ri.rental.expectedReturn.toISOString()}`);
-    });
-  } catch (err) {
-    console.error('Error running diagnostics:', err);
-  }
-  console.log('=== END OF DIAGNOSTIC ===');
-  
   // Get all daily cash records ordered by date
   const allDays = await prisma.dailyCash.findMany({
     orderBy: { date: 'asc' }

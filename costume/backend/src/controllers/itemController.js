@@ -8,9 +8,9 @@ exports.getAllItems = async (req, res) => {
 
     if (startDate && endDate) {
       const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
+      start.setUTCHours(0, 0, 0, 0);
       const end = new Date(endDate);
-      end.setHours(11, 0, 0, 0);
+      end.setUTCHours(11, 0, 0, 0);
 
       // 1. Trouver tous les articles directement occupés par une location qui chevauche exactement ces heures
       const overlappingRentalItems = await prisma.rentalItem.findMany({
@@ -35,7 +35,7 @@ exports.getAllItems = async (req, res) => {
       // - OU il est physiquement en nettoyage/réparation (si la date de début est aujourd'hui)
       
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setUTCHours(0, 0, 0, 0);
       const isStartingToday = start <= today;
 
       const allItems = await prisma.item.findMany();

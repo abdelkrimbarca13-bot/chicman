@@ -38,10 +38,10 @@ exports.createRental = async (req, res) => {
     }
 
     const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
+    start.setUTCHours(0, 0, 0, 0);
     const end = new Date(expectedReturn);
     // Set to 11:00 AM for the return deadline
-    end.setHours(11, 0, 0, 0);
+    end.setUTCHours(11, 0, 0, 0);
 
     // 1. Récupérer les détails des articles sélectionnés (pour connaître leurs ensembleId)
     const selectedItemsDetails = await prisma.item.findMany({
@@ -76,7 +76,7 @@ exports.createRental = async (req, res) => {
 
     // 3. Vérification physique (seulement si la location commence aujourd'hui)
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
     if (start <= today) {
         const unavailableItems = selectedItemsDetails.filter(item => item.status !== 'AVAILABLE');
         if (unavailableItems.length > 0) {
@@ -367,7 +367,7 @@ exports.activateRental = async (req, res) => {
 
     const startDate = new Date();
     const expectedReturn = new Date(startDate.getTime() + (24 * 60 * 60 * 1000)); // +24 heures
-    expectedReturn.setHours(11, 0, 0, 0); // Toujours à 11h00
+    expectedReturn.setUTCHours(11, 0, 0, 0); // Toujours à 11h00 UTC
 
     const updated = await prisma.$transaction(async (tx) => {
       const updatedRental = await tx.rental.update({
@@ -544,17 +544,67 @@ exports.updateRental = async (req, res) => {
       return res.status(400).json({ message: 'Impossible de modifier une location terminée ou annulée.' });
     }
 
+    const start = new Date(startDate);
+    start.setUTCHours(0, 0, 0, 0);
+    const end = new Date(expectedReturn);
+    end.setUTCHours(11, 0, 0, 0);
+
+    const itemIds = selectedItems.map(i => parseInt(i.id));
+
+    // 1. Récupérer les détails des articles sélectionnés (pour connaître leurs ensembleId)
+    const selectedItemsDetails = await prisma.item.findMany({
+      where: { id: { in: itemIds } }
+    });
+    const selectedEnsembleIds = selectedItemsDetails.map(i => i.ensembleId).filter(id => id);
+
+    // 2. Vérifier les chevauchements (en excluant la location actuelle)
+    const overlappingRentals = await prisma.rentalItem.findMany({
+      where: {
+        rental: {
+          id: { not: rentalId }, // Exclure la location en cours de modification
+          status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'DELAYED'] },
+          AND: [
+            { startDate: { lt: end } },
+            { expectedReturn: { gt: start } }
+          ]
+        },
+        OR: [
+          { itemId: { in: itemIds } },
+          { item: { ensembleId: { in: selectedEnsembleIds } } }
+        ]
+      },
+      include: { item: true }
+    });
+
+    if (overlappingRentals.length > 0) {
+      return res.status(400).json({ 
+        message: 'Certains articles (ou éléments de leur ensemble) sont déjà loués pour ces dates par une autre location', 
+        items: [...new Set(overlappingRentals.map(r => r.item.name))]
+      });
+    }
+
+    // 3. Vérification physique (seulement si la location commence aujourd'hui)
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    if (start <= today) {
+        // Exclure les articles déjà associés à cette location (ils sont déjà en possession du client ou du processus, donc légitimes)
+        const oldItemIds = new Set(existingRental.items.map(ri => ri.itemId));
+        const newlyAddedItems = selectedItemsDetails.filter(item => !oldItemIds.has(item.id));
+        
+        const unavailableItems = newlyAddedItems.filter(item => item.status !== 'AVAILABLE');
+        if (unavailableItems.length > 0) {
+          return res.status(400).json({ 
+            message: 'Certains nouveaux articles ne sont pas physiquement disponibles aujourd\'hui (en nettoyage ou réparation)', 
+            items: unavailableItems.map(i => i.name) 
+          });
+        }
+    }
+
     // Update customer if info changed
     await prisma.customer.update({
       where: { id: existingRental.customerId },
       data: { firstName, lastName, phone }
     });
-
-    const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(expectedReturn);
-    // Set to 11:00 AM to trigger alert if not returned by 11:00
-    end.setHours(11, 0, 0, 0);
 
     const total = parseFloat(totalAmount) || 0;
     const paid = parseFloat(paidAmount) || 0; // This is the updated initial deposit from the frontend
