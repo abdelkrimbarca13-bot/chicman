@@ -53,7 +53,7 @@ exports.createRental = async (req, res) => {
     const overlappingRentals = await prisma.rentalItem.findMany({
       where: {
         rental: {
-          status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'DELAYED'] },
+          status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'] },
           AND: [
             { startDate: { lt: end } },
             { expectedReturn: { gt: start } }
@@ -419,7 +419,7 @@ exports.deleteRental = async (req, res) => {
     
     await prisma.$transaction(async (tx) => {
       // Release items if the rental was active (delivered or repairing)
-      if (rental.status === 'LIVRÉE' || rental.status === 'EN_RÉPARATION') {
+      if (['LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'].includes(rental.status)) {
           await tx.item.updateMany({
             where: { id: { in: itemIds } },
             data: { status: 'AVAILABLE' }
@@ -560,7 +560,7 @@ exports.updateRental = async (req, res) => {
       where: {
         rental: {
           id: { not: rentalId }, // Exclure la location en cours de modification
-          status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'DELAYED'] },
+          status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'] },
           AND: [
             { startDate: { lt: end } },
             { expectedReturn: { gt: start } }
@@ -620,7 +620,7 @@ exports.updateRental = async (req, res) => {
     const result = await prisma.$transaction(async (tx) => {
       // 1. Release old items only if the rental was active (delivered or repairing)
       const oldItemIds = existingRental.items.map(ri => ri.itemId);
-      if (existingRental.status === 'LIVRÉE' || existingRental.status === 'EN_RÉPARATION') {
+      if (['LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'].includes(existingRental.status)) {
           await tx.item.updateMany({
             where: { id: { in: oldItemIds } },
             data: { status: 'AVAILABLE' }
@@ -705,7 +705,7 @@ exports.updateRental = async (req, res) => {
       });
 
       // 4. Update new items status only if the rental is already delivered (LIVRÉE) or in repair (EN_RÉPARATION)
-      if (existingRental.status === 'LIVRÉE' || existingRental.status === 'EN_RÉPARATION') {
+      if (['LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'].includes(existingRental.status)) {
         const newItemIds = selectedItems.map(item => parseInt(item.id));
         await tx.item.updateMany({
           where: { id: { in: newItemIds } },
@@ -774,7 +774,7 @@ exports.cancelRental = async (req, res) => {
 
       // 2. Release items only if the rental was active (delivered or repairing)
       const itemIds = rental.items.map(ri => ri.itemId);
-      if (rental.status === 'LIVRÉE' || rental.status === 'EN_RÉPARATION') {
+      if (['LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'].includes(rental.status)) {
           await tx.item.updateMany({
             where: { id: { in: itemIds } },
             data: { status: 'AVAILABLE' }

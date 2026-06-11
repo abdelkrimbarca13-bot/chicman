@@ -29,7 +29,7 @@ exports.createSale = async (req, res) => {
     const activeRentals = await prisma.rentalItem.findMany({
       where: {
         itemId: { in: itemIds },
-        rental: { status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION'] } }
+        rental: { status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'] } }
       }
     });
 

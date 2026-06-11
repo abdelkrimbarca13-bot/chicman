@@ -87,7 +87,7 @@ async function fixBalances() {
       rentals: {
         where: {
           rental: {
-            status: { in: ['LIVRÉE', 'EN_RÉPARATION', 'DELAYED'] }
+            status: { in: ['LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'] }
           }
         }
       }

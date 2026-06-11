@@ -16,7 +16,7 @@ exports.getAllItems = async (req, res) => {
       const overlappingRentalItems = await prisma.rentalItem.findMany({
         where: {
           rental: {
-            status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'DELAYED'] },
+            status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'] },
             AND: [
               { startDate: { lt: end } },
               { expectedReturn: { gt: start } }
@@ -230,7 +230,7 @@ exports.deleteItem = async (req, res) => {
       where: {
         itemId: itemId,
         rental: {
-          status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION'] }
+          status: { in: ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'] }
         }
       }
     });
