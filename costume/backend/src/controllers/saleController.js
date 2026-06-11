@@ -108,6 +108,9 @@ exports.createSale = async (req, res) => {
 
 exports.getAllSales = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { startDate, endDate } = req.query;
     let where = {};
 
@@ -150,6 +153,9 @@ exports.getSaleById = async (req, res) => {
 
 exports.updateSale = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { id } = req.params;
     const { totalAmount } = req.body;
 
@@ -175,6 +181,9 @@ exports.updateSale = async (req, res) => {
 
 exports.deleteSale = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { id } = req.params;
     const sale = await prisma.sale.findUnique({ 
       where: { id: parseInt(id) },

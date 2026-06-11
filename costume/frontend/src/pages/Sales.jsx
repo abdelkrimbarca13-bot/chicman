@@ -28,18 +28,22 @@ const Sales = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const [sRes, iRes] = await Promise.all([
-        api.get('/sales'),
-        api.get('/items') // Assuming we fetch available items to sell
-      ]);
-      setSales(Array.isArray(sRes.data) ? sRes.data : []);
-      // Filter out only available items for selling
-      const availableItems = (Array.isArray(iRes.data) ? iRes.data : []).filter(item => item.status === 'AVAILABLE');
+      const calls = [api.get('/items')];
+      if (user?.role === 'ADMIN') {
+        calls.push(api.get('/sales'));
+      }
+      const results = await Promise.all(calls);
+      
+      const availableItems = (Array.isArray(results[0].data) ? results[0].data : []).filter(item => item.status === 'AVAILABLE');
       setItems(availableItems);
+      
+      if (user?.role === 'ADMIN' && results[1]) {
+        setSales(Array.isArray(results[1].data) ? results[1].data : []);
+      }
     } catch (err) {
       console.error('Erreur lors du chargement des données', err);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -123,6 +127,18 @@ const Sales = () => {
     } catch (err) {
       if (err.response?.status !== 401) {
         alert(err.response?.data?.message || 'Erreur lors de la vente');
+      }
+    }
+  };
+
+  const handleDeleteSale = async (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette vente ? Cette action remettra les articles en stock.')) {
+      try {
+        await api.delete(`/sales/${id}`);
+        fetchData();
+        alert('Vente supprimée avec succès et articles remis en stock');
+      } catch (err) {
+        alert(err.response?.data?.message || 'Erreur lors de la suppression de la vente');
       }
     }
   };
@@ -247,12 +263,23 @@ const Sales = () => {
                         </span>
                     </td>
                     <td className="px-6 py-4">
-                      <button 
-                        onClick={() => setReceiptModal(sale)}
-                        className="text-zinc-500 dark:text-zinc-300 hover:text-gold flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
-                      >
-                        <FileText size={16} className="mr-1"/> Reçu
-                      </button>
+                      <div className="flex gap-4">
+                        <button 
+                          onClick={() => setReceiptModal(sale)}
+                          className="text-zinc-500 dark:text-zinc-300 hover:text-gold flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                        >
+                          <FileText size={16} className="mr-1"/> Reçu
+                        </button>
+                        {user?.role === 'ADMIN' && (
+                          <button 
+                            onClick={() => handleDeleteSale(sale.id)}
+                            className="text-red-500 hover:text-red-400 flex items-center font-bold text-xs uppercase tracking-tighter transition-colors"
+                            title="Supprimer la vente"
+                          >
+                            <Trash2 size={16} className="mr-1"/> Supprimer
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
