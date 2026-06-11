@@ -62,6 +62,7 @@ exports.getAllItems = async (req, res) => {
     const items = await prisma.item.findMany({ where });
     res.json(items);
   } catch (error) {
+    console.error('Error in getAllItems:', error);
     res.status(500).json({ error: error.message });
   }
 };
