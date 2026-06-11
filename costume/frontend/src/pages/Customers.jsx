@@ -245,8 +245,18 @@ const Customers = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <span className="font-bold text-zinc-900 dark:text-white">BON #{rental.id.toString().padStart(5, '0')}</span>
-                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${rental.status === 'ONGOING' ? 'bg-blue-900/20 text-blue-400 border-blue-900/50' : 'bg-green-900/20 text-green-400 border-green-900/50'}`}>
-                          {rental.status === 'ONGOING' ? 'En cours' : 'Retourné'}
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                          ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'ONGOING'].includes(rental.status) 
+                            ? 'bg-blue-900/20 text-blue-400 border-blue-900/50' 
+                            : ['ANNULÉE', 'ANNULÉE (RETENTION)'].includes(rental.status)
+                              ? 'bg-zinc-900/20 text-zinc-400 border-zinc-900/50'
+                              : 'bg-green-900/20 text-green-400 border-green-900/50'
+                        }`}>
+                          {['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'ONGOING'].includes(rental.status) 
+                            ? 'En cours' 
+                            : ['ANNULÉE', 'ANNULÉE (RETENTION)'].includes(rental.status)
+                              ? 'Annulée'
+                              : 'Retourné'}
                         </span>
                       </div>
                       <div className="flex flex-col gap-1 mb-3">

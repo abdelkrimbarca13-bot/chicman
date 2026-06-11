@@ -599,17 +599,17 @@ const Items = () => {
                         <p className="text-3xl font-bold text-gold">{historyModal.rentals.length}</p>
                     </div>
                     <div className={`p-4 rounded-lg text-center border ${
-                        historyModal.rentals.some(r => r.rental.status === 'ONGOING') 
+                        historyModal.rentals.some(r => ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'ONGOING'].includes(r.rental.status)) 
                         ? 'bg-orange-900/20 border-orange-900/50' 
                         : 'bg-green-900/20 border-green-900/50'
                     }`}>
                         <p className={`text-xs font-semibold uppercase tracking-wider ${
-                            historyModal.rentals.some(r => r.rental.status === 'ONGOING') ? 'text-orange-400' : 'text-green-400'
+                            historyModal.rentals.some(r => ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'ONGOING'].includes(r.rental.status)) ? 'text-orange-400' : 'text-green-400'
                         }`}>Statut Actuel</p>
                         <p className={`text-xl font-bold mt-1 ${
-                            historyModal.rentals.some(r => r.rental.status === 'ONGOING') ? 'text-orange-400' : 'text-green-400'
+                            historyModal.rentals.some(r => ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'ONGOING'].includes(r.rental.status)) ? 'text-orange-400' : 'text-green-400'
                         }`}>
-                            {historyModal.rentals.some(r => r.rental.status === 'ONGOING') ? 'OCCUPÉ' : 'DISPONIBLE'}
+                            {historyModal.rentals.some(r => ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'ONGOING'].includes(r.rental.status)) ? 'OCCUPÉ' : 'DISPONIBLE'}
                         </p>
                     </div>
                     <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-lg text-center border border-zinc-700 flex flex-col justify-center items-center">
@@ -707,9 +707,17 @@ const Items = () => {
                                 </td>
                                 <td className="px-4 py-4 text-right">
                                     <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                                        r.rental.status === 'RETURNED' ? 'bg-green-900/30 text-green-400' : 'bg-blue-900/30 text-blue-400'
+                                        r.rental.status === 'RETURNED' 
+                                          ? 'bg-green-900/30 text-green-400' 
+                                          : ['ANNULÉE', 'ANNULÉE (RETENTION)'].includes(r.rental.status)
+                                            ? 'bg-zinc-900/30 text-zinc-400'
+                                            : 'bg-blue-900/30 text-blue-400'
                                     }`}>
-                                        {r.rental.status === 'RETURNED' ? 'Rendu' : 'En cours'}
+                                        {r.rental.status === 'RETURNED' 
+                                          ? 'Rendu' 
+                                          : ['ANNULÉE', 'ANNULÉE (RETENTION)'].includes(r.rental.status)
+                                            ? 'Annulé'
+                                            : 'En cours'}
                                     </span>
                                 </td>
                             </tr>

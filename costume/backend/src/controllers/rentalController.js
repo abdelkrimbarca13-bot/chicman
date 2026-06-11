@@ -316,7 +316,8 @@ exports.addPayment = async (req, res) => {
     if (!rental) return res.status(404).json({ message: 'Rental not found' });
 
     const currentPaid = rental.payments.reduce((sum, p) => sum + p.amount, 0);
-    const maxAllowed = Math.max(0, rental.totalAmount - currentPaid);
+    const totalDue = rental.totalAmount + (rental.repairFees || 0);
+    const maxAllowed = Math.max(0, totalDue - currentPaid);
     
     if (parseFloat(amount) > maxAllowed) {
         return res.status(400).json({ message: `Le montant dépasse le reste à payer (${maxAllowed} DA)` });
@@ -366,8 +367,6 @@ exports.activateRental = async (req, res) => {
     }
 
     const startDate = new Date();
-    const expectedReturn = new Date(startDate.getTime() + (24 * 60 * 60 * 1000)); // +24 heures
-    expectedReturn.setUTCHours(11, 0, 0, 0); // Toujours à 11h00 UTC
 
     const updated = await prisma.$transaction(async (tx) => {
       const updatedRental = await tx.rental.update({
@@ -375,8 +374,7 @@ exports.activateRental = async (req, res) => {
         data: {
           isActivated: true,
           status: 'LIVRÉE',
-          startDate: startDate,
-          expectedReturn: expectedReturn
+          startDate: startDate
         }
       });
 
@@ -390,7 +388,7 @@ exports.activateRental = async (req, res) => {
       return updatedRental;
     });
 
-    await logAction(req.userData.userId, 'ACTIVATE_RENTAL', { rentalId: id, newReturnDate: expectedReturn });
+    await logAction(req.userData.userId, 'ACTIVATE_RENTAL', { rentalId: id, newReturnDate: rental.expectedReturn });
 
     res.json(updated);
   } catch (error) {
@@ -420,8 +418,8 @@ exports.deleteRental = async (req, res) => {
     const paymentDates = [...new Set(rental.payments.map(p => p.createdAt.toISOString().split('T')[0]))];
     
     await prisma.$transaction(async (tx) => {
-      // Release items if the rental was not already returned
-      if (rental.status !== 'RETURNED') {
+      // Release items if the rental was active (delivered or repairing)
+      if (rental.status === 'LIVRÉE' || rental.status === 'EN_RÉPARATION') {
           await tx.item.updateMany({
             where: { id: { in: itemIds } },
             data: { status: 'AVAILABLE' }
@@ -620,12 +618,14 @@ exports.updateRental = async (req, res) => {
     const initialCashMovement = existingRental.cashMovements.find(cm => cm.type === 'DEPOSIT');
 
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Release old items
+      // 1. Release old items only if the rental was active (delivered or repairing)
       const oldItemIds = existingRental.items.map(ri => ri.itemId);
-      await tx.item.updateMany({
-        where: { id: { in: oldItemIds } },
-        data: { status: 'AVAILABLE' }
-      });
+      if (existingRental.status === 'LIVRÉE' || existingRental.status === 'EN_RÉPARATION') {
+          await tx.item.updateMany({
+            where: { id: { in: oldItemIds } },
+            data: { status: 'AVAILABLE' }
+          });
+      }
 
       // 2. Delete old rental items
       await tx.rentalItem.deleteMany({ where: { rentalId } });
@@ -704,8 +704,8 @@ exports.updateRental = async (req, res) => {
         }
       });
 
-      // 4. Update new items status only if the rental is already delivered (LIVRÉE)
-      if (existingRental.status === 'LIVRÉE') {
+      // 4. Update new items status only if the rental is already delivered (LIVRÉE) or in repair (EN_RÉPARATION)
+      if (existingRental.status === 'LIVRÉE' || existingRental.status === 'EN_RÉPARATION') {
         const newItemIds = selectedItems.map(item => parseInt(item.id));
         await tx.item.updateMany({
           where: { id: { in: newItemIds } },
@@ -772,12 +772,14 @@ exports.cancelRental = async (req, res) => {
         data: { status: status }
       });
 
-      // 2. Release items
+      // 2. Release items only if the rental was active (delivered or repairing)
       const itemIds = rental.items.map(ri => ri.itemId);
-      await tx.item.updateMany({
-        where: { id: { in: itemIds } },
-        data: { status: 'AVAILABLE' }
-      });
+      if (rental.status === 'LIVRÉE' || rental.status === 'EN_RÉPARATION') {
+          await tx.item.updateMany({
+            where: { id: { in: itemIds } },
+            data: { status: 'AVAILABLE' }
+          });
+      }
 
       // 3. Create refund payment if any
       if (refund > 0) {

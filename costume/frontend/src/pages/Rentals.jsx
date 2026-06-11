@@ -407,7 +407,7 @@ const Rentals = () => {
     if (filterStatus === 'ONGOING_EXTENDED') {
       matchesStatus = ['CONFIRMÉE', 'LIVRÉE', 'EN_RÉPARATION', 'ONGOING'].includes(rental.status);
     } else if (filterStatus === 'HISTORY_EXTENDED') {
-      matchesStatus = ['RETOURNEE', 'ANNULÉE', 'RETURNED'].includes(rental.status);
+      matchesStatus = ['RETOURNEE', 'ANNULÉE', 'ANNULÉE (RETENTION)', 'RETURNED'].includes(rental.status);
     } else if (filterStatus !== 'ALL') {
       matchesStatus = rental.status === filterStatus;
     }
@@ -583,7 +583,7 @@ const Rentals = () => {
                       rental.status === 'LIVRÉE' ? 'bg-orange-50 text-orange-700 border-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-900/30' :
                       rental.status === 'RETOURNEE' || rental.status === 'RETURNED' ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30' :
                       rental.status === 'EN_RÉPARATION' ? 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30' :
-                      rental.status === 'ANNULÉE' ? 'bg-zinc-50 text-zinc-700 border-zinc-100 dark:bg-zinc-900/20 dark:text-zinc-400 dark:border-zinc-900/30' :
+                      rental.status === 'ANNULÉE' || rental.status === 'ANNULÉE (RETENTION)' ? 'bg-zinc-50 text-zinc-700 border-zinc-100 dark:bg-zinc-900/20 dark:text-zinc-400 dark:border-zinc-900/30' :
                       'bg-zinc-50 text-zinc-700 border-zinc-100 dark:bg-zinc-900/20 dark:text-zinc-400 dark:border-zinc-900/30'
                     }`}>
                       {rental.status === 'CONFIRMÉE' ? 'Confirmée' : 
@@ -591,7 +591,8 @@ const Rentals = () => {
                        rental.status === 'LIVRÉE' ? 'Livrée' : 
                        rental.status === 'RETOURNEE' || rental.status === 'RETURNED' ? 'Retournée' : 
                        rental.status === 'EN_RÉPARATION' ? 'En réparation' : 
-                       rental.status === 'ANNULÉE' ? 'Annulée' : rental.status}
+                       rental.status === 'ANNULÉE' ? 'Annulée' : 
+                       rental.status === 'ANNULÉE (RETENTION)' ? 'Annulée (Rétention)' : rental.status}
                     </span>
                     {(rental.status === 'CONFIRMÉE' || rental.status === 'LIVRÉE' || rental.status === 'ONGOING') && new Date(rental.expectedReturn) < new Date() && (
                       <span className="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-red-500/50 bg-red-500/10 text-red-500 text-center animate-pulse">

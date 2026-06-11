@@ -95,7 +95,7 @@ const PerfumeReceipt = ({ sale, onClose, onPrintLabel }) => {
           </div>
 
           <div className="flex flex-col items-center mb-6">
-              <QRCodeSVG value={qrValue} size={60} level="H" />
+              <QRCodeSVG value={qrValue} size={80} level="H" />
               <p className="text-[8px] font-black mt-2 uppercase tracking-widest">MERCI DE VOTRE VISITE</p>
           </div>
 

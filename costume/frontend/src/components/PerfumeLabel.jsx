@@ -67,7 +67,7 @@ const PerfumeLabel = ({ perfume, quantity, onClose }) => {
             
             {!quantity && (
               <div className="flex flex-col items-center justify-center shrink-0 ml-1">
-                  <QRCodeSVG value={qrValue} size={60} level="M" />
+                  <QRCodeSVG value={qrValue} size={80} level="M" />
               </div>
             )}
           </div>
