@@ -5,6 +5,16 @@ import { X } from 'lucide-react';
 const CameraScanner = ({ isOpen, onClose, onScanSuccess }) => {
   const html5QrcodeRef = useRef(null);
 
+  const stopScanner = () => {
+    if (html5QrcodeRef.current && html5QrcodeRef.current.isScanning) {
+      html5QrcodeRef.current.stop().then(() => {
+        html5QrcodeRef.current.clear();
+      }).catch((err) => {
+        console.error("Error stopping scanner:", err);
+      });
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       // Small delay to ensure the DOM element is fully rendered
@@ -23,7 +33,7 @@ const CameraScanner = ({ isOpen, onClose, onScanSuccess }) => {
             stopScanner();
             onClose();
           },
-          (errorMessage) => {
+          () => {
             // Ignore scan failures (they are generated continuously when scanning finds nothing)
           }
         ).catch((err) => {
@@ -36,17 +46,8 @@ const CameraScanner = ({ isOpen, onClose, onScanSuccess }) => {
         stopScanner();
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
-
-  const stopScanner = () => {
-    if (html5QrcodeRef.current && html5QrcodeRef.current.isScanning) {
-      html5QrcodeRef.current.stop().then(() => {
-        html5QrcodeRef.current.clear();
-      }).catch((err) => {
-        console.error("Error stopping scanner:", err);
-      });
-    }
-  };
 
   if (!isOpen) return null;
 

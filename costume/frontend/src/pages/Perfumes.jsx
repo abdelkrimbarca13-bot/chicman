@@ -18,7 +18,6 @@ const Perfumes = () => {
   const [perfumes, setPerfumes] = useState([]);
   const [sales, setSales] = useState([]);
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modals
@@ -47,7 +46,6 @@ const Perfumes = () => {
   });
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
     try {
       const pRes = await api.get('/perfumes');
       setPerfumes(pRes.data);
@@ -62,8 +60,6 @@ const Perfumes = () => {
       }
     } catch (err) {
       console.error('Error fetching perfume data:', err);
-    } finally {
-      setLoading(false);
     }
   }, [user]);
 
@@ -118,7 +114,7 @@ const Perfumes = () => {
             setSearchTerm('');
           }
         }
-      } catch (err) {
+      } catch {
         // Not a complete or valid JSON yet
       }
     }
@@ -137,7 +133,7 @@ const Perfumes = () => {
             setSearchTerm('');
           }
         }
-      } catch (err) {
+      } catch {
         console.log('Invalid scan');
       }
     }
@@ -153,7 +149,7 @@ const Perfumes = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (err) {
+    } catch {
       alert('Erreur lors du téléchargement du template');
     }
   };
@@ -166,7 +162,6 @@ const Perfumes = () => {
     formData.append('file', file);
 
     try {
-      setLoading(true);
       const res = await api.post('/perfumes/import', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -175,7 +170,6 @@ const Perfumes = () => {
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur lors de l\'importation');
     } finally {
-      setLoading(false);
       e.target.value = '';
     }
   };

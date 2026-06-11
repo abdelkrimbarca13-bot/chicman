@@ -20,7 +20,7 @@ const Login = () => {
       const response = await api.post('/auth/login', { username, password });
       login(response.data);
       navigate('/');
-    } catch (err) {
+    } catch {
       setError('Identifiants invalides');
     }
   };

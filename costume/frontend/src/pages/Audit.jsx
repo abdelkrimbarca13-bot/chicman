@@ -137,7 +137,13 @@ const Audit = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <Search className="absolute left-3 top-2.5 text-zinc-500" size={16} />
-            <button type="submit" className="absolute right-1 top-1 bg-gold text-rich-black px-3 py-1 rounded text-[10px] font-black uppercase">Chercher</button>
+            <button 
+              type="submit" 
+              disabled={searchLoading} 
+              className="absolute right-1 top-1 bg-gold text-rich-black px-3 py-1 rounded text-[10px] font-black uppercase disabled:opacity-50"
+            >
+              {searchLoading ? '...' : 'Chercher'}
+            </button>
         </form>
       </div>
 

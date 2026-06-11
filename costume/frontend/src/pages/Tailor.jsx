@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
-import { useAuth } from '../context/AuthContext';
 import { Search, Scissors, CheckCircle2 } from 'lucide-react';
 
 const Tailor = () => {

@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Search, Trash2, Smartphone, DollarSign, FileText, ShoppingCart, X } from 'lucide-react';
@@ -50,7 +49,7 @@ const Sales = () => {
     if (newSale.totalAmount !== total) {
       setNewSale(prev => ({ ...prev, totalAmount: total }));
     }
-  }, [newSale.items, newSale.discount]);
+  }, [newSale.items, newSale.discount, newSale.totalAmount]);
 
   const addItem = (item) => {
     if (!newSale.items.some(i => i.id === item.id)) {

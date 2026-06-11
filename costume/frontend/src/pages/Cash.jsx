@@ -8,7 +8,6 @@ const Cash = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
   const [dailyCash, setDailyCash] = useState(null);
-  const [expenses, setExpenses] = useState([]);
   const [history, setHistory] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [activeTab, setActiveTab] = useState('current');
@@ -44,11 +43,8 @@ const Cash = () => {
   const fetchData = React.useCallback(async () => {
     setLoading(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
-      
       const calls = [
-        api.get('/cash/status'),
-        api.get(`/cash/expenses?date=${today}`)
+        api.get('/cash/status')
       ];
 
       if (isAdmin) {
@@ -60,10 +56,9 @@ const Cash = () => {
       const results = await Promise.all(calls);
       
       setDailyCash(results[0].data);
-      setExpenses(results[1].data);
-      if (isAdmin && results[2]) setHistory(results[2].data || []);
-      if (isAdmin && results[3]) setGlobalSummary(results[3].data || null);
-      if (isAdmin && results[4]) setWithdrawals(results[4].data || []);
+      if (isAdmin && results[1]) setHistory(results[1].data || []);
+      if (isAdmin && results[2]) setGlobalSummary(results[2].data || null);
+      if (isAdmin && results[3]) setWithdrawals(results[3].data || []);
       
       if (results[0].data.serverTime) {
         const serverTime = new Date(results[0].data.serverTime);
@@ -337,7 +332,7 @@ const Cash = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (err) {
+    } catch {
       alert('Erreur lors de l\'export Excel');
     }
   };
@@ -346,7 +341,7 @@ const Cash = () => {
     try {
       const res = await api.get(`/cash/details/${date}`);
       setDetailModal(res.data);
-    } catch (err) {
+    } catch {
       alert('Erreur lors du chargement des détails');
     }
   };
@@ -359,7 +354,7 @@ const Cash = () => {
       await api.post('/cash/fix-history');
       await fetchData();
       alert("Historique réparé avec succès !");
-    } catch (err) {
+    } catch {
       alert("Erreur lors de la réparation de l'historique.");
     } finally {
       setLoading(false);
@@ -376,7 +371,7 @@ const Cash = () => {
       const s = filterStartDate || '0000-00-00';
       const e = filterEndDate || '9999-12-31';
       return d >= s && d <= e;
-    } catch (e) {
+    } catch {
       return false;
     }
   });
@@ -550,10 +545,10 @@ const Cash = () => {
                                     amount: -e.amount,
                                     color: 'text-red-400'
                                   })),
-                                  ...withdrawals?.filter(w => {
+                                  ...(withdrawals || []).filter(w => {
                                     try {
                                       return w.date && new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
-                                    } catch(e) { return false; }
+                                    } catch { return false; }
                                   }).map(w => ({ 
                                     time: new Date(w.date), 
                                     type: 'RETRAIT', 
@@ -598,10 +593,10 @@ const Cash = () => {
                     <div className="space-y-4 border-y-2 border-dashed border-zinc-800 py-8">
                         <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Monnaie Initiale (+)</span><span className="font-black text-white">{dailyCash.initialCash} DA</span></div>
                         <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Total Entrées (+)</span><span className="font-black text-green-400">{dailyCash.totalRentals} DA</span></div>
-                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dépenses/Retraits (-)</span><span className="font-black text-red-400">-{ (dailyCash?.totalExpenses || 0) + (withdrawals?.filter(w => {
+                        <div className="flex justify-between items-center"><span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Dépenses/Retraits (-)</span><span className="font-black text-red-400">-{ (dailyCash?.totalExpenses || 0) + ((withdrawals || []).filter(w => {
                           try {
                             return w.date && new Date(w.date).toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
-                          } catch(e) { return false; }
+                          } catch { return false; }
                         }).reduce((sum, w) => sum + (w.amount || 0), 0) || 0)} DA</span></div>
                     </div>
                     <div className="flex justify-between items-center pt-6">

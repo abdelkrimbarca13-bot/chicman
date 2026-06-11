@@ -64,7 +64,7 @@ const Customers = () => {
       setCurrentCustomer({ firstName: '', lastName: '', phone: '', address: '', idNumber: '' });
       setEditingId(null);
       await fetchCustomers();
-    } catch (err) {
+    } catch {
       alert('Erreur: Vérifiez si le numéro de pièce d\'identité est unique');
     }
   };
@@ -80,7 +80,7 @@ const Customers = () => {
         try {
             await api.put(`/customers/${id}/blacklist`, { isBlacklisted: !currentState });
             await fetchCustomers();
-        } catch (err) {
+        } catch {
             alert('Erreur lors de la modification de la liste noire');
         }
     }

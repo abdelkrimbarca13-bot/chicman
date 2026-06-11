@@ -67,7 +67,7 @@ const Users = () => {
     try {
       await api.put(`/auth/users/${user.id}`, { isActive: !user.isActive });
       fetchUsers();
-    } catch (err) {
+    } catch {
       alert('Erreur lors du changement de statut');
     }
   };

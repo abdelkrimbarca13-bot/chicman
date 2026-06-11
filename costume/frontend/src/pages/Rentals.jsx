@@ -123,7 +123,7 @@ const Rentals = () => {
     if (newRental.totalAmount !== total) {
       setNewRental(prev => ({ ...prev, totalAmount: total }));
     }
-  }, [newRental.items, newRental.discount, newRental.addedAmount]);
+  }, [newRental.items, newRental.discount, newRental.addedAmount, newRental.totalAmount]);
 
   const addItem = (item) => {
     const isAvailable = items.some(i => i.id === item.id);
