@@ -237,12 +237,13 @@ exports.getPerfumeStats = async (req, res) => {
       _sum: { totalAmount: true, profit: true, quantityMl: true }
     });
 
-    const lowStockCount = await prisma.perfume.count({
-      where: { currentQuantityMl: { lte: 30, gt: 0 } }
+    const activePerfumes = await prisma.perfume.findMany({
+      where: { isActive: true, currentQuantityMl: { gt: 0 } }
     });
+    const lowStockCount = activePerfumes.filter(p => p.currentQuantityMl <= p.alertThresholdMl).length;
 
     const outOfStockCount = await prisma.perfume.count({
-      where: { currentQuantityMl: 0 }
+      where: { currentQuantityMl: 0, isActive: true }
     });
 
     res.json({

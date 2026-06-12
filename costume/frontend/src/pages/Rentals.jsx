@@ -210,6 +210,10 @@ const Rentals = () => {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (new Date(newRental.expectedReturn) <= new Date(newRental.startDate)) {
+        alert('La date de retour doit être postérieure à la date de début');
+        return;
+    }
     if (newRental.items.length === 0) {
         alert('Veuillez sélectionner au moins un article');
         return;
@@ -709,7 +713,7 @@ const Rentals = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-black uppercase text-gold/60 mb-1 tracking-wider">Fin de location</label>
-                  <input type="date" className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-zinc-900 dark:text-white" value={newRental.expectedReturn} onChange={e => setNewRental({...newRental, expectedReturn: e.target.value})} required />
+                  <input type="date" min={newRental.startDate} className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-gold outline-none text-zinc-900 dark:text-white" value={newRental.expectedReturn} onChange={e => setNewRental({...newRental, expectedReturn: e.target.value})} required />
                 </div>
               </div>
 

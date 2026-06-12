@@ -87,11 +87,10 @@ exports.getStats = async (req, res) => {
       }
     }));
 
-    const perfumeAlertsCount = await prisma.perfume.count({
-      where: {
-        currentQuantityMl: { lte: 30 }
-      }
+    const activePerfumesForAlerts = await prisma.perfume.findMany({
+      where: { isActive: true, currentQuantityMl: { gt: 0 } }
     });
+    const perfumeAlertsCount = activePerfumesForAlerts.filter(p => p.currentQuantityMl <= p.alertThresholdMl).length;
 
     res.json({
       activeRentals,

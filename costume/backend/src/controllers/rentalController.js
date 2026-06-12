@@ -43,6 +43,10 @@ exports.createRental = async (req, res) => {
     // Set to 11:00 AM for the return deadline
     end.setUTCHours(11, 0, 0, 0);
 
+    if (end <= start) {
+      return res.status(400).json({ message: 'La date de retour doit être postérieure à la date de début.' });
+    }
+
     // 1. Récupérer les détails des articles sélectionnés (pour connaître leurs ensembleId)
     const selectedItemsDetails = await prisma.item.findMany({
       where: { id: { in: itemIds } }
@@ -546,6 +550,10 @@ exports.updateRental = async (req, res) => {
     start.setUTCHours(0, 0, 0, 0);
     const end = new Date(expectedReturn);
     end.setUTCHours(11, 0, 0, 0);
+
+    if (end <= start) {
+      return res.status(400).json({ message: 'La date de retour doit être postérieure à la date de début.' });
+    }
 
     const itemIds = selectedItems.map(i => parseInt(i.id));
 
