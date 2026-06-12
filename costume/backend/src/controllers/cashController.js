@@ -203,9 +203,9 @@ exports.setInitialCash = async (req, res) => {
       }
     });
 
-    await updateDailyStats(todayDate);
-    
     await logAction(req.userData.userId, 'SET_INITIAL_CASH', { amount: amountFloat });
+
+    await updateDailyStats(todayDate);
     
     const updated = await prisma.dailyCash.findUnique({ where: { date: todayDate } });
 
@@ -305,11 +305,13 @@ async function updateDailyStats(dateInput) {
     where: { date: dayStart }
   });
 
-  // Pour éviter tout report de solde, on vérifie s'il y a eu une action manuelle "SET_INITIAL_CASH" aujourd'hui
   const manualLog = await prisma.auditLog.findFirst({
     where: {
       action: 'SET_INITIAL_CASH',
       createdAt: { gte: dayStart, lte: dayEnd }
+    },
+    orderBy: {
+      createdAt: 'desc'
     }
   });
 
