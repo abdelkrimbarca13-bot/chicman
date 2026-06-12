@@ -233,6 +233,9 @@ exports.getPerfumeSales = async (req, res) => {
 
 exports.getPerfumeStats = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const totalSales = await prisma.perfumeSale.aggregate({
       _sum: { totalAmount: true, profit: true, quantityMl: true }
     });
@@ -287,6 +290,9 @@ exports.downloadTemplate = async (req, res) => {
 
 exports.importPerfumes = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     if (!req.file) return res.status(400).json({ message: 'Aucun fichier fourni' });
 
     const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });

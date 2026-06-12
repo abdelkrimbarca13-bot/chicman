@@ -197,6 +197,9 @@ exports.getAllRentals = async (req, res) => {
 
 exports.getCashMovements = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const { startDate, endDate } = req.query;
     let where = {};
     if (startDate && endDate) {
@@ -289,6 +292,9 @@ exports.getCashMovements = async (req, res) => {
 
 exports.getRevenue = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const payments = await prisma.payment.findMany({
       include: {
         rental: {

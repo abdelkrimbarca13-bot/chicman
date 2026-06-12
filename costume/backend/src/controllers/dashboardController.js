@@ -97,7 +97,7 @@ exports.getStats = async (req, res) => {
       availableItems,
       rentedItems,
       totalRentalsCount,
-      repairingItems: repairingItems + manualRepairs.length,
+      repairingItems: manualRepairs.length,
       cleaningItems,
       dailyRevenue: req.userData.role === 'ADMIN' ? dailyRevenue : null,
       delayedRentals,

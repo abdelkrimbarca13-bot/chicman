@@ -7,6 +7,16 @@ import { format } from 'date-fns';
 import RentalReceipt from '../components/RentalReceipt';
 import CameraScanner from '../components/CameraScanner';
 
+const toLocalYYYYMMDD = (dateInput) => {
+  if (!dateInput) return '';
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const Rentals = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
@@ -27,7 +37,7 @@ const Rentals = () => {
     lastName: '',
     phone: '',
     items: [], // [{ id, remarks, price, name }]
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: toLocalYYYYMMDD(new Date()),
     expectedReturn: '',
     totalAmount: 0,
     paidAmount: 0,
@@ -194,8 +204,8 @@ const Rentals = () => {
         color: ri.item.color,
         size: ri.item.size
       })),
-      startDate: new Date(rental.startDate).toISOString().split('T')[0],
-      expectedReturn: new Date(rental.expectedReturn).toISOString().split('T')[0],
+      startDate: toLocalYYYYMMDD(rental.startDate),
+      expectedReturn: toLocalYYYYMMDD(rental.expectedReturn),
       totalAmount: rental.totalAmount,
       paidAmount: rental.depositAmount || 0,
       discount: rental.discount,
@@ -247,7 +257,7 @@ const Rentals = () => {
         lastName: '', 
         phone: '', 
         items: [], 
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: toLocalYYYYMMDD(new Date()),
         expectedReturn: '',
         totalAmount: 0,
         paidAmount: 0,
@@ -381,8 +391,8 @@ const Rentals = () => {
     
     if (days === 0) {
       // Today
-      setFilterStartDate(start.toISOString().split('T')[0]);
-      setFilterEndDate(end.toISOString().split('T')[0]);
+      setFilterStartDate(toLocalYYYYMMDD(start));
+      setFilterEndDate(toLocalYYYYMMDD(end));
     } else if (days === 1) {
       // Yesterday
       const yesterday = new Date();
@@ -391,15 +401,15 @@ const Rentals = () => {
       const yesterdayEnd = new Date();
       yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
       yesterdayEnd.setHours(23, 59, 59, 999);
-      setFilterStartDate(yesterday.toISOString().split('T')[0]);
-      setFilterEndDate(yesterdayEnd.toISOString().split('T')[0]);
+      setFilterStartDate(toLocalYYYYMMDD(yesterday));
+      setFilterEndDate(toLocalYYYYMMDD(yesterdayEnd));
     } else if (days === 7) {
       // Last 7 days
       const lastWeek = new Date();
       lastWeek.setDate(lastWeek.getDate() - 7);
       lastWeek.setHours(0, 0, 0, 0);
-      setFilterStartDate(lastWeek.toISOString().split('T')[0]);
-      setFilterEndDate(end.toISOString().split('T')[0]);
+      setFilterStartDate(toLocalYYYYMMDD(lastWeek));
+      setFilterEndDate(toLocalYYYYMMDD(end));
     } else {
       setFilterStartDate('');
       setFilterEndDate('');
