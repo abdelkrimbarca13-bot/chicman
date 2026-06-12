@@ -56,6 +56,7 @@ exports.createSale = async (req, res) => {
           items: {
             create: items.map(i => {
               const dbItem = dbItems.find(d => d.id === i.itemId);
+              const parsedEnsembleId = dbItem.ensembleId ? parseInt(dbItem.ensembleId) : NaN;
               return {
                 itemRef: dbItem.reference,
                 itemName: dbItem.name,
@@ -64,7 +65,7 @@ exports.createSale = async (req, res) => {
                 itemColor: dbItem.color,
                 price: parseFloat(i.price),
                 rentalPrice: dbItem.rentalPrice || 0,
-                ensembleId: dbItem.ensembleId || null
+                ensembleId: isNaN(parsedEnsembleId) ? null : parsedEnsembleId
               };
             })
           }
@@ -72,15 +73,17 @@ exports.createSale = async (req, res) => {
         include: { items: true }
       });
 
-      // 2. Supprimer l'historique de location des articles vendus
-      await tx.rentalItem.deleteMany({
-        where: { itemId: { in: itemIds } }
-      });
-
-      // 3. Supprimer les articles de l'inventaire
-      await tx.item.deleteMany({
-        where: { id: { in: itemIds } }
-      });
+      // 2. Marquer les articles comme vendus (status: 'SOLD') et renommer leur référence pour libérer l'unicité
+      const timestamp = Date.now();
+      for (const dbItem of dbItems) {
+        await tx.item.update({
+          where: { id: dbItem.id },
+          data: {
+            status: 'SOLD',
+            reference: `${dbItem.reference}_SOLD_${timestamp}`
+          }
+        });
+      }
 
       return newSale;
     });
@@ -207,7 +210,7 @@ exports.deleteSale = async (req, res) => {
               color: item.itemColor,
               status: 'AVAILABLE',
               rentalPrice: item.rentalPrice || 0,
-              ensembleId: item.ensembleId || null,
+              ensembleId: item.ensembleId ? String(item.ensembleId) : null,
               quantity: 1
             }
           });

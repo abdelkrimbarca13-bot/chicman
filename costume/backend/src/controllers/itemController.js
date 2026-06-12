@@ -4,7 +4,9 @@ const { logAction } = require('../utils/audit');
 exports.getAllItems = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    let where = {};
+    let where = {
+      status: { notIn: ['SOLD', 'ARCHIVED'] }
+    };
 
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -38,7 +40,9 @@ exports.getAllItems = async (req, res) => {
       today.setUTCHours(0, 0, 0, 0);
       const isStartingToday = start <= today;
 
-      const allItems = await prisma.item.findMany();
+      const allItems = await prisma.item.findMany({
+        where: { status: { notIn: ['SOLD', 'ARCHIVED'] } }
+      });
       const availableItems = allItems.filter(item => {
         // Bloqué par location directe
         if (busyItemIds.has(item.id)) return false;
@@ -248,19 +252,24 @@ exports.deleteItem = async (req, res) => {
       });
     }
 
-    // Supprimer l'historique de location de cet article d'abord (contrainte clé étrangère)
-    await prisma.rentalItem.deleteMany({
-      where: { itemId: itemId }
+    // Récupérer l'article pour connaître sa référence
+    const item = await prisma.item.findUnique({ where: { id: itemId } });
+    if (!item) {
+      return res.status(404).json({ error: "Article non trouvé" });
+    }
+
+    // Marquer l'article comme archivé au lieu de le supprimer physiquement pour préserver l'historique
+    await prisma.item.update({
+      where: { id: itemId },
+      data: {
+        status: 'ARCHIVED',
+        reference: `${item.reference}_ARCHIVED_${Date.now()}`
+      }
     });
 
-    // Supprimer l'article
-    await prisma.item.delete({
-      where: { id: itemId }
-    });
+    await logAction(req.userData.userId, 'DELETE_ITEM', { itemId, reference: item.reference });
 
-    await logAction(req.userData.userId, 'DELETE_ITEM', { itemId });
-
-    res.status(204).send();
+    res.json({ message: 'Article archivé avec succès' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
