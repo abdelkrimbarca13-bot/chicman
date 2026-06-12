@@ -242,6 +242,9 @@ exports.deleteSale = async (req, res) => {
 
 exports.inspectDatabase = async (req, res) => {
   try {
+    if (req.userData.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
     const saleCount = await prisma.sale.count();
     const rentalCount = await prisma.rental.count();
     const auditLogCount = await prisma.auditLog.count();
