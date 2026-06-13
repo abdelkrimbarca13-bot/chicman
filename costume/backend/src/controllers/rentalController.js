@@ -392,7 +392,7 @@ exports.activateRental = async (req, res) => {
       const itemIds = rental.items.map(ri => ri.itemId);
       await tx.item.updateMany({
         where: { id: { in: itemIds } },
-        data: { status: 'RENTED' }
+        data: { status: 'RENTED', statusRemarks: null }
       });
 
       return updatedRental;
@@ -432,7 +432,7 @@ exports.deleteRental = async (req, res) => {
       if (['LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'].includes(rental.status)) {
           await tx.item.updateMany({
             where: { id: { in: itemIds } },
-            data: { status: 'AVAILABLE' }
+            data: { status: 'AVAILABLE', statusRemarks: null }
           });
       }
 
@@ -640,7 +640,7 @@ exports.updateRental = async (req, res) => {
       if (['LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'].includes(existingRental.status)) {
           await tx.item.updateMany({
             where: { id: { in: oldItemIds } },
-            data: { status: 'AVAILABLE' }
+            data: { status: 'AVAILABLE', statusRemarks: null }
           });
       }
 
@@ -726,7 +726,7 @@ exports.updateRental = async (req, res) => {
         const newItemIds = selectedItems.map(item => parseInt(item.id));
         await tx.item.updateMany({
           where: { id: { in: newItemIds } },
-          data: { status: 'RENTED' }
+          data: { status: 'RENTED', statusRemarks: null }
         });
       }
 
@@ -794,7 +794,7 @@ exports.cancelRental = async (req, res) => {
       if (['LIVRÉE', 'EN_RÉPARATION', 'DELAYED', 'ONGOING'].includes(rental.status)) {
           await tx.item.updateMany({
             where: { id: { in: itemIds } },
-            data: { status: 'AVAILABLE' }
+            data: { status: 'AVAILABLE', statusRemarks: null }
           });
       }
 

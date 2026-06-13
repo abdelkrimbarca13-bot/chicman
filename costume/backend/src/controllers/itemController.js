@@ -89,9 +89,14 @@ exports.updateItem = async (req, res) => {
       return res.status(403).json({ message: 'Seul l\'administrateur peut modifier un article.' });
     }
 
+    const updateData = { ...req.body };
+    if (updateData.status && ['AVAILABLE', 'RENTED', 'CLEANING'].includes(updateData.status)) {
+      updateData.statusRemarks = null;
+    }
+
     const item = await prisma.item.update({
       where: { id: parseInt(id) },
-      data: req.body
+      data: updateData
     });
     await logAction(req.userData.userId, 'UPDATE_ITEM', { itemId: id, reference: item.reference });
     res.json(item);
