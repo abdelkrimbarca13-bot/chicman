@@ -316,7 +316,7 @@ async function updateDailyStats(dateInput) {
   });
 
   // Récupérer le montant initial depuis le log d'audit pour éviter de perdre la valeur lors d'une réparation ou d'une mauvaise synchronisation
-  let initialCash = 0;
+  let initialCash = dailyCash?.initialCash || 0;
   if (manualLog) {
     try {
       const details = JSON.parse(manualLog.details);
