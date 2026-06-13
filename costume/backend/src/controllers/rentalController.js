@@ -513,7 +513,10 @@ exports.returnRental = async (req, res) => {
           const status = immediateAvailableTypes.includes(ri.item.type) ? 'AVAILABLE' : 'CLEANING';
           await tx.item.update({
             where: { id: ri.itemId },
-            data: { status }
+            data: { 
+              status,
+              statusRemarks: null
+            }
           });
         }
       }

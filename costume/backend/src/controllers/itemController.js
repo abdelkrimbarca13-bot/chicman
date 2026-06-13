@@ -109,11 +109,11 @@ exports.updateItemStatus = async (req, res) => {
       return res.status(400).json({ error: 'Invalid status' });
     }
     
-    const updateData = { status };
+    let updateData = { status };
     if (['AVAILABLE', 'RENTED', 'CLEANING'].includes(status)) {
       updateData.statusRemarks = null;
     }
-    
+
     const item = await prisma.item.update({
       where: { id: parseInt(id) },
       data: updateData
@@ -139,11 +139,11 @@ exports.bulkUpdateItemStatus = async (req, res) => {
     
     const parsedIds = ids.map(id => parseInt(id));
     
-    const updateData = { status };
+    let updateData = { status };
     if (['AVAILABLE', 'RENTED', 'CLEANING'].includes(status)) {
       updateData.statusRemarks = null;
     }
-    
+
     await prisma.item.updateMany({
       where: { id: { in: parsedIds } },
       data: updateData
